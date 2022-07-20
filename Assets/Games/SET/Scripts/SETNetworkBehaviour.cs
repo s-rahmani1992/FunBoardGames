@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
-using System;
-using UnityEngine.UI;
 
 /*
 	Documentation: https://mirror-networking.gitbook.io/docs/guides/networkbehaviour
@@ -10,33 +8,14 @@ using UnityEngine.UI;
 */
 
 // NOTE: Do not put objects in DontDestroyOnLoad (DDOL) in Awake.  You can do that in Start instead.
+
+
 namespace BoardGames.SET
 {
-    public class SETNetworkPlayer : NetworkBehaviour
+    public class SETNetworkBehaviour : NetworkBehaviour
     {
         [SyncVar]
-        public string playerName;
-
-        [SyncVar(hook = nameof(IndexChanged))]
-        public int playerNumber;
-
-        [SerializeField]
-        GameObject playerUI = null;
-
-        [SerializeField]
-        SETGameUIManager UIManager;
-
-        private void Awake(){
-            UIManager = FindObjectOfType<SETGameUIManager>();
-        }
-
-        void IndexChanged(int oldVal, int newVal){
-            Debug.Log($"IndexChanged({oldVal}, {newVal})");
-            if (newVal < 1)
-                return;
-            RefreshUI();
-        }
-
+        public bool isGuessMode; 
 
         #region Start & Stop Callbacks
 
@@ -45,10 +24,7 @@ namespace BoardGames.SET
         /// <para>This could be triggered by NetworkServer.Listen() for objects in the scene, or by NetworkServer.Spawn() for objects that are dynamically created.</para>
         /// <para>This will be called for objects on a "host" as well as for object on a dedicated server.</para>
         /// </summary>
-        public override void OnStartServer(){
-            DebugStep.Log($"NetworkBehaviour<{connectionToClient.connectionId}>.OnstartServer()");
-            playerName = connectionToClient.authenticationData as string;
-        }
+        public override void OnStartServer() { }
 
         /// <summary>
         /// Invoked on the server when the object is unspawned
@@ -62,22 +38,11 @@ namespace BoardGames.SET
         /// </summary>
         public override void OnStartClient() { }
 
-        public void RefreshUI(){
-            playerUI = UIManager.playerPanel.GetChild(playerNumber - 1).gameObject;
-            if (playerUI != null){
-                if (hasAuthority) playerUI.transform.GetChild(0).GetComponent<Text>().fontStyle = FontStyle.Italic;
-                playerUI.transform.GetChild(0).GetComponent<Text>().text = playerName;
-                playerUI.transform.gameObject.SetActive(true);
-            }
-        }
-
         /// <summary>
         /// This is invoked on clients when the server has caused this object to be destroyed.
         /// <para>This can be used as a hook to invoke effects or do client specific cleanup.</para>
         /// </summary>
-        public override void OnStopClient(){
-            playerUI.transform.GetChild(0).GetComponent<Text>().text = "Left";
-        }
+        public override void OnStopClient() { }
 
         /// <summary>
         /// Called when the local player object has been set up.

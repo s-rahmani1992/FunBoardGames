@@ -2,19 +2,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SETGameUIManager : MonoBehaviour
+namespace BoardGames.SET
 {
-    public Transform playerPanel;
-    public Timer timer;
-    // Start is called before the first frame update
-    void Start()
+    public class SETGameUIManager : MonoBehaviour
     {
-        
-    }
+        public Transform playerPanel;
+        public Timer timer;
+        public ObjectPoolManager pool;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        public Color[] colors;
+        public Sprite[] cardShapes;
+
+        public void PlaceCards(byte[] cardInfos, byte[] cardPoses){
+            for (int i = 0; i < cardInfos.Length; i++)
+            {
+                pool.PullFromList(0, this, cardInfos[i], cardPoses[i], 0.2f * i);
+            }
+        }
     }
 }

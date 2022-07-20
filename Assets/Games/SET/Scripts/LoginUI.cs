@@ -3,39 +3,28 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class LoginUI : MonoBehaviour
+namespace BoardGames.SET
 {
-    [SerializeField]
-    InputField nameField;
-    [SerializeField]
-    Button loginBtn;
-    [SerializeField]
-    Text logTxt;
-    // Start is called before the first frame update
-    void Start()
+    public class LoginUI : MonoBehaviour
     {
+        [SerializeField]
+        InputField nameField;
+        [SerializeField]
+        Button loginBtn;
+        [SerializeField]
+        Text logTxt;
         
-    }
+        public void UpdateBtn(){
+            loginBtn.interactable = nameField.text.Length > 2;
+        }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+        public void AtemptLogin(){
+            (SETNetworkManager.singleton.authenticator as SimpleNameAuthenticator).reqName = nameField.text;
+            SETNetworkManager.singleton.StartClient();
+        }
 
-    public void UpdateBtn()
-    {
-        loginBtn.interactable = nameField.text.Length > 2;
-    }
-
-    public void AtemptLogin()
-    {
-        (SETNetworkManager.singleton.authenticator as SimpleNameAuthenticator).reqName = nameField.text;
-        SETNetworkManager.singleton.StartClient();
-    }
-
-    public void LogMsg(string msg)
-    {
-        logTxt.text = msg;
+        public void LogMsg(string msg){
+            logTxt.text = msg;
+        }
     }
 }

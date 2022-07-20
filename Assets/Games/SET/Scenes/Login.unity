@@ -971,8 +971,12 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7475147692941367165, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
+      propertyPath: isEditorServer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7475147692941367165, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
       propertyPath: maxConnections
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
