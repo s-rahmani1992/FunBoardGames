@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace BoardGames
+namespace OnlineBoardGames
 {
     public interface IPoolable
     {
@@ -21,19 +21,13 @@ namespace BoardGames
 
     public class ObjectPoolManager : MonoBehaviour
     {
-        public static ObjectPoolManager Instance { get; private set; }
         public PoolPrefab[] prefabs;
 
         private SortedList<string, List<IPoolable>> _poolList = new SortedList<string, List<IPoolable>>();
 
         private void Awake(){
-            Instance = this;
             foreach (var p in prefabs)
                 _poolList.Add(p.tag, new List<IPoolable>());
-        }
-
-        private void OnDestroy(){
-            Instance = null;
         }
 
         public void Push2List(GameObject gObject, params object[] parameters){

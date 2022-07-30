@@ -11,25 +11,10 @@ using System.Linq;
 	API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkManager.html
 */
 
-namespace BoardGames.SET
+namespace OnlineBoardGames.SET
 {
-
-    public struct BeginGameMessage : NetworkMessage
-    {
-        public byte phase;
-    }
-
-    public struct PlaceCardsMessage : NetworkMessage
-    {
-        public byte[] cards2Place;
-        public byte[] cardsPosition;
-    }
-
     public class SETNetworkManager : NetworkManager
     {
-        // Overrides the base singleton so we don't
-        // have to cast to this type everywhere.
-        #region Developer
 #if UNITY_EDITOR
         [Header("Editor Only")]
         [SerializeField]
@@ -39,8 +24,7 @@ namespace BoardGames.SET
         /// Runs on both Server and Client
         /// Networking is NOT initialized when this fires
         /// </summary>
-        public override void Start()
-        {
+        public override void Start(){
             base.Start();
 
             if (isEditorServer)
@@ -48,35 +32,21 @@ namespace BoardGames.SET
         }
 #endif
 
+        public static new SETNetworkManager singleton { get; private set; }
+
+        #region Server Methods & Variables
+
         int playerCount = 0;
+        public SETSessionNetworkManager session;
+        List<byte> cardDeck = new List<byte>(81);
 
-        [SerializeField]
-        SETGameUIManager gameUIManager;
-
-        IEnumerator DelaySendBegin()
-        {
-            yield return new WaitForSeconds(0.5f);
-
-            NetworkServer.SendToAll(new BeginGameMessage { phase = 0 });
-            yield return new WaitForSeconds(5);
-            NetworkServer.SendToAll(new BeginGameMessage { phase = 1 });
-            yield return new WaitForSeconds(0.5f);
-            byte[] temp = new byte[12];
-            for (int i = 0; i < 12; i++)
-                temp[i] = (byte)i;
-            NetworkServer.SendToAll(new PlaceCardsMessage { cards2Place = cardDeck.GetRange(cardCursor, 12).ToArray(), cardsPosition = temp });
+        [Server]
+        public List<byte> GetShuffleDeck(){
+            System.Random r = new System.Random();
+            return cardDeck.OrderBy(x => r.Next()).ToList();
         }
 
-        public List<byte> cardDeck { get; private set; } = new List<byte>(81);
-        public List<Tuple<byte, byte>> placedCards = new List<Tuple<byte, byte>>();
-        int cardCursor = 0;
-
-
         #endregion
-
-
-
-        public static new SETNetworkManager singleton { get; private set; }
 
         #region Unity Callbacks
 
@@ -154,11 +124,7 @@ namespace BoardGames.SET
         /// <param name="newSceneName">Name of the scene that's about to be loaded</param>
         public override void OnServerChangeScene(string newSceneName){
             DebugStep.Log($"NetworkManager.OnServerChangeScene({newSceneName})");
-            if (newSceneName == "Assets/Games/SET/Scenes/Game.unity"){
-                System.Random r = new System.Random();
-                cardDeck = cardDeck.OrderBy(x => r.Next()).ToList();
-                cardCursor = 0;
-            }
+            
         }
 
         /// <summary>
@@ -167,7 +133,11 @@ namespace BoardGames.SET
         /// <param name="sceneName">The name of the new scene.</param>
         public override void OnServerSceneChanged(string sceneName)
         {
-
+            DebugStep.Log($"NetworkManager.OnServerSceneChanged({sceneName})");
+            if (sceneName == "Assets/Games/SET/Scenes/Game.unity"){
+                //session = GameObject.Instantiate(spawnPrefabs[0]).GetComponent<SETSessionNetworkManager>();
+                //NetworkServer.Spawn(session.gameObject);
+            }
         }
 
         /// <summary>
@@ -186,10 +156,6 @@ namespace BoardGames.SET
         public override void OnClientSceneChanged()
         {
             base.OnClientSceneChanged();
-            if (SceneManager.GetActiveScene().name == "Game")
-                gameUIManager = FindObjectOfType<SETGameUIManager>();
-            else
-                gameUIManager = null;
         }
 
         #endregion
@@ -231,7 +197,7 @@ namespace BoardGames.SET
             DebugStep.Log($"NetworkManager.OnServerAddPlayer({conn.connectionId})");
             conn.identity.GetComponent<SETNetworkPlayer>().playerNumber = playerCount;
             if (playerCount >= maxConnections)
-                StartCoroutine(DelaySendBegin());
+                StartCoroutine(session.DelaySendBegin());
             //conn.identity.GetComponent<SETNetworkPlayer>().RefreshUI(playerCount);
         }
 
@@ -306,18 +272,12 @@ namespace BoardGames.SET
         /// This is invoked when a server is started - including when a host is started.
         /// <para>StartServer has multiple signatures, but they all cause this hook to be called.</para>
         /// </summary>
-        public override void OnStartServer()
-        {
+        public override void OnStartServer(){
             DebugStep.Log("NetworkManager.OnStartServer()");
-            for (byte i = 0; i <= 254; i++)
-            {
-                if (CardData.isValid(i))
-                {
+            for (byte i = 0; i <= 254; i++){
+                if (CardData.isValid(i)){
                     cardDeck.Add(i);
-                    Debug.Log(System.Convert.ToString(i, 2));
                 }
-
-                //Debug.Log(cardDeck.Count);
             }
         }
 
@@ -326,17 +286,9 @@ namespace BoardGames.SET
         /// </summary>
         public override void OnStartClient(){
             DebugStep.Log("NetworkManager.OnStartClient()");
-            NetworkClient.RegisterHandler<BeginGameMessage>(OnBeginGameSend, false);
-            NetworkClient.RegisterHandler<PlaceCardsMessage>(OnPlaceCards, false);
         }
 
-        private void OnPlaceCards(PlaceCardsMessage msg){
-            gameUIManager.PlaceCards(msg.cards2Place, msg.cardsPosition);
-        }
-
-        private void OnBeginGameSend(BeginGameMessage msg){
-            gameUIManager.timer.gameObject.SetActive(msg.phase == 0);
-        }
+        
 
         /// <summary>
         /// This is called when a host is stopped.

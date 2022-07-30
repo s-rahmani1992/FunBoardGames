@@ -9,19 +9,60 @@ using UnityEngine.UI;
 	API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkBehaviour.html
 */
 
+
+
 // NOTE: Do not put objects in DontDestroyOnLoad (DDOL) in Awake.  You can do that in Start instead.
-namespace BoardGames.SET
+namespace OnlineBoardGames.SET
 {
+    public struct PlayerData
+    {
+        public string name;
+        public int wrong;
+        public int correct;
+        public bool isGuessing;
+    }
+
     public class SETNetworkPlayer : NetworkBehaviour
     {
+        #region Syncvars
         [SyncVar]
         public string playerName;
 
+        [SyncVar( hook = nameof(PlayerDataChanged))]
+        public byte wrongs;
+
+        [SyncVar(hook = nameof(PlayerDataChanged))]
+        public byte corrects;
+
+        [SyncVar(hook = nameof(OnGuessChanged))]
+        public bool isGuessing;
+
         [SyncVar(hook = nameof(IndexChanged))]
         public int playerNumber;
+        #endregion
+
+        #region Syncvar Hooks
+        void IndexChanged(int oldVal, int newVal){
+            Debug.Log($"IndexChanged({oldVal}, {newVal})");
+            if (newVal < 1)
+                return;
+            RefreshUI();
+        }
+
+        void PlayerDataChanged(byte oldVal, byte newVal){
+            RefreshUI();
+        }
+
+        void OnGuessChanged(bool oldVal, bool newVal){
+            if (!oldVal && newVal){
+                UIManager.AlertGuess((hasAuthority ? "You are guessing." : $"{playerName} is Guessing"));
+            }
+            RefreshUI();
+        }
+        #endregion
 
         [SerializeField]
-        GameObject playerUI = null;
+        PlayerUI playerUI = null;
 
         [SerializeField]
         SETGameUIManager UIManager;
@@ -30,13 +71,7 @@ namespace BoardGames.SET
             UIManager = FindObjectOfType<SETGameUIManager>();
         }
 
-        void IndexChanged(int oldVal, int newVal){
-            Debug.Log($"IndexChanged({oldVal}, {newVal})");
-            if (newVal < 1)
-                return;
-            RefreshUI();
-        }
-
+        
 
         #region Start & Stop Callbacks
 
@@ -48,6 +83,7 @@ namespace BoardGames.SET
         public override void OnStartServer(){
             DebugStep.Log($"NetworkBehaviour<{connectionToClient.connectionId}>.OnstartServer()");
             playerName = connectionToClient.authenticationData as string;
+            corrects = wrongs = 0;
         }
 
         /// <summary>
@@ -60,15 +96,13 @@ namespace BoardGames.SET
         /// Called on every NetworkBehaviour when it is activated on a client.
         /// <para>Objects on the host have this function called, as there is a local client on the host. The values of SyncVars on object are guaranteed to be initialized correctly with the latest state from the server when this function is called on the client.</para>
         /// </summary>
-        public override void OnStartClient() { }
+        public override void OnStartClient() {
+        }
 
+        [Client]
         public void RefreshUI(){
-            playerUI = UIManager.playerPanel.GetChild(playerNumber - 1).gameObject;
-            if (playerUI != null){
-                if (hasAuthority) playerUI.transform.GetChild(0).GetComponent<Text>().fontStyle = FontStyle.Italic;
-                playerUI.transform.GetChild(0).GetComponent<Text>().text = playerName;
-                playerUI.transform.gameObject.SetActive(true);
-            }
+            playerUI = UIManager.playerPanel.GetChild(playerNumber - 1).GetComponent<PlayerUI>();
+            playerUI?.RefreshUI(new PlayerData { name = (hasAuthority ? "You" : playerName), correct = corrects, wrong = wrongs, isGuessing = isGuessing} );
         }
 
         /// <summary>
@@ -76,7 +110,7 @@ namespace BoardGames.SET
         /// <para>This can be used as a hook to invoke effects or do client specific cleanup.</para>
         /// </summary>
         public override void OnStopClient(){
-            playerUI.transform.GetChild(0).GetComponent<Text>().text = "Left";
+            playerUI.PlayerLeft();
         }
 
         /// <summary>

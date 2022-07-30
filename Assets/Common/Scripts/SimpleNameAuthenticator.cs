@@ -9,7 +9,7 @@ using UnityEngine;
     API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkAuthenticator.html
 */
 
-namespace BoardGames
+namespace OnlineBoardGames
 {
     public class PlayerData
     {

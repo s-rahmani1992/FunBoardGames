@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace BoardGames.SET
+namespace OnlineBoardGames.SET
 {
     public class LoginUI : MonoBehaviour
     {
