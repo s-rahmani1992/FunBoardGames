@@ -979,6 +979,10 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7475147692941367165, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
+      propertyPath: networkAddress
+      value: 192.168.1.242
+      objectReference: {fileID: 0}
+    - target: {fileID: 7475147692941367165, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
       propertyPath: spawnPrefabs.Array.size
       value: 2
       objectReference: {fileID: 0}

@@ -22,6 +22,14 @@ namespace OnlineBoardGames.SET
         public bool isGuessing;
     }
 
+    [Serializable]
+    public enum VoteStat
+    {
+        NULL = 0,
+        NO = 1,
+        YES = 2
+    }
+
     public class SETNetworkPlayer : NetworkBehaviour
     {
         #region Syncvars
@@ -36,6 +44,9 @@ namespace OnlineBoardGames.SET
 
         [SyncVar(hook = nameof(OnGuessChanged))]
         public bool isGuessing;
+
+        [SyncVar(hook = nameof(OnVoteChanged))]
+        public VoteStat voteState;
 
         [SyncVar(hook = nameof(IndexChanged))]
         public int playerNumber;
@@ -55,10 +66,19 @@ namespace OnlineBoardGames.SET
 
         void OnGuessChanged(bool oldVal, bool newVal){
             if (!oldVal && newVal){
-                UIManager.AlertGuess((hasAuthority ? "You are guessing." : $"{playerName} is Guessing"));
+                UIManager.AlertGuess();
+                if (hasAuthority)
+                    GameUIEventManager.OnCommonOrLocalStateEvent?.Invoke(UIStates.GuessBegin);
+                else
+                    GameUIEventManager.OnOtherStateEvent?.Invoke(UIStates.GuessBegin, playerName);
             }
             RefreshUI();
         }
+
+        void OnVoteChanged(VoteStat oldVal, VoteStat newVal){
+            playerUI?.RefreshVote(newVal);
+        }
+
         #endregion
 
         [SerializeField]
@@ -83,7 +103,9 @@ namespace OnlineBoardGames.SET
         public override void OnStartServer(){
             DebugStep.Log($"NetworkBehaviour<{connectionToClient.connectionId}>.OnstartServer()");
             playerName = connectionToClient.authenticationData as string;
+            SETNetworkManager.singleton.session.AddPlayer(this);
             corrects = wrongs = 0;
+            voteState = VoteStat.NULL;
         }
 
         /// <summary>

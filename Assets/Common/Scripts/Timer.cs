@@ -11,13 +11,13 @@ namespace OnlineBoardGames
         Text timeTxt;
         Coroutine countDown = null;
 
-        public void StartCountdown(float seconds, bool force = true){
+        public void StartCountdown(float seconds, bool force = true, System.Action onEnd = null){
             if (force){
                 Stop();
-                countDown = StartCoroutine(CountDown(seconds));
+                countDown = StartCoroutine(CountDown(seconds, onEnd));
             }
             else if (countDown == null)
-                countDown = StartCoroutine(CountDown(seconds));
+                countDown = StartCoroutine(CountDown(seconds, onEnd));
         }
 
         public void Stop(){
@@ -28,7 +28,7 @@ namespace OnlineBoardGames
             timeTxt.text = "";
         }
 
-        IEnumerator CountDown(float seconds){
+        IEnumerator CountDown(float seconds, System.Action onEnd = null){
             float t = seconds;
             while (t > 0){
                 t -= Time.deltaTime;
@@ -37,6 +37,7 @@ namespace OnlineBoardGames
             }
             t = 0;
             timeTxt.text = "";
+            onEnd?.Invoke();
             countDown = null;
         }
     }

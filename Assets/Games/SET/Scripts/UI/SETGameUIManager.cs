@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -13,9 +14,7 @@ namespace OnlineBoardGames.SET
         ObjectPoolManager pool;
         public Collider2D cardBlock;
         [SerializeField]
-        Button guessBtn;
-        [SerializeField]
-        Text statTxt, timeOutTxt;
+        Button guessBtn, cardBtn;
         [SerializeField]
         SETSessionNetworkManager sessionManager;
 
@@ -29,7 +28,7 @@ namespace OnlineBoardGames.SET
         
 
         [SerializeField]
-        Transform resultMarks, resultPanel, timeoutPanel;
+        Transform resultMarks, resultPanel;
         Vector2[] poses = new Vector2[]{
             new Vector2(-1, -1.9f),
             new Vector2(1, -1.9f),
@@ -49,6 +48,15 @@ namespace OnlineBoardGames.SET
             }
         }
 
+        private void Start(){
+            GameUIEventManager.OnGameStateChanged.AddListener(RefreshBtns);
+        }
+
+        private void OnDestroy(){
+            GameUIEventManager.OnGameStateChanged.RemoveListener(RefreshBtns);
+        }
+
+
         public void PlaceCards(byte[] cardInfos, byte[] cardPoses){
             for (int i = 0; i < cardInfos.Length; i++){
                 placedCardUIs.Add(pool.PullFromList(0, cardInfos[i], cardPoses[i], 0.2f * i).GetComponent<CardUI>());
@@ -56,7 +64,7 @@ namespace OnlineBoardGames.SET
         }
 
         public void RefreshBtns(GameState state){
-            guessBtn.interactable = (state == GameState.Normal);
+            guessBtn.interactable = cardBtn.interactable = (state == GameState.Normal);
             cardBlock.enabled = sessionManager.CanSelect;
         }
 
@@ -64,8 +72,7 @@ namespace OnlineBoardGames.SET
             Mirror.NetworkClient.Send(new AttempSETGuess());
         }
 
-        public void AlertGuess(string GuessTxt){
-            statTxt.text = GuessTxt;
+        public void AlertGuess(){
             timer.StartCountdown(sessionManager.roomInfo.guessTime);
         }
 
@@ -73,18 +80,16 @@ namespace OnlineBoardGames.SET
             for (int i = 0; i < selected.Count; i++)
                 selected[i].Mark(false);
             selected.Clear();
-            timeOutTxt.text = str;
-            timeoutPanel.gameObject.SetActive(true);
-            statTxt.text = "";
-            MyUtils.DelayAction(() => { timeoutPanel.gameObject.SetActive(false); }, 3, this);
+            MyUtils.DelayAction(() => { GameUIEventManager.OnCommonOrLocalStateEvent?.Invoke(UIStates.Clear); }, 3, this);
         }
 
         public void PopResult(byte result, GuessSETMessage msg, Mirror.NetworkIdentity player){
-            statTxt.gameObject.SetActive(false);
-            bool isCorrect = MyUtils.IsSET(result);
+            GameUIEventManager.OnCommonOrLocalStateEvent?.Invoke(UIStates.Clear);
+            bool isCorrect = CardData.IsSET(result);
+            string p = null;
             if (!player.hasAuthority){
-                statTxt.text = (isCorrect ? $"{player.GetComponent<SETNetworkPlayer>().playerName} Guessed Right! He Got 1 point." : $"{player.GetComponent<SETNetworkPlayer>().playerName}'s Guess was Wrong! He lost 1 point.");
-                    selected.Clear();
+                p = player.GetComponent<SETNetworkPlayer>().playerName;
+                selected.Clear();
                 foreach (var c in placedCardUIs){
                     if (c.info.RawByte == msg.card1 || c.info.RawByte == msg.card2 || c.info.RawByte == msg.card3){
                         c.Mark(true);
@@ -94,16 +99,14 @@ namespace OnlineBoardGames.SET
                         c.Mark(false);
                 }
             }
-            else
-                statTxt.text = (isCorrect ? "You Guessed Right! You Got 1 point." : "Your Guess was Wrong! You lost 1 point.");
-            var g = MyUtils.Byte2Result(result);
+            var g = CardData.Byte2Result(result);
             for (int i = 0; i < 4; i++)
                 resultMarks.GetChild(i).transform.localPosition = new Vector3((byte)g[i] * 170, -140 * i);
             
-            StartCoroutine(DisplayResult(MyUtils.IsSET(result)));
+            StartCoroutine(DisplayResult(isCorrect, p));
         }
 
-        IEnumerator DisplayResult(bool isSet){
+        IEnumerator DisplayResult(bool isSet, string playerName){
             timer.Stop();
             for (int i = 0; i < selected.Count; i++){
                 selected[i].GetComponent<UnityEngine.Rendering.SortingGroup>().sortingOrder = 1;
@@ -111,7 +114,14 @@ namespace OnlineBoardGames.SET
                 selected[i].GetComponent<LineMove>().MoveInLine(poses[i], MoveMode.FixedTime, 0.5f);
             }
             yield return new WaitForSeconds(0.5f);
-            statTxt.gameObject.SetActive(true);
+            if(playerName != null){
+                if (isSet)
+                    GameUIEventManager.OnOtherStateEvent?.Invoke(UIStates.GuessRight, playerName);
+                else
+                    GameUIEventManager.OnOtherStateEvent?.Invoke(UIStates.GuessWrong, playerName);
+            }
+            else
+                GameUIEventManager.OnCommonOrLocalStateEvent?.Invoke(isSet ? UIStates.GuessRight : UIStates.GuessWrong);
             resultPanel.gameObject.SetActive(true);
             yield return new WaitForSeconds(6);
             resultPanel.gameObject.SetActive(false);
@@ -127,8 +137,11 @@ namespace OnlineBoardGames.SET
                     placedCardUIs.Remove(s);
                 }
             }
-            statTxt.text = "";
+            GameUIEventManager.OnCommonOrLocalStateEvent?.Invoke(UIStates.Clear);
             selected.Clear();
+        }
+        public void SendCardRequest(){
+            Mirror.NetworkClient.Send(new DestributeRequest { });
         }
     }
 }

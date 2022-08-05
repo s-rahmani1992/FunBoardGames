@@ -9,4 +9,11 @@ namespace OnlineBoardGames.SET
     {
         public byte card1, card2, card3;
     }
+
+    public struct DestributeRequest : NetworkMessage { }
+
+    public struct VoteMessage : NetworkMessage
+    {
+        public bool isYes;
+    }
 }
