@@ -11,14 +11,10 @@ namespace OnlineBoardGames.SET{
         [SerializeField]
         Text statTxt;
 
-        private void Awake(){
-            GameUIEventManager.OnCommonOrLocalStateEvent.AddListener(OnGenericOrLocalNewEvent);
-            GameUIEventManager.OnOtherStateEvent.AddListener(OnOtherPlayerNewEvent);
-        }
-
-        private void OnDestroy(){
-            GameUIEventManager.OnCommonOrLocalStateEvent.RemoveListener(OnGenericOrLocalNewEvent);
-            GameUIEventManager.OnOtherStateEvent.RemoveListener(OnOtherPlayerNewEvent);
+        private void Start(){
+            var eventHandler = SingletonUIHandler.GetInstance<SETUIEventHandler>();
+            eventHandler.OnCommonOrLocalStateEvent += OnGenericOrLocalNewEvent;
+            eventHandler.OnOtherStateEvent += OnOtherPlayerNewEvent;
         }
 
         private void OnOtherPlayerNewEvent(UIStates state, string playerName){

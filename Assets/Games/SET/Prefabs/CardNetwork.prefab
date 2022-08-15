@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 8950774803725538228}
   - component: {fileID: 5909139759575773970}
-  - component: {fileID: 7603019546472167689}
   m_Layer: 0
   m_Name: CardNetwork
   m_TagString: Untagged
@@ -49,17 +48,3 @@ MonoBehaviour:
   visible: 0
   m_AssetId: df1caaf73588e35499f1ea118678050e
   hasSpawned: 0
---- !u!114 &7603019546472167689
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 90749685771835009}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b54357ccf5370ea46a1a6c9a0cf58623, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  syncMode: 0
-  syncInterval: 1

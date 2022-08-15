@@ -75,6 +75,16 @@ namespace OnlineBoardGames
                 authResponseMessage.message = "Player name cannot contain '%' character!";
             }
 
+            else if (BoardGameNetworkManager.singleton.session.playerCount > 3){
+                authResponseMessage.resultCode = 1;
+                authResponseMessage.message = "Room is full! Try Again later.";
+            }
+
+            else if (!BoardGameNetworkManager.singleton.session.IsAcceptingPlayer){
+                authResponseMessage.resultCode = 1;
+                authResponseMessage.message = "Room is in the middle of the game! Try Again later.";
+            }
+
             else if (playerNames.Add(msg.requestedName)){
                 conn.authenticationData = msg.requestedName;
                 authResponseMessage.resultCode = 0;
@@ -122,11 +132,12 @@ namespace OnlineBoardGames
             if (msg.resultCode != 0){
                 reqName = null;
                 playerProfile = null;
-                FindObjectOfType<SET.LoginUI>().LogMsg(msg.message);
+                SingletonUIHandler.GetInstance<LoginUIEventHandler>()?.OnLoginError?.Invoke(msg.message);
                 ClientReject();
             }
             else{
-                playerProfile = new PlayerData { playerName = reqName };
+                playerProfile = new PlayerData { playerName = reqName }; 
+                SingletonUIHandler.GetInstance<LoginUIEventHandler>()?.OnLoginSuccess?.Invoke();
                 ClientAccept();
             }
         }

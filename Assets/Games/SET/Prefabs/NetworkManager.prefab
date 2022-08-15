@@ -49,8 +49,8 @@ MonoBehaviour:
   runInBackground: 1
   autoStartServerBuild: 1
   serverTickRate: 30
-  offlineScene: Assets/Games/SET/Scenes/Login.unity
-  onlineScene: Assets/Games/SET/Scenes/Game.unity
+  offlineScene: 
+  onlineScene: 
   transport: {fileID: 7475147692941367166}
   networkAddress: localhost
   maxConnections: 100
@@ -59,9 +59,8 @@ MonoBehaviour:
   autoCreatePlayer: 1
   playerSpawnMethod: 0
   spawnPrefabs:
-  - {fileID: 90749685771835009, guid: df1caaf73588e35499f1ea118678050e, type: 3}
-  isEditorServer: 1
-  gameUIManager: {fileID: 0}
+  - {fileID: 7781958062978115182, guid: 3b2cf858f9e19e84fb6229118ff1fdb2, type: 3}
+  isEditorServer: 0
 --- !u!114 &7475147692941367166
 MonoBehaviour:
   m_ObjectHideFlags: 0

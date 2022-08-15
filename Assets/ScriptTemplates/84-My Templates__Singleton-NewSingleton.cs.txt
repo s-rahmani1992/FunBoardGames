@@ -1,0 +1,26 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class #SCRIPTNAME# : MonoBehaviour
+{
+    static int refCount = 0;
+    public static #SCRIPTNAME# instance;
+
+    private void Awake(){
+        refCount++;
+        if (instance == null){
+            DontDestroyOnLoad(gameObject);
+            instance = this;
+        }
+
+        else
+            GameObject.DestroyImmediate(gameObject);
+    }
+
+    private void OnDestroy(){
+        refCount--;
+        if (refCount == 0)
+            instance = null;
+    }
+}

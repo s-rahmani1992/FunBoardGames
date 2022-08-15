@@ -11,9 +11,9 @@ using System.Linq;
 	API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkManager.html
 */
 
-namespace OnlineBoardGames.SET
+namespace OnlineBoardGames
 {
-    public class SETNetworkManager : NetworkManager
+    public class BoardGameNetworkManager : NetworkManager
     {
 #if UNITY_EDITOR
         [Header("Editor Only")]
@@ -32,12 +32,12 @@ namespace OnlineBoardGames.SET
         }
 #endif
 
-        public static new SETNetworkManager singleton { get; private set; }
+        public static new BoardGameNetworkManager singleton { get; private set; }
 
         #region Server Methods & Variables
 
         int playerCount = 0;
-        public SETSessionNetworkManager session;
+        public IRoom session;
         List<byte> cardDeck = new List<byte>(81);
 
         [Server]
@@ -62,7 +62,10 @@ namespace OnlineBoardGames.SET
         public override void Awake()
         {
             base.Awake();
-            singleton = this;
+            if (singleton != null)
+                DestroyImmediate(gameObject);
+            else 
+                singleton = this;
         }
 
         /// <summary>
@@ -78,7 +81,7 @@ namespace OnlineBoardGames.SET
         /// </summary>
         public override void OnDestroy()
         {
-            singleton = null;
+            //singleton = null;
             base.OnDestroy();
         }
 
@@ -156,6 +159,9 @@ namespace OnlineBoardGames.SET
         public override void OnClientSceneChanged()
         {
             base.OnClientSceneChanged();
+            if(SceneManager.GetActiveScene().name == "Room" && NetworkClient.localPlayer == null)
+                NetworkClient.AddPlayer();
+            //else if(SceneManager.GetActiveScene().name == "Game")
         }
 
         #endregion
@@ -170,6 +176,7 @@ namespace OnlineBoardGames.SET
         public override void OnServerConnect(NetworkConnectionToClient conn)
         {
             DebugStep.Log($"NetworkManager.OnServerConnect({conn.connectionId})");
+            conn.Send(new SceneMessage { sceneName = "Room" });
         }
 
         /// <summary>
@@ -193,11 +200,12 @@ namespace OnlineBoardGames.SET
         {
 
             base.OnServerAddPlayer(conn);
-            playerCount++;
-            DebugStep.Log($"NetworkManager.OnServerAddPlayer({conn.connectionId})");
-            conn.identity.GetComponent<SETNetworkPlayer>().playerNumber = playerCount;
-            if (playerCount >= maxConnections)
-                StartCoroutine(session.DelaySendBegin());
+            session.AddPlayer(conn.identity.GetComponent<BoardGamePlayer>());
+            //playerCount++;
+            //DebugStep.Log($"NetworkManager.OnServerAddPlayer({conn.connectionId})");
+            //conn.identity.GetComponent<SET.SETNetworkPlayer>().playerIndex = (byte)playerCount;
+            //if (playerCount >= maxConnections)
+            //    StartCoroutine(session.DelaySendBegin());
             //conn.identity.GetComponent<SETNetworkPlayer>().RefreshUI(playerCount);
         }
 
@@ -209,6 +217,8 @@ namespace OnlineBoardGames.SET
         public override void OnServerDisconnect(NetworkConnectionToClient conn)
         {
             (authenticator as SimpleNameAuthenticator).RemoveName(conn.authenticationData as string);
+            //conn.Send(new SceneMessage { sceneName = "Login" });
+            session.Remove(conn.identity?.GetComponent<BoardGamePlayer>(), false);
             base.OnServerDisconnect(conn);
         }
 
@@ -239,6 +249,7 @@ namespace OnlineBoardGames.SET
         /// </summary>
         public override void OnClientDisconnect()
         {
+            if(SceneManager.GetActiveScene().name != "Login") SceneManager.LoadScene("Login");
             base.OnClientDisconnect();
         }
 
@@ -275,17 +286,19 @@ namespace OnlineBoardGames.SET
         public override void OnStartServer(){
             DebugStep.Log("NetworkManager.OnStartServer()");
             for (byte i = 0; i <= 254; i++){
-                if (CardData.isValid(i)){
+                if (SET.CardData.isValid(i))
                     cardDeck.Add(i);
-                }
             }
+            IRoom room = Instantiate(spawnPrefabs[0]).GetComponent<IRoom>();
+            session = room;
+            room.RoomName ="Room1";
+            NetworkServer.Spawn((room as MonoBehaviour).gameObject);
         }
 
         /// <summary>
         /// This is invoked when the client is started.
         /// </summary>
         public override void OnStartClient(){
-            DebugStep.Log("NetworkManager.OnStartClient()");
         }
 
         

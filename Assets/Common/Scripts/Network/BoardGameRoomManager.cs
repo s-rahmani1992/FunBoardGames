@@ -2,93 +2,72 @@ using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
 using System;
-using UnityEngine.UI;
 
 /*
 	Documentation: https://mirror-networking.gitbook.io/docs/guides/networkbehaviour
 	API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkBehaviour.html
 */
 
-
-
 // NOTE: Do not put objects in DontDestroyOnLoad (DDOL) in Awake.  You can do that in Start instead.
-namespace OnlineBoardGames.SET
-{
-    public struct PlayerData
+namespace OnlineBoardGames {
+    public interface IRoom
     {
-        public string name;
-        public int wrong;
-        public int correct;
-        public bool isGuessing;
+        byte playerCount { get; }
+        bool IsAcceptingPlayer { get; }
+        string RoomName { get; set; }
+        void AddPlayer(BoardGamePlayer player);
+        void Remove(BoardGamePlayer player, bool canRefreshIndices = true);
     }
 
-    [Serializable]
-    public enum VoteStat
+    public abstract class BoardGameRoomManager<T> : NetworkBehaviour, IRoom where T: BoardGamePlayer
     {
-        NULL = 0,
-        NO = 1,
-        YES = 2
-    }
+        protected T host;
+        protected List<T> roomPlayers = new List<T>();
+        int readyCount;
 
-    public class SETNetworkPlayer : BoardGamePlayer
-    {
-        #region Syncvars
-        [SyncVar( hook = nameof(PlayerDataChanged))]
-        public byte wrongs;
+        [SyncVar]
+        public string roomName;
 
-        [SyncVar(hook = nameof(PlayerDataChanged))]
-        public byte corrects;
+        bool _acceptPlayer;
 
-        [SyncVar(hook = nameof(OnGuessChanged))]
-        public bool isGuessing;
+        protected virtual void Awake(){
+            DontDestroyOnLoad(gameObject);
+        }
 
-        [SyncVar(hook = nameof(OnVoteChanged))]
-        public VoteStat voteState;
+
+        #region Virtual RPCClients
+        protected virtual void RPCAllPlayersReady(){
+            SingletonUIHandler.GetInstance<RoomUIEventHandler>()?.OnAllPlayersReady();
+        }
+
+        protected virtual void RPCPlayerJoin(NetworkIdentity identity){
+            if(!identity.hasAuthority)
+                SingletonUIHandler.GetInstance<RoomUIEventHandler>()?.OnOtherPlayerJoined?.Invoke(identity.GetComponent<BoardGamePlayer>().playerName);
+        }
+
+        protected virtual void RPCPlayerLeave(NetworkIdentity identity){
+            if (!identity.hasAuthority)
+                SingletonUIHandler.GetInstance<RoomUIEventHandler>()?.OnOtherPlayerLeft?.Invoke(identity.GetComponent<BoardGamePlayer>().playerName);
+        }
         #endregion
 
-        #region Syncvar Hooks
-        void IndexChanged(int oldVal, int newVal){
-            Debug.Log($"IndexChanged({oldVal}, {newVal})");
-            if (newVal < 1)
-                return;
-            RefreshUI();
-        }
-
-        void PlayerDataChanged(byte oldVal, byte newVal){
-            RefreshUI();
-        }
-
-        void OnGuessChanged(bool oldVal, bool newVal){
-            if (!oldVal && newVal){
-                SETGameUIManager.Instance.AlertGuess();
-                if (hasAuthority)
-                    SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.GuessBegin);
-                else
-                    SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnOtherStateEvent?.Invoke(UIStates.GuessBegin, playerName);
+        #region Message Handlers
+        private void OnPlayerReady(NetworkConnectionToClient conn, PlayerReadyMessage msg){
+            conn.identity.GetComponent<BoardGamePlayer>().isReady = true;
+            readyCount++;
+            if (playerCount >= 2 && readyCount == playerCount){
+                RPCAllPlayersReady();
+                _acceptPlayer = false;
+                MyUtils.DelayAction(() => {
+                    NetworkServer.SendToAll(new SceneMessage { sceneName = "Game" });
+                }, 1, this);
+                MyUtils.DelayAction(() => {
+                    BeginGame();
+                }, 1.2f, this);
             }
-            RefreshUI();
         }
 
-        void OnVoteChanged(VoteStat oldVal, VoteStat newVal){
-            playerUI?.RefreshVote(newVal);
-        }
         #endregion
-
-        [SerializeField]
-        PlayerUI playerUI = null;
-
-        protected override void Awake(){
-            base.Awake();
-        }
-
-        protected override void OnRoomSceneLoaded(){
-            playerUI = null;
-        }
-
-        protected override void OnGameSceneLoaded(){
-            playerUI = SETGameUIManager.Instance.playerPanel.GetChild(playerIndex - 1).GetComponent<PlayerUI>();
-            RefreshUI();
-        }
 
         #region Start & Stop Callbacks
 
@@ -97,13 +76,12 @@ namespace OnlineBoardGames.SET
         /// <para>This could be triggered by NetworkServer.Listen() for objects in the scene, or by NetworkServer.Spawn() for objects that are dynamically created.</para>
         /// <para>This will be called for objects on a "host" as well as for object on a dedicated server.</para>
         /// </summary>
-        public override void OnStartServer(){
-            DebugStep.Log($"NetworkBehaviour<{connectionToClient.connectionId}>.OnstartServer()");
-            playerName = connectionToClient.authenticationData as string;
-            //BoardGameNetworkManager.singleton.session.AddPlayer(this);
-            corrects = wrongs = 0;
-            voteState = VoteStat.NULL;
+        public override void OnStartServer() {
+            _acceptPlayer = true;
+            NetworkServer.RegisterHandler<PlayerReadyMessage>(OnPlayerReady);
         }
+
+        protected abstract void BeginGame();
 
         /// <summary>
         /// Invoked on the server when the object is unspawned
@@ -116,23 +94,16 @@ namespace OnlineBoardGames.SET
         /// <para>Objects on the host have this function called, as there is a local client on the host. The values of SyncVars on object are guaranteed to be initialized correctly with the latest state from the server when this function is called on the client.</para>
         /// </summary>
         public override void OnStartClient() {
-            base.OnStartClient();
-        }
 
-        [Client]
-        public void RefreshUI(){
-            //playerUI = UIManager.playerPanel.GetChild(playerIndex - 1).GetComponent<PlayerUI>();
-            playerUI?.RefreshUI(new PlayerData { name = (hasAuthority ? "You" : playerName), correct = corrects, wrong = wrongs, isGuessing = isGuessing} );
+            DebugStep.Log("NetworkRoomManager.OnStartClient()");
+            BoardGameNetworkManager.singleton.session = this;
         }
 
         /// <summary>
         /// This is invoked on clients when the server has caused this object to be destroyed.
         /// <para>This can be used as a hook to invoke effects or do client specific cleanup.</para>
         /// </summary>
-        public override void OnStopClient(){
-            base.OnStopClient();
-            playerUI?.PlayerLeft();
-        }
+        public override void OnStopClient() { }
 
         /// <summary>
         /// Called when the local player object has been set up.
@@ -159,6 +130,34 @@ namespace OnlineBoardGames.SET
         /// </summary>
         public override void OnStopAuthority() { }
 
+        #endregion
+
+        #region interface
+        public byte playerCount => (byte)roomPlayers.Count;
+        public bool IsAcceptingPlayer => _acceptPlayer;
+        public string RoomName { get => roomName; set { roomName = value; } }
+
+        [Server]
+        public void AddPlayer(BoardGamePlayer player){
+            roomPlayers.Add((T)player);
+            roomName = $"Room{playerCount}";
+            RPCPlayerJoin(player.netIdentity);
+            for (int i = 0; i < roomPlayers.Count; i++)
+                roomPlayers[i].playerIndex = (byte)(i + 1);
+        }
+
+        [Server]
+        public void Remove(BoardGamePlayer player, bool canRefreshIndices = true){
+            if (roomPlayers.Remove((T)player)){
+                RPCPlayerLeave(player.netIdentity);
+                if (player.isReady)
+                    readyCount--;
+                if (canRefreshIndices){
+                    for (int i = 0; i < playerCount; i++)
+                        roomPlayers[i].playerIndex = (byte)(i + 1);
+                }
+            }
+        }
         #endregion
     }
 }

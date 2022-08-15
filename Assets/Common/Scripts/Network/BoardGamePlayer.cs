@@ -1,94 +1,75 @@
 using System.Collections.Generic;
-using UnityEngine;
+using UnityEngine;using UnityEngine.SceneManagement;
 using Mirror;
 using System;
-using UnityEngine.UI;
 
 /*
 	Documentation: https://mirror-networking.gitbook.io/docs/guides/networkbehaviour
 	API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkBehaviour.html
 */
 
-
-
 // NOTE: Do not put objects in DontDestroyOnLoad (DDOL) in Awake.  You can do that in Start instead.
-namespace OnlineBoardGames.SET
+
+namespace OnlineBoardGames
 {
-    public struct PlayerData
+    public class BoardGamePlayer : NetworkBehaviour
     {
-        public string name;
-        public int wrong;
-        public int correct;
-        public bool isGuessing;
-    }
+        [SerializeField]
+        RoomPlayerUI roomPlayerUI;
 
-    [Serializable]
-    public enum VoteStat
-    {
-        NULL = 0,
-        NO = 1,
-        YES = 2
-    }
-
-    public class SETNetworkPlayer : BoardGamePlayer
-    {
         #region Syncvars
-        [SyncVar( hook = nameof(PlayerDataChanged))]
-        public byte wrongs;
+        [SyncVar]
+        public string playerName;
 
-        [SyncVar(hook = nameof(PlayerDataChanged))]
-        public byte corrects;
+        [SyncVar(hook = nameof(OnIndexChanged))]
+        public byte playerIndex;
 
-        [SyncVar(hook = nameof(OnGuessChanged))]
-        public bool isGuessing;
-
-        [SyncVar(hook = nameof(OnVoteChanged))]
-        public VoteStat voteState;
+        [SyncVar(hook = nameof(OnReadyChanged))]
+        public bool isReady;
         #endregion
 
         #region Syncvar Hooks
-        void IndexChanged(int oldVal, int newVal){
-            Debug.Log($"IndexChanged({oldVal}, {newVal})");
-            if (newVal < 1)
-                return;
-            RefreshUI();
+        protected virtual void OnReadyChanged(bool oldVal, bool newVal){
+            roomPlayerUI?.RefreshUI(playerName, isReady);
+            if (newVal && hasAuthority)
+                SingletonUIHandler.GetInstance<RoomUIEventHandler>()?.OnLocalPlayerReady?.Invoke();
         }
 
-        void PlayerDataChanged(byte oldVal, byte newVal){
-            RefreshUI();
-        }
-
-        void OnGuessChanged(bool oldVal, bool newVal){
-            if (!oldVal && newVal){
-                SETGameUIManager.Instance.AlertGuess();
-                if (hasAuthority)
-                    SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.GuessBegin);
-                else
-                    SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnOtherStateEvent?.Invoke(UIStates.GuessBegin, playerName);
-            }
-            RefreshUI();
-        }
-
-        void OnVoteChanged(VoteStat oldVal, VoteStat newVal){
-            playerUI?.RefreshVote(newVal);
+        protected virtual void OnIndexChanged(byte oldVal, byte newVal) {
+            if (roomPlayerUI != null) roomPlayerUI.gameObject.SetActive(false);
+            roomPlayerUI = RoomUIManager.Instance?.GetUI(newVal);
+            roomPlayerUI?.RefreshUI(playerName, isReady);
+            roomPlayerUI.gameObject.SetActive(true);
         }
         #endregion
 
-        [SerializeField]
-        PlayerUI playerUI = null;
-
-        protected override void Awake(){
-            base.Awake();
+        #region Unity Messages
+        protected virtual void Awake(){
+            DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += SceneManager_sceneLoaded;
         }
 
-        protected override void OnRoomSceneLoaded(){
-            playerUI = null;
+        protected virtual void OnDestroy(){
+            SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
         }
+        #endregion
 
-        protected override void OnGameSceneLoaded(){
-            playerUI = SETGameUIManager.Instance.playerPanel.GetChild(playerIndex - 1).GetComponent<PlayerUI>();
-            RefreshUI();
+        #region Scene Management
+        private void SceneManager_sceneLoaded(Scene scene1, LoadSceneMode mode){
+            if (scene1.name == "Room"){
+                roomPlayerUI = RoomUIManager.Instance.GetUI(playerIndex);
+                roomPlayerUI?.RefreshUI(playerName, isReady);
+                OnRoomSceneLoaded();
+            }
+
+            else if (scene1.name == "Game"){
+                roomPlayerUI = null;
+                OnGameSceneLoaded();
+            }
         }
+        protected virtual void OnRoomSceneLoaded() { }
+        protected virtual void OnGameSceneLoaded() { }
+        #endregion
 
         #region Start & Stop Callbacks
 
@@ -97,13 +78,7 @@ namespace OnlineBoardGames.SET
         /// <para>This could be triggered by NetworkServer.Listen() for objects in the scene, or by NetworkServer.Spawn() for objects that are dynamically created.</para>
         /// <para>This will be called for objects on a "host" as well as for object on a dedicated server.</para>
         /// </summary>
-        public override void OnStartServer(){
-            DebugStep.Log($"NetworkBehaviour<{connectionToClient.connectionId}>.OnstartServer()");
-            playerName = connectionToClient.authenticationData as string;
-            //BoardGameNetworkManager.singleton.session.AddPlayer(this);
-            corrects = wrongs = 0;
-            voteState = VoteStat.NULL;
-        }
+        public override void OnStartServer() { }
 
         /// <summary>
         /// Invoked on the server when the object is unspawned
@@ -116,22 +91,15 @@ namespace OnlineBoardGames.SET
         /// <para>Objects on the host have this function called, as there is a local client on the host. The values of SyncVars on object are guaranteed to be initialized correctly with the latest state from the server when this function is called on the client.</para>
         /// </summary>
         public override void OnStartClient() {
-            base.OnStartClient();
-        }
-
-        [Client]
-        public void RefreshUI(){
-            //playerUI = UIManager.playerPanel.GetChild(playerIndex - 1).GetComponent<PlayerUI>();
-            playerUI?.RefreshUI(new PlayerData { name = (hasAuthority ? "You" : playerName), correct = corrects, wrong = wrongs, isGuessing = isGuessing} );
+            DebugStep.Log("BoardGamePlayer.OnStartClient()");
         }
 
         /// <summary>
         /// This is invoked on clients when the server has caused this object to be destroyed.
         /// <para>This can be used as a hook to invoke effects or do client specific cleanup.</para>
         /// </summary>
-        public override void OnStopClient(){
-            base.OnStopClient();
-            playerUI?.PlayerLeft();
+        public override void OnStopClient() {
+            roomPlayerUI?.PlayerLeft();
         }
 
         /// <summary>

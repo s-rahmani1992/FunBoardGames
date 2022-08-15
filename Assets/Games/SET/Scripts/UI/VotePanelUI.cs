@@ -11,15 +11,11 @@ namespace OnlineBoardGames.SET
         [SerializeField]
         Button yesBtn, noBtn;
 
-        void Awake(){
-            GameUIEventManager.OnGameStateChanged.AddListener(OnStateChange);
-            GameUIEventManager.OnCommonOrLocalStateEvent.AddListener(OnLocalVote);
+        void Start(){
+            var eventHandler = SingletonUIHandler.GetInstance<SETUIEventHandler>();
+            eventHandler.OnGameStateChanged += OnStateChange;
+            eventHandler.OnCommonOrLocalStateEvent += OnLocalVote;
             gameObject.SetActive(false);
-        }
-
-        private void OnDestroy(){
-            GameUIEventManager.OnGameStateChanged.RemoveListener(OnStateChange);
-            GameUIEventManager.OnCommonOrLocalStateEvent.RemoveListener(OnLocalVote);
         }
 
         private void OnLocalVote(UIStates state){
@@ -29,8 +25,8 @@ namespace OnlineBoardGames.SET
                 noBtn.interactable = yesBtn.interactable = true;
         }
 
-        private void OnStateChange(GameState state){
-            gameObject.SetActive(state == GameState.Request);
+        private void OnStateChange(SETGameState state){
+            gameObject.SetActive(state == SETGameState.Request);
         }
 
         public void SendVote(bool yes){
