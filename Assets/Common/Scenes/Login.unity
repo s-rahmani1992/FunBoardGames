@@ -974,26 +974,6 @@ PrefabInstance:
       propertyPath: isEditorServer
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367165, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: maxConnections
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367165, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: networkAddress
-      value: 192.168.1.242
-      objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367165, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: spawnPrefabs.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367165, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: spawnPrefabs.Array.data[0]
-      value: 
-      objectReference: {fileID: 7781958062978115182, guid: 3b2cf858f9e19e84fb6229118ff1fdb2, type: 3}
-    - target: {fileID: 7475147692941367165, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: spawnPrefabs.Array.data[1]
-      value: 
-      objectReference: {fileID: 90749685771835009, guid: df1caaf73588e35499f1ea118678050e, type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
 --- !u!1 &2062099705

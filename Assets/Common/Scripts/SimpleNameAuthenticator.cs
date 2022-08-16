@@ -16,6 +16,11 @@ namespace OnlineBoardGames
         public string playerName;
     }
 
+    public class AuthData
+    {
+        public string playerName;
+        public Guid roomID = Guid.Empty;
+    }
 
     public class SimpleNameAuthenticator : NetworkAuthenticator
     {
@@ -75,18 +80,18 @@ namespace OnlineBoardGames
                 authResponseMessage.message = "Player name cannot contain '%' character!";
             }
 
-            else if (BoardGameNetworkManager.singleton.session.playerCount > 3){
-                authResponseMessage.resultCode = 1;
-                authResponseMessage.message = "Room is full! Try Again later.";
-            }
+            //else if (BoardGameNetworkManager.singleton.session.playerCount > 3){
+            //    authResponseMessage.resultCode = 1;
+            //    authResponseMessage.message = "Room is full! Try Again later.";
+            //}
 
-            else if (!BoardGameNetworkManager.singleton.session.IsAcceptingPlayer){
-                authResponseMessage.resultCode = 1;
-                authResponseMessage.message = "Room is in the middle of the game! Try Again later.";
-            }
+            //else if (!BoardGameNetworkManager.singleton.session.IsAcceptingPlayer){
+            //    authResponseMessage.resultCode = 1;
+            //    authResponseMessage.message = "Room is in the middle of the game! Try Again later.";
+            //}
 
             else if (playerNames.Add(msg.requestedName)){
-                conn.authenticationData = msg.requestedName;
+                conn.authenticationData = new AuthData {playerName = msg.requestedName, roomID = Guid.Empty };
                 authResponseMessage.resultCode = 0;
                 authResponseMessage.message = "Authentication Success";
                 ServerAccept(conn);

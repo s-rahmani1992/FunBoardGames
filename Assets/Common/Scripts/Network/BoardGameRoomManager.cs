@@ -17,6 +17,7 @@ namespace OnlineBoardGames {
         string RoomName { get; set; }
         void AddPlayer(BoardGamePlayer player);
         void Remove(BoardGamePlayer player, bool canRefreshIndices = true);
+        void OnPlayerReady(NetworkConnectionToClient conn, PlayerReadyMessage msg);
     }
 
     public abstract class BoardGameRoomManager<T> : NetworkBehaviour, IRoom where T: BoardGamePlayer
@@ -52,14 +53,14 @@ namespace OnlineBoardGames {
         #endregion
 
         #region Message Handlers
-        private void OnPlayerReady(NetworkConnectionToClient conn, PlayerReadyMessage msg){
+        void IRoom.OnPlayerReady(NetworkConnectionToClient conn, PlayerReadyMessage msg){
             conn.identity.GetComponent<BoardGamePlayer>().isReady = true;
             readyCount++;
             if (playerCount >= 2 && readyCount == playerCount){
                 RPCAllPlayersReady();
                 _acceptPlayer = false;
                 MyUtils.DelayAction(() => {
-                    NetworkServer.SendToAll(new SceneMessage { sceneName = "Game" });
+                    NetworkServer.SendToReadyObservers(conn.identity, new SceneMessage { sceneName = "Game" });
                 }, 1, this);
                 MyUtils.DelayAction(() => {
                     BeginGame();
@@ -78,7 +79,6 @@ namespace OnlineBoardGames {
         /// </summary>
         public override void OnStartServer() {
             _acceptPlayer = true;
-            NetworkServer.RegisterHandler<PlayerReadyMessage>(OnPlayerReady);
         }
 
         protected abstract void BeginGame();
@@ -96,7 +96,7 @@ namespace OnlineBoardGames {
         public override void OnStartClient() {
 
             DebugStep.Log("NetworkRoomManager.OnStartClient()");
-            BoardGameNetworkManager.singleton.session = this;
+            //BoardGameNetworkManager.singleton.session = this;
         }
 
         /// <summary>
@@ -140,7 +140,6 @@ namespace OnlineBoardGames {
         [Server]
         public void AddPlayer(BoardGamePlayer player){
             roomPlayers.Add((T)player);
-            roomName = $"Room{playerCount}";
             RPCPlayerJoin(player.netIdentity);
             for (int i = 0; i < roomPlayers.Count; i++)
                 roomPlayers[i].playerIndex = (byte)(i + 1);
@@ -156,6 +155,7 @@ namespace OnlineBoardGames {
                     for (int i = 0; i < playerCount; i++)
                         roomPlayers[i].playerIndex = (byte)(i + 1);
                 }
+                NetworkServer.RemovePlayerForConnection(player.connectionToClient, true);
             }
         }
         #endregion

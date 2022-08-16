@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using System.Linq;
 
 namespace OnlineBoardGames
 {
@@ -31,9 +32,9 @@ namespace OnlineBoardGames
             eventHandler.OnOtherPlayerLeft += (player) => { Log($"Player {player} Left"); };
             eventHandler.OnAllPlayersReady += () => { logTxt.text = "Wait For Game to Load"; };
             eventHandler.OnBeginStatChanged += (stat) => { logTxt.text = (stat ? "" : "Not Enough Players. Wait For Others to join"); };
-            while (BoardGameNetworkManager.singleton.session == null)
-                yield return null;
-            roomTxt.text = BoardGameNetworkManager.singleton.session.RoomName;
+            //while (BoardGameNetworkManager.singleton.session == null)
+            yield return null;
+            //roomTxt.text = (FindObjectsOfType<Mirror.NetworkBehaviour>().OfType<IRoom>().ToArray())[0].RoomName;
         }
 
         private void OnDestroy(){
@@ -41,11 +42,13 @@ namespace OnlineBoardGames
         }
 
         public RoomPlayerUI GetUI(int number){
+            if (number < 1) return null; 
             return playersPanel.GetChild(number - 1).GetComponent<RoomPlayerUI>();
         }
 
         public void ReaveRoom(){
-            BoardGameNetworkManager.singleton.StopClient();
+            //BoardGameNetworkManager.singleton.StopClient();
+            Mirror.NetworkClient.Send(new LeaveRoomMessage { });
         }
 
         public void SendReady(){

@@ -37,7 +37,7 @@ namespace OnlineBoardGames
         #region Server Methods & Variables
 
         int playerCount = 0;
-        public IRoom session;
+        public BoardGameLobbyManager lobbyManager;
         List<byte> cardDeck = new List<byte>(81);
 
         [Server]
@@ -156,12 +156,10 @@ namespace OnlineBoardGames
         /// Called on clients when a scene has completed loaded, when the scene load was initiated by the server.
         /// <para>Scene changes can cause player objects to be destroyed. The default implementation of OnClientSceneChanged in the NetworkManager is to add a player object for the connection if no player object exists.</para>
         /// </summary>
-        public override void OnClientSceneChanged()
-        {
+        public override void OnClientSceneChanged(){
             base.OnClientSceneChanged();
-            if(SceneManager.GetActiveScene().name == "Room" && NetworkClient.localPlayer == null)
-                NetworkClient.AddPlayer();
-            //else if(SceneManager.GetActiveScene().name == "Game")
+            if (SceneManager.GetActiveScene().name == "Room" && NetworkClient.connection.identity == null)
+                NetworkClient.Send(new AddPlayerForMatch { gameType = BoardGameTypes.SET });
         }
 
         #endregion
@@ -176,7 +174,7 @@ namespace OnlineBoardGames
         public override void OnServerConnect(NetworkConnectionToClient conn)
         {
             DebugStep.Log($"NetworkManager.OnServerConnect({conn.connectionId})");
-            conn.Send(new SceneMessage { sceneName = "Room" });
+            conn.Send(new SceneMessage { sceneName = "Menu" });
         }
 
         /// <summary>
@@ -196,17 +194,8 @@ namespace OnlineBoardGames
         /// <para>The default implementation for this function creates a new player object from the playerPrefab.</para>
         /// </summary>
         /// <param name="conn">Connection from client.</param>
-        public override void OnServerAddPlayer(NetworkConnectionToClient conn)
-        {
-
+        public override void OnServerAddPlayer(NetworkConnectionToClient conn){
             base.OnServerAddPlayer(conn);
-            session.AddPlayer(conn.identity.GetComponent<BoardGamePlayer>());
-            //playerCount++;
-            //DebugStep.Log($"NetworkManager.OnServerAddPlayer({conn.connectionId})");
-            //conn.identity.GetComponent<SET.SETNetworkPlayer>().playerIndex = (byte)playerCount;
-            //if (playerCount >= maxConnections)
-            //    StartCoroutine(session.DelaySendBegin());
-            //conn.identity.GetComponent<SETNetworkPlayer>().RefreshUI(playerCount);
         }
 
         /// <summary>
@@ -214,11 +203,11 @@ namespace OnlineBoardGames
         /// <para>This is called on the Server when a Client disconnects from the Server. Use an override to decide what should happen when a disconnection is detected.</para>
         /// </summary>
         /// <param name="conn">Connection from client.</param>
-        public override void OnServerDisconnect(NetworkConnectionToClient conn)
-        {
-            (authenticator as SimpleNameAuthenticator).RemoveName(conn.authenticationData as string);
-            //conn.Send(new SceneMessage { sceneName = "Login" });
-            session.Remove(conn.identity?.GetComponent<BoardGamePlayer>(), false);
+        public override void OnServerDisconnect(NetworkConnectionToClient conn){
+            (authenticator as SimpleNameAuthenticator).RemoveName((conn.authenticationData as AuthData).playerName);
+            if ((conn.authenticationData as AuthData).roomID != Guid.Empty)
+                lobbyManager.OnLeaveRoomRequest(conn, new LeaveRoomMessage { });
+            conn.Send(new SceneMessage { sceneName = "Login" });
             base.OnServerDisconnect(conn);
         }
 
@@ -238,8 +227,7 @@ namespace OnlineBoardGames
         /// Called on the client when connected to a server.
         /// <para>The default implementation of this function sets the client as ready and adds a player. Override the function to dictate what happens when the client connects.</para>
         /// </summary>
-        public override void OnClientConnect()
-        {
+        public override void OnClientConnect(){
             base.OnClientConnect();
         }
 
@@ -289,19 +277,29 @@ namespace OnlineBoardGames
                 if (SET.CardData.isValid(i))
                     cardDeck.Add(i);
             }
-            IRoom room = Instantiate(spawnPrefabs[0]).GetComponent<IRoom>();
-            session = room;
-            room.RoomName ="Room1";
-            NetworkServer.Spawn((room as MonoBehaviour).gameObject);
+            var lobby = Instantiate(spawnPrefabs[0]);
+            lobbyManager = lobby.GetComponent<BoardGameLobbyManager>();
+            NetworkServer.Spawn(lobby);
+
+            NetworkServer.RegisterHandler<SET.AttempSETGuess>((conn, msg)=> { lobbyManager.GetRoomManager<SET.SETRoomNetworkManager>((conn.authenticationData as AuthData).roomID).OnAttemptGuess(conn, msg); }, false);
+            NetworkServer.RegisterHandler<SET.GuessSETMessage>((conn, msg) => { lobbyManager.GetRoomManager<SET.SETRoomNetworkManager>((conn.authenticationData as AuthData).roomID).OnSETGuess(conn, msg); }, false);
+            NetworkServer.RegisterHandler<SET.DestributeRequest>((conn, msg) => { lobbyManager.GetRoomManager<SET.SETRoomNetworkManager>((conn.authenticationData as AuthData).roomID).OnRequestDestribute(conn, msg); }, false);
+            NetworkServer.RegisterHandler<SET.VoteMessage>((conn, msg) => { lobbyManager.GetRoomManager<SET.SETRoomNetworkManager>((conn.authenticationData as AuthData).roomID).OnPlayerVote(conn, msg); }, false);
         }
 
         /// <summary>
         /// This is invoked when the client is started.
         /// </summary>
         public override void OnStartClient(){
+            NetworkClient.RegisterHandler<RoomListResponse>(OnGetRoomList);
         }
 
-        
+        private void OnGetRoomList(RoomListResponse rList)
+        {
+            SingletonUIHandler.GetInstance<MenuUIEventHandler>().OnRoomListRefresh?.Invoke(rList.rooms);
+        }
+
+
 
         /// <summary>
         /// This is called when a host is stopped.

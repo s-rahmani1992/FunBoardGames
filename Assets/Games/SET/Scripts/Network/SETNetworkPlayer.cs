@@ -47,8 +47,8 @@ namespace OnlineBoardGames.SET
         #endregion
 
         #region Syncvar Hooks
-        void IndexChanged(int oldVal, int newVal){
-            Debug.Log($"IndexChanged({oldVal}, {newVal})");
+        protected override void OnIndexChanged(byte oldVal, byte newVal){
+            base.OnIndexChanged(oldVal, newVal);
             if (newVal < 1)
                 return;
             RefreshUI();
@@ -99,8 +99,7 @@ namespace OnlineBoardGames.SET
         /// </summary>
         public override void OnStartServer(){
             DebugStep.Log($"NetworkBehaviour<{connectionToClient.connectionId}>.OnstartServer()");
-            playerName = connectionToClient.authenticationData as string;
-            //BoardGameNetworkManager.singleton.session.AddPlayer(this);
+            playerName = (connectionToClient.authenticationData as AuthData).playerName;
             corrects = wrongs = 0;
             voteState = VoteStat.NULL;
         }

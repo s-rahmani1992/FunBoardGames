@@ -36,10 +36,10 @@ namespace OnlineBoardGames
         }
 
         protected virtual void OnIndexChanged(byte oldVal, byte newVal) {
-            if (roomPlayerUI != null) roomPlayerUI.gameObject.SetActive(false);
+            roomPlayerUI?.gameObject.SetActive(false);
             roomPlayerUI = RoomUIManager.Instance?.GetUI(newVal);
             roomPlayerUI?.RefreshUI(playerName, isReady);
-            roomPlayerUI.gameObject.SetActive(true);
+            roomPlayerUI?.gameObject.SetActive(true);
         }
         #endregion
 

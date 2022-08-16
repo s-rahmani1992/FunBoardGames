@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/Common/Scenes/Login.unity
     guid: b307cd99bbcb7d54d962091a41c887a5
   - enabled: 1
+    path: Assets/Common/Scenes/Menu.unity
+    guid: 66a7096281972cd4db68fe13d480ecc6
+  - enabled: 1
     path: Assets/Common/Scenes/Room.unity
     guid: 925a2abee2746f44c84b52d414c7173e
   - enabled: 1

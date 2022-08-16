@@ -249,7 +249,7 @@ namespace OnlineBoardGames.SET {
         #endregion
 
         #region MessageHandlers
-        private void OnAttemptGuess(NetworkConnectionToClient conn, AttempSETGuess msg){
+        internal void OnAttemptGuess(NetworkConnectionToClient conn, AttempSETGuess msg){
             if (guessingPlayer == null && state == SETGameState.Normal && guessProcess == null){
                 guessingPlayer = conn.identity;
                 conn.identity.GetComponent<SETNetworkPlayer>().isGuessing = true;
@@ -258,7 +258,7 @@ namespace OnlineBoardGames.SET {
             }
         }
 
-        private void OnSETGuess(NetworkConnectionToClient conn, GuessSETMessage msg){
+        internal void OnSETGuess(NetworkConnectionToClient conn, GuessSETMessage msg){
             if (state == SETGameState.Guess && guessingPlayer != null && conn.identity == guessingPlayer && ValidateGuess(msg.card1, msg.card2, msg.card3)){
                 byte r = CardData.CheckSET(msg.card1, msg.card2, msg.card3);
                 state = SETGameState.Process;
@@ -267,7 +267,7 @@ namespace OnlineBoardGames.SET {
             }
         }
 
-        private void OnRequestDestribute(NetworkConnectionToClient conn, DestributeRequest msg){
+        internal void OnRequestDestribute(NetworkConnectionToClient conn, DestributeRequest msg){
             if(state == SETGameState.Normal && cursor < 81){
                 state = SETGameState.Request;
                 conn.identity.GetComponent<SETNetworkPlayer>().voteState = VoteStat.YES;
@@ -277,7 +277,7 @@ namespace OnlineBoardGames.SET {
             }
         }
 
-        private void OnPlayerVote(NetworkConnectionToClient conn, VoteMessage msg){
+        internal void OnPlayerVote(NetworkConnectionToClient conn, VoteMessage msg){
             if(state == SETGameState.Request && conn.identity.GetComponent<SETNetworkPlayer>().voteState == VoteStat.NULL){
                 if (msg.isYes){
                     conn.identity.GetComponent<SETNetworkPlayer>().voteState = VoteStat.YES;
@@ -298,7 +298,7 @@ namespace OnlineBoardGames.SET {
         #region Unity Callbacks
         protected override void Awake(){
             base.Awake();
-            BoardGameNetworkManager.singleton.session = this;
+            //BoardGameNetworkManager.singleton.session = this;
         }
         #endregion
 
@@ -317,11 +317,9 @@ namespace OnlineBoardGames.SET {
             roomInfo = new RoomData { guessTime = 5, roundCount = 1 };
             for (int i = 0; i < 18; i++)
                 placedCards.Insert(i, 0);
-            NetworkServer.RegisterHandler<AttempSETGuess>(OnAttemptGuess, false);
-            NetworkServer.RegisterHandler<GuessSETMessage>(OnSETGuess, false);
-            NetworkServer.RegisterHandler<DestributeRequest>(OnRequestDestribute, false);
-            NetworkServer.RegisterHandler<VoteMessage>(OnPlayerVote, false);
         }
+
+
 
         /// <summary>
         /// Invoked on the server when the object is unspawned
