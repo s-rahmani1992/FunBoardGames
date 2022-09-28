@@ -15,8 +15,6 @@ namespace OnlineBoardGames.SET
         RawImage LED;
         [SerializeField]
         Texture2D ledOn, ledOff;
-        [SerializeField]
-        PlayerVoteUI voteUI;
 
         public void RefreshUI(PlayerData data){
             playerTxt.text = data.name;
@@ -25,16 +23,16 @@ namespace OnlineBoardGames.SET
             scoreTxt.text = (data.correct - data.wrong).ToString();
             gameObject.SetActive(true);
             LED.texture = (data.isGuessing ? ledOn : ledOff);
-            voteUI.UpdateText(data.name);
+            //voteUI.UpdateText(data.name);
         }
 
         public void PlayerLeft(){
             playerTxt.text = "Player Left";
-            Destroy(voteUI.gameObject);
+            //voteUI?.gameObject.SetActive(false);
         }
 
         internal void RefreshVote(VoteStat newVal){
-            voteUI?.UpdateUI(newVal);
+            //voteUI?.UpdateUI(newVal);
         }
     }
 }

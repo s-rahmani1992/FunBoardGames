@@ -23,7 +23,7 @@ namespace OnlineBoardGames {
     public abstract class BoardGameRoomManager<T> : NetworkBehaviour, IRoom where T: BoardGamePlayer
     {
         protected T host;
-        protected List<T> roomPlayers = new List<T>();
+        public List<T> roomPlayers = new List<T>();
         int readyCount;
 
         [SyncVar]

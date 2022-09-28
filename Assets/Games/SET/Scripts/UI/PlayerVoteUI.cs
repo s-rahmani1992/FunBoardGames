@@ -39,4 +39,8 @@ public class PlayerVoteUI : MonoBehaviour
         gameObject.SetActive(true);
         playerTxt.text = str;
     }
+
+    internal void RefreshVote(VoteStat newVal){
+        UpdateUI(newVal);
+    }
 }

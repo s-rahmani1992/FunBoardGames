@@ -150,9 +150,11 @@ namespace OnlineBoardGames.SET {
                     cursor += 3;
                     foreach (var p in roomPlayers)
                         p.voteState = VoteStat.NULL;
+                    RPCEndVote();
                     yield return new WaitForSeconds(0.7f);
                 }
                 else{
+                    RPCEndVote();
                     yield return new WaitForSeconds(0.2f);
                 }
                 foreach (var p in roomPlayers)
@@ -234,17 +236,26 @@ namespace OnlineBoardGames.SET {
         }
 
         [ClientRpc]
-        private void RPCBeginVote(NetworkIdentity identity){
-            if (identity.hasAuthority)
-                SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.BeginVote);
-            else
-                SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnOtherStateEvent?.Invoke(UIStates.BeginVote, identity.GetComponent<SETNetworkPlayer>().playerName);  
+        private void RPCBeginVote(NetworkIdentity identity)
+        {
+            SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnPlayerBeginVote?.Invoke(identity.GetComponent<SETNetworkPlayer>(), identity.hasAuthority);
+            DialogManager.Instance.SpawnDialog<SETVoteDialog>(DialogShowOptions.OverAll);
+            //if (identity.hasAuthority)
+            //    SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.BeginVote);
+            //else
+            //    SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnOtherStateEvent?.Invoke(UIStates.BeginVote, identity.GetComponent<SETNetworkPlayer>().playerName);  
         }
 
         [ClientRpc]
         void RPCPlayerVoted(NetworkIdentity identity){
             if (identity.hasAuthority)
                 SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.PlaceVote);
+        }
+
+        [ClientRpc]
+        void RPCEndVote()
+        {
+            DialogManager.Instance.CloseDialog<SETVoteDialog>();
         }
         #endregion
 

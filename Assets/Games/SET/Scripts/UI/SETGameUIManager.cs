@@ -56,11 +56,17 @@ namespace OnlineBoardGames.SET
 
         private void Start(){
             SingletonUIHandler.GetInstance<SETUIEventHandler>().OnGameStateChanged += RefreshBtns;
+            //SingletonUIHandler.GetInstance<SETUIEventHandler>().OnPlayerBeginVote += PlayerBeginVote;
         }
 
         private void OnDestroy(){
             Instance = null;
         }
+
+        //private void PlayerBeginVote(PlayerUI player, bool local)
+        //{
+        //    VotePanelUI.Show(player);
+        //}
 
 
         public void PlaceCards(byte[] cardInfos, byte[] cardPoses){

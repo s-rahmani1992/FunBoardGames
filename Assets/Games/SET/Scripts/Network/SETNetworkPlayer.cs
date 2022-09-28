@@ -32,6 +32,9 @@ namespace OnlineBoardGames.SET
 
     public class SETNetworkPlayer : BoardGamePlayer
     {
+        public PlayerUI playerUI { get; private set; } = null;
+        public PlayerVoteUI playerVoteUI { get; private set; } = null;
+
         #region Syncvars
         [SyncVar( hook = nameof(PlayerDataChanged))]
         public byte wrongs;
@@ -70,12 +73,13 @@ namespace OnlineBoardGames.SET
         }
 
         void OnVoteChanged(VoteStat oldVal, VoteStat newVal){
-            playerUI?.RefreshVote(newVal);
+            playerVoteUI?.RefreshVote(newVal);
         }
         #endregion
 
-        [SerializeField]
-        PlayerUI playerUI = null;
+        public void SetVoteUI(PlayerVoteUI voteUI) {
+            playerVoteUI = voteUI;
+        }
 
         protected override void Awake(){
             base.Awake();
@@ -116,6 +120,16 @@ namespace OnlineBoardGames.SET
         /// </summary>
         public override void OnStartClient() {
             base.OnStartClient();
+            DialogManager.OnSETVoteDialogSpawned += OnVoteBegin;
+        }
+
+        [Client]
+        private void OnVoteBegin(SETVoteDialog dialog)
+        {
+            playerVoteUI = dialog.GetVoteUI(playerIndex);
+            playerVoteUI?.UpdateUI(voteState);
+            playerVoteUI?.UpdateText(playerName);
+            playerVoteUI?.gameObject.SetActive(true);
         }
 
         [Client]
@@ -130,6 +144,7 @@ namespace OnlineBoardGames.SET
         /// </summary>
         public override void OnStopClient(){
             base.OnStopClient();
+            DialogManager.OnSETVoteDialogSpawned -= OnVoteBegin;
             playerUI?.PlayerLeft();
         }
 
