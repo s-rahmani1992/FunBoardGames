@@ -8,101 +8,114 @@ namespace OnlineBoardGames.SET
 {
     public class SETGameUIManager : MonoBehaviour
     {
-        public Transform playerPanel;
-        public Timer timer;
-        [SerializeField]
-        ObjectPoolManager pool;
-        [SerializeField]
-        Button guessBtn, cardBtn;
-        [SerializeField]
-        SETRoomNetworkManager sessionManager;
+        [SerializeField] ObjectPoolManager pool;
+        [SerializeField] Button guessBtn, cardBtn;
+        [SerializeField] Transform cardHolder, resultMarks, resultPanel;
+        [SerializeField] Text remainTxt;
+        [SerializeField] GraphicRaycaster cardRaycaster;
 
         public static SETGameUIManager Instance { get; private set; }
 
-        
-        List<CardUI> selected = new List<CardUI>(3);
-        List<CardUI> placedCardUIs = new List<CardUI>(18);
-
+        public Transform playerPanel;
+        public Timer timer;
         public Color[] colors;
         public Sprite[] cardShapes;
 
-        
+        int cardCount = 81;
+        SETRoomNetworkManager sessionManager;
+        List<CardUI> selected = new List<CardUI>(3);
+        List<CardUI> placedCardUIs = new List<CardUI>(18);
 
-        [SerializeField]
-        Transform resultMarks, resultPanel;
-        Vector2[] poses = new Vector2[]{
-            new Vector2(-1, -1.9f),
-            new Vector2(1, -1.9f),
-            new Vector2(0, -3)
+        Vector2[] poses = new Vector2[]
+        {
+            new Vector2(-180, -970),
+            new Vector2(180, -970),
+            new Vector2(0, -1190)
         };
 
-        public bool UpdateSelected(CardUI card){
+        public bool UpdateSelected(CardUI card)
+        {
             if (!sessionManager.CanSelect || selected.Contains(card)) return false;
-            if (selected.Count < 3){
+            if (selected.Count < 3)
+            {
                 selected.Add(card);
                 if (selected.Count == 3 && sessionManager.state == SETGameState.Guess)
                     Mirror.NetworkClient.Send(new GuessSETMessage { card1 = selected[0].info.RawByte, card2 = selected[1].info.RawByte, card3 = selected[2].info.RawByte });
                 return true;
             }
-            else{
+            else
+            {
                 return false;
             }
         }
 
-        private void Awake(){
+        private void Awake()
+        {
             Instance = this;
             sessionManager = FindObjectOfType<SETRoomNetworkManager>();
         }
 
-        private void Start(){
+        private void Start()
+        {
             SingletonUIHandler.GetInstance<SETUIEventHandler>().OnGameStateChanged += RefreshBtns;
-            //SingletonUIHandler.GetInstance<SETUIEventHandler>().OnPlayerBeginVote += PlayerBeginVote;
         }
 
-        private void OnDestroy(){
+        private void OnDestroy()
+        {
             Instance = null;
         }
 
-        //private void PlayerBeginVote(PlayerUI player, bool local)
-        //{
-        //    VotePanelUI.Show(player);
-        //}
+        public void UpdateCardMeter()
+        {
+            cardCount--;
+            remainTxt.text = cardCount.ToString();
+        }
 
-
-        public void PlaceCards(byte[] cardInfos, byte[] cardPoses){
-            for (int i = 0; i < cardInfos.Length; i++){
-                placedCardUIs.Add(pool.PullFromList(0, cardInfos[i], cardPoses[i], 0.2f * i).GetComponent<CardUI>());
+        public void PlaceCards(byte[] cardInfos, byte[] cardPoses)
+        {
+            for (int i = 0; i < cardInfos.Length; i++)
+            {
+                placedCardUIs.Add(pool.PullFromList(0, cardInfos[i], cardPoses[i], 0.2f * i, cardHolder).GetComponent<CardUI>());
             }
         }
 
-        public void RefreshBtns(SETGameState state){
+        public void RefreshBtns(SETGameState state)
+        {
             guessBtn.interactable = cardBtn.interactable = (state == SETGameState.Normal);
+            cardRaycaster.enabled = (state == SETGameState.Guess);
         }
 
-        public void AttemptGuess(){
+        public void AttemptGuess()
+        {
             Mirror.NetworkClient.Send(new AttempSETGuess());
         }
 
-        public void AlertGuess(){
+        public void AlertGuess()
+        {
             timer.StartCountdown(sessionManager.roomInfo.guessTime);
         }
 
-        public void PopTimeout(string str){
+        public void PopTimeout(string str)
+        {
             for (int i = 0; i < selected.Count; i++)
                 selected[i].Mark(false);
             selected.Clear();
             MyUtils.DelayAction(() => { SingletonUIHandler.GetInstance<SETUIEventHandler>().OnCommonOrLocalStateEvent?.Invoke(UIStates.Clear); }, 3, this);
         }
 
-        public void PopResult(byte result, GuessSETMessage msg, Mirror.NetworkIdentity player){
+        public void PopResult(byte result, GuessSETMessage msg, Mirror.NetworkIdentity player)
+        {
             SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.Clear);
             bool isCorrect = CardData.IsSET(result);
             string p = null;
-            if (!player.hasAuthority){
+            if (!player.hasAuthority)
+            {
                 p = player.GetComponent<SETNetworkPlayer>()?.playerName;
                 selected.Clear();
-                foreach (var c in placedCardUIs){
-                    if (c.info.RawByte == msg.card1 || c.info.RawByte == msg.card2 || c.info.RawByte == msg.card3){
+                foreach (var c in placedCardUIs)
+                {
+                    if (c.info.RawByte == msg.card1 || c.info.RawByte == msg.card2 || c.info.RawByte == msg.card3)
+                    {
                         c.Mark(true);
                         selected.Add(c);
                     }
@@ -113,19 +126,22 @@ namespace OnlineBoardGames.SET
             var g = CardData.Byte2Result(result);
             for (int i = 0; i < 4; i++)
                 resultMarks.GetChild(i).transform.localPosition = new Vector3((byte)g[i] * 170, -140 * i);
-            
+
             StartCoroutine(DisplayResult(isCorrect, p));
         }
 
-        IEnumerator DisplayResult(bool isSet, string playerName){
+        IEnumerator DisplayResult(bool isSet, string playerName)
+        {
             timer.Stop();
-            for (int i = 0; i < selected.Count; i++){
-                selected[i].GetComponent<UnityEngine.Rendering.SortingGroup>().sortingOrder = 1;
-                selected[i].GetComponent<UnityEngine.Rendering.SortingGroup>().sortingLayerName = "L3";
+            for (int i = 0; i < selected.Count; i++)
+            {
+                selected[i].GetComponent<Canvas>().sortingOrder = 1;
+                selected[i].GetComponent<Canvas>().sortingLayerName = "L3";
                 selected[i].GetComponent<LineMove>().MoveInLine(poses[i], MoveMode.FixedTime, 0.5f);
             }
             yield return new WaitForSeconds(0.5f);
-            if(playerName != null){
+            if (playerName != null)
+            {
                 if (isSet)
                     SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnOtherStateEvent?.Invoke(UIStates.GuessRight, playerName);
                 else
@@ -136,14 +152,18 @@ namespace OnlineBoardGames.SET
             resultPanel.gameObject.SetActive(true);
             yield return new WaitForSeconds(6);
             resultPanel.gameObject.SetActive(false);
-            if (!isSet){
-                foreach (var s in selected){
+            if (!isSet)
+            {
+                foreach (var s in selected)
+                {
                     s.MoveBack();
                     s.Mark(false);
                 }
             }
-            else{
-                foreach (var s in selected){
+            else
+            {
+                foreach (var s in selected)
+                {
                     pool.Push2List(s.gameObject);
                     placedCardUIs.Remove(s);
                 }
@@ -151,7 +171,8 @@ namespace OnlineBoardGames.SET
             SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.Clear);
             selected.Clear();
         }
-        public void SendCardRequest(){
+        public void SendCardRequest()
+        {
             Mirror.NetworkClient.Send(new DestributeRequest { });
         }
     }

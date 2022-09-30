@@ -1,69 +1,74 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
+using UnityEngine.UI;
 
 namespace OnlineBoardGames.SET
 {
     public class CardUI : MonoBehaviour, IPoolable
     {
         public string ObjectTag { get; set; }
-
         public CardData info { get; private set; }
         Vector2Int position;
-        [SerializeField]
-        LineMove move;
+        [SerializeField] LineMove move;
+        [SerializeField] Image[] shapes;
+        [SerializeField] Canvas canvas;
         SETGameUIManager uiManager;
-        //SETSessionNetworkManager session;
 
+        static float[][] yPos = new float[][] { new float[] { 0 }, new float[] { -45f, 45f }, new float[] { -90f, 0, 90f } };
 
-        static float[][] yPos = new float[][] { new float[] { 0 }, new float[] { -1.6f, 1.6f }, new float[] { -3.3f, 0, 3.3f } };
-
-        private void Awake(){
+        private void Awake()
+        {
             uiManager = FindObjectOfType<SETGameUIManager>();
-            //session = FindObjectOfType<SETSessionNetworkManager>();
         }
 
-        private void OnMouseDown(){
-            if(uiManager.UpdateSelected(this)) Mark(true);
+        public void OnCardClicked()
+        {
+            if (uiManager.UpdateSelected(this)) Mark(true);
         }
 
-        public void OnPull(params object[] parameters){
+        public void OnPull(params object[] parameters)
+        {
             info = new CardData((byte)parameters[0]);
             position = new Vector2Int((byte)parameters[1] % 3, (byte)parameters[1] / 3);
-            transform.position = new Vector3(0, 3.0f, 0);
-            GetComponent<SortingGroup>().sortingOrder = 0;
-            GetComponent<SortingGroup>().sortingLayerName = "card";
+            transform.SetParent(parameters[3] as Transform);
+            transform.localPosition = Vector3.zero;
+            transform.localScale = Vector3.one;
+            canvas.sortingOrder = 0;
+            canvas.sortingLayerName = "card";
             gameObject.SetActive(true);
             Debug.Log("pull  " + (float)parameters[2]);
-            for(var a = 0; a < info.count; a++){
-                transform.GetChild(a).localPosition = new Vector3(0, yPos[info.count - 1][a], 0);
-                transform.GetChild(a).GetComponent<SpriteRenderer>().color = uiManager.colors[info.color];
-                transform.GetChild(a).GetComponent<SpriteRenderer>().sprite = uiManager.cardShapes[3 * info.shape + info.shading];
-                transform.GetChild(a).gameObject.SetActive(true);
-                GetComponent<SortingGroup>().sortingOrder = 1;
-                move.MoveInLine(new Vector2(-1.6f + 1.6f * position.x, 1.8f - 1.1f * position.y), MoveMode.FixedTime, 0.2f, (b) => b.GetComponent<SortingGroup>().sortingOrder = 0, (float)parameters[2]);
+            for (var a = 0; a < info.count; a++){
+                shapes[a].transform.localPosition = new Vector3(0, yPos[info.count - 1][a], 0);
+                shapes[a].color = uiManager.colors[info.color];
+                shapes[a].sprite = uiManager.cardShapes[3 * info.shape + info.shading];
+                shapes[a].gameObject.SetActive(true);
+                canvas.sortingOrder = 1;
+                move.MoveInLine(new Vector2(-320 + 320 * position.x, -270 - 220f * position.y), MoveMode.FixedTime, 0.2f, (b) => b.GetComponent<Canvas>().sortingOrder = 0, (float)parameters[2]);
             }
 
-            for(var a = info.count; a < 3; a++)
-                transform.GetChild(a).gameObject.SetActive(false);
-            //gameObject.SetActive(true);
+            MyUtils.DelayAction(() => { uiManager.UpdateCardMeter(); }, (float)parameters[2], uiManager);
+            for (var a = info.count; a < 3; a++)
+                shapes[a].gameObject.SetActive(false);
         }
 
-        public void OnPush(params object[] parameters){
+        public void OnPush(params object[] parameters)
+        {
             gameObject.SetActive(false);
             Mark(false);
         }
 
-        public void Mark(bool isSelected) {
-            GetComponent<SpriteRenderer>().color = (isSelected ? Color.yellow : Color.white);
+        public void Mark(bool isSelected) 
+        {
+            GetComponent<Image>().color = (isSelected ? Color.yellow : Color.white);
         }
 
-        public void MoveBack(){
-            move.MoveInLine(new Vector2(-1.6f + 1.6f * position.x, 1.8f - 1.1f * position.y), MoveMode.FixedTime, 0.2f, 
+        public void MoveBack()
+        {
+            move.MoveInLine(new Vector2(-320 + 320 * position.x, -270 - 220f * position.y), MoveMode.FixedTime, 0.2f, 
                 (b) => { 
-                    b.GetComponent<SortingGroup>().sortingOrder = 0;
-                    b.GetComponent<SortingGroup>().sortingLayerName = "card";
+                    b.GetComponent<Canvas>().sortingOrder = 0;
+                    b.GetComponent<Canvas>().sortingLayerName = "card";
                 });
         }
     }
