@@ -10,7 +10,7 @@ namespace OnlineBoardGames.SET
     {
         [SerializeField] ObjectPoolManager pool;
         [SerializeField] Button guessBtn, cardBtn;
-        [SerializeField] Transform cardHolder, resultMarks, resultPanel;
+        [SerializeField] Transform cardHolder;
         [SerializeField] Text remainTxt;
         [SerializeField] GraphicRaycaster cardRaycaster;
 
@@ -26,12 +26,12 @@ namespace OnlineBoardGames.SET
         List<CardUI> selected = new List<CardUI>(3);
         List<CardUI> placedCardUIs = new List<CardUI>(18);
 
-        Vector2[] poses = new Vector2[]
-        {
-            new Vector2(-180, -970),
-            new Vector2(180, -970),
-            new Vector2(0, -1190)
-        };
+        //Vector2[] poses = new Vector2[]
+        //{
+        //    new Vector2(-180, -970),
+        //    new Vector2(180, -970),
+        //    new Vector2(0, -1190)
+        //};
 
         public bool UpdateSelected(CardUI card)
         {
@@ -123,22 +123,14 @@ namespace OnlineBoardGames.SET
                         c.Mark(false);
                 }
             }
-            var g = CardData.Byte2Result(result);
-            for (int i = 0; i < 4; i++)
-                resultMarks.GetChild(i).transform.localPosition = new Vector3((byte)g[i] * 170, -140 * i);
 
+            GuessResultDialog.Show(selected.ToArray(), result);
+            timer.Stop();
             StartCoroutine(DisplayResult(isCorrect, p));
         }
 
         IEnumerator DisplayResult(bool isSet, string playerName)
         {
-            timer.Stop();
-            for (int i = 0; i < selected.Count; i++)
-            {
-                selected[i].GetComponent<Canvas>().sortingOrder = 1;
-                selected[i].GetComponent<Canvas>().sortingLayerName = "L3";
-                selected[i].GetComponent<LineMove>().MoveInLine(poses[i], MoveMode.FixedTime, 0.5f);
-            }
             yield return new WaitForSeconds(0.5f);
             if (playerName != null)
             {
@@ -149,31 +141,30 @@ namespace OnlineBoardGames.SET
             }
             else
                 SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(isSet ? UIStates.GuessRight : UIStates.GuessWrong);
-            resultPanel.gameObject.SetActive(true);
+            
             yield return new WaitForSeconds(6);
-            resultPanel.gameObject.SetActive(false);
-            if (!isSet)
-            {
-                foreach (var s in selected)
-                {
-                    s.MoveBack();
-                    s.Mark(false);
-                }
-            }
-            else
-            {
-                foreach (var s in selected)
-                {
-                    pool.Push2List(s.gameObject);
-                    placedCardUIs.Remove(s);
-                }
-            }
+            DialogManager.Instance.CloseDialog<GuessResultDialog>();
             SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.Clear);
-            selected.Clear();
         }
+
         public void SendCardRequest()
         {
             Mirror.NetworkClient.Send(new DestributeRequest { });
+        }
+
+        public void RemoveSelected()
+        {
+            foreach (var s in selected)
+            {
+                pool.Push2List(s.gameObject);
+                placedCardUIs.Remove(s);
+            }
+            selected.Clear();
+        }
+
+        public void ClearSelected()
+        {
+            selected.Clear();
         }
     }
 }

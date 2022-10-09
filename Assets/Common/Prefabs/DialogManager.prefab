@@ -48,7 +48,7 @@ Canvas:
   m_GameObject: {fileID: 5911023598691558993}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
+  m_RenderMode: 1
   m_Camera: {fileID: 0}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
@@ -58,7 +58,7 @@ Canvas:
   m_SortingBucketNormalizedSize: 0
   m_AdditionalShaderChannelsFlag: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 7
+  m_SortingOrder: 0
   m_TargetDisplay: 0
 --- !u!114 &5911023598691558996
 MonoBehaviour:
@@ -112,8 +112,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad9c721eddb340048bf5ca99d810e8a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  panel: {fileID: 0}
-  block: {fileID: 0}
   raycaster: {fileID: 5911023598691558999}
   allDialog:
   - {fileID: 6076122389970499832, guid: 325c8f850748b4c42b7000b2226033f7, type: 3}
+  - {fileID: 3668792101223927869, guid: 52e7ca254a0f86f4ba9bd2d40d749389, type: 3}

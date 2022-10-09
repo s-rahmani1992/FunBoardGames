@@ -1,134 +1,150 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-public enum DialogShowOptions
+namespace OnlineBoardGames
 {
-    OverAll,
-    Replace
-}
-
-public class DialogManager : MonoBehaviour
-{
-    [SerializeField] UnityEngine.UI.GraphicRaycaster raycaster;
-    [SerializeField] BaseDialog[] allDialog;
-
-    List<BaseDialog> opendialogs = new List<BaseDialog>();
-
-    public static System.Action<OnlineBoardGames.SET.SETVoteDialog> OnSETVoteDialogSpawned;
-
-    public static DialogManager Instance { get; private set; }
-
-    private void Awake(){
-        if (Instance == null){
-            DontDestroyOnLoad(gameObject);
-            Instance = this;
-        }
-
-        else
-            GameObject.DestroyImmediate(gameObject);
+    public enum DialogShowOptions
+    {
+        OverAll,
+        Replace
     }
 
-    public T SpawnDialog<T>(DialogShowOptions option) where T : BaseDialog
+    public class DialogManager : MonoBehaviour
     {
-        T dialog = null;
-        foreach(var d in allDialog)
+        [SerializeField] UnityEngine.UI.GraphicRaycaster raycaster;
+        [SerializeField] BaseDialog[] allDialog;
+
+        List<BaseDialog> opendialogs = new List<BaseDialog>();
+
+        public static System.Action<SET.SETVoteDialog> OnSETVoteDialogSpawned;
+
+        public static DialogManager Instance { get; private set; }
+
+        private void Awake()
         {
-            if (d is T)
+            if (Instance == null)
             {
-                dialog = Instantiate(d.gameObject, transform).GetComponent<T>();
-                break;
+                DontDestroyOnLoad(gameObject);
+                Instance = this;
             }
-        }
 
-        if (dialog == null) return dialog;
-
-        if (option == DialogShowOptions.OverAll)
-        {
-            if (opendialogs.Count == 0)
-                opendialogs.Add(dialog);
             else
-                opendialogs.Insert(0, dialog);
-            StartCoroutine(ShowAsync(dialog));
+                GameObject.DestroyImmediate(gameObject);
         }
 
-        else
+        private void Start()
         {
-            if (opendialogs.Count == 0)
+            SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
+        }
+
+        private void SceneManager_activeSceneChanged(Scene arg0, Scene arg1)
+        {
+            GetComponent<Canvas>().worldCamera = Camera.main;
+        }
+
+        public T SpawnDialog<T>(DialogShowOptions option, System.Action<BaseDialog> onSpawn = null) where T : BaseDialog
+        {
+            T dialog = null;
+            foreach (var d in allDialog)
             {
-                opendialogs.Add(dialog);
+                if (d is T)
+                {
+                    dialog = Instantiate(d.gameObject, transform).GetComponent<T>();
+                    break;
+                }
+            }
+
+            if (dialog == null) return dialog;
+            dialog.OnSpawned = onSpawn;
+
+            if (option == DialogShowOptions.OverAll)
+            {
+                if (opendialogs.Count == 0)
+                    opendialogs.Add(dialog);
+                else
+                    opendialogs.Insert(0, dialog);
                 StartCoroutine(ShowAsync(dialog));
             }
+
             else
             {
-                var d = opendialogs[opendialogs.Count - 1];
-                opendialogs[opendialogs.Count - 1] = dialog;
-                StartCoroutine(CloseShowAsync(d, dialog));
+                if (opendialogs.Count == 0)
+                {
+                    opendialogs.Add(dialog);
+                    StartCoroutine(ShowAsync(dialog));
+                }
+                else
+                {
+                    var d = opendialogs[opendialogs.Count - 1];
+                    opendialogs[opendialogs.Count - 1] = dialog;
+                    StartCoroutine(CloseShowAsync(d, dialog));
+                }
             }
+            dialog.canvas.sortingOrder = opendialogs.Count;
+            return dialog;
         }
-        dialog.canvas.sortingOrder = opendialogs.Count;
-        return dialog;
-    }
 
-    public void CloseDialog(BaseDialog dialog)
-    {
-        if (opendialogs.Contains(dialog))
+        public void CloseDialog(BaseDialog dialog)
         {
-            opendialogs.Remove(dialog);
-            StartCoroutine(CloseAsync(dialog));
-        }
-    }
-
-    public void CloseDialog<T>()
-    {
-        foreach (var d in opendialogs)
-        {
-            if (d is T)
+            if (opendialogs.Contains(dialog))
             {
-                CloseDialog(d);
-                break;
+                opendialogs.Remove(dialog);
+                StartCoroutine(CloseAsync(dialog));
             }
         }
-    }
 
-    void RefreshDialogs()
-    {
-        if(opendialogs.Count > 0)
+        public void CloseDialog<T>()
         {
-            raycaster.enabled = true;
-            for (int i = 0; i < opendialogs.Count; i++)
+            foreach (var d in opendialogs)
             {
-                //opendialogs[i].transform.localPosition = new Vector3(opendialogs[i].transform.localPosition.x, opendialogs[i].transform.localPosition.y, -i - 1);
-                //opendialogs[i].rayCast.enabled = false;
-                opendialogs[i].canvas.sortingOrder = i + 1;
+                if (d is T)
+                {
+                    CloseDialog(d);
+                    break;
+                }
             }
-            opendialogs[opendialogs.Count - 1].rayCast.enabled = true;
         }
-        else
-            raycaster.enabled = false;
-    }
 
-    IEnumerator CloseAsync(BaseDialog dialog)
-    {
-        dialog.Close();
-        yield return new WaitForSeconds(dialog.closeTime);
-        Destroy(dialog);
-        RefreshDialogs();
-    }
+        void RefreshDialogs()
+        {
+            if (opendialogs.Count > 0)
+            {
+                raycaster.enabled = true;
+                for (int i = 0; i < opendialogs.Count; i++)
+                {
+                    opendialogs[i].rayCast.enabled = false;
+                    opendialogs[i].canvas.sortingOrder = i + 1;
+                }
+                opendialogs[opendialogs.Count - 1].rayCast.enabled = true;
+            }
+            else
+                raycaster.enabled = false;
+        }
 
-    IEnumerator ShowAsync(BaseDialog dialog)
-    {
-        dialog.Show();
-        yield return new WaitForSeconds(dialog.showTime);
-        RefreshDialogs();
-    }
+        IEnumerator CloseAsync(BaseDialog dialog)
+        {
+            dialog.Close();
+            yield return new WaitForSeconds(dialog.closeTime);
+            Destroy(dialog.gameObject);
+            RefreshDialogs();
+        }
 
-    IEnumerator CloseShowAsync(BaseDialog oldDialog, BaseDialog newDialog)
-    {
-        oldDialog.Close();
-        yield return new WaitForSeconds(oldDialog.closeTime); 
-        newDialog.Show();
-        yield return new WaitForSeconds(newDialog.showTime);
-        RefreshDialogs();
+        IEnumerator ShowAsync(BaseDialog dialog)
+        {
+            dialog.Show();
+            yield return new WaitForSeconds(dialog.showTime);
+            RefreshDialogs();
+        }
+
+        IEnumerator CloseShowAsync(BaseDialog oldDialog, BaseDialog newDialog)
+        {
+            oldDialog.Close();
+            yield return new WaitForSeconds(oldDialog.closeTime);
+            newDialog.Show();
+            yield return new WaitForSeconds(newDialog.showTime);
+            RefreshDialogs();
+        }
     }
 }

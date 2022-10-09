@@ -50,3 +50,6 @@ TagManager:
   - name: L3
     uniqueID: 398350007
     locked: 0
+  - name: Dialog
+    uniqueID: 684272949
+    locked: 0
