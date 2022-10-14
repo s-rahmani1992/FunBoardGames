@@ -7,7 +7,7 @@ namespace OnlineBoardGames.SET
 
     public struct GuessSETMessage : NetworkMessage
     {
-        public byte card1, card2, card3;
+        public CardData card1, card2, card3;
     }
 
     public struct DestributeRequest : NetworkMessage { }

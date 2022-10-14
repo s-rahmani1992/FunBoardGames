@@ -36,15 +36,7 @@ namespace OnlineBoardGames
 
         #region Server Methods & Variables
 
-        int playerCount = 0;
         public BoardGameLobbyManager lobbyManager;
-        List<byte> cardDeck = new List<byte>(81);
-
-        [Server]
-        public List<byte> GetShuffleDeck(){
-            System.Random r = new System.Random();
-            return cardDeck.OrderBy(x => r.Next()).ToList();
-        }
 
         #endregion
 
@@ -127,7 +119,6 @@ namespace OnlineBoardGames
         /// <param name="newSceneName">Name of the scene that's about to be loaded</param>
         public override void OnServerChangeScene(string newSceneName){
             DebugStep.Log($"NetworkManager.OnServerChangeScene({newSceneName})");
-            
         }
 
         /// <summary>
@@ -273,13 +264,10 @@ namespace OnlineBoardGames
         /// </summary>
         public override void OnStartServer(){
             DebugStep.Log("NetworkManager.OnStartServer()");
-            for (byte i = 0; i <= 254; i++){
-                if (SET.CardData.isValid(i))
-                    cardDeck.Add(i);
-            }
             var lobby = Instantiate(spawnPrefabs[0]);
             lobbyManager = lobby.GetComponent<BoardGameLobbyManager>();
             NetworkServer.Spawn(lobby);
+            NetworkServer.Spawn(Instantiate(spawnPrefabs[1]));
 
             NetworkServer.RegisterHandler<SET.AttempSETGuess>((conn, msg)=> { lobbyManager.GetRoomManager<SET.SETRoomNetworkManager>((conn.authenticationData as AuthData).roomID).OnAttemptGuess(conn, msg); }, false);
             NetworkServer.RegisterHandler<SET.GuessSETMessage>((conn, msg) => { lobbyManager.GetRoomManager<SET.SETRoomNetworkManager>((conn.authenticationData as AuthData).roomID).OnSETGuess(conn, msg); }, false);

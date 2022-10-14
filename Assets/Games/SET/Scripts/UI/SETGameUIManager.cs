@@ -40,7 +40,7 @@ namespace OnlineBoardGames.SET
             {
                 selected.Add(card);
                 if (selected.Count == 3 && sessionManager.state == SETGameState.Guess)
-                    Mirror.NetworkClient.Send(new GuessSETMessage { card1 = selected[0].info.RawByte, card2 = selected[1].info.RawByte, card3 = selected[2].info.RawByte });
+                    Mirror.NetworkClient.Send(new GuessSETMessage { card1 = selected[0].info, card2 = selected[1].info, card3 = selected[2].info });
                 return true;
             }
             else
@@ -71,7 +71,7 @@ namespace OnlineBoardGames.SET
             remainTxt.text = cardCount.ToString();
         }
 
-        public void PlaceCards(byte[] cardInfos, byte[] cardPoses)
+        public void PlaceCards(CardData[] cardInfos, byte[] cardPoses)
         {
             for (int i = 0; i < cardInfos.Length; i++)
             {
@@ -114,7 +114,7 @@ namespace OnlineBoardGames.SET
                 selected.Clear();
                 foreach (var c in placedCardUIs)
                 {
-                    if (c.info.RawByte == msg.card1 || c.info.RawByte == msg.card2 || c.info.RawByte == msg.card3)
+                    if (c.info.Equals(msg.card1) || c.info.Equals(msg.card2) || c.info.Equals(msg.card3))
                     {
                         c.Mark(true);
                         selected.Add(c);

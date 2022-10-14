@@ -107,7 +107,7 @@ namespace OnlineBoardGames
             var id = (conn.authenticationData as AuthData).roomID;
             if(id != Guid.Empty)
             {
-                var player = Instantiate(BoardGameNetworkManager.singleton.spawnPrefabs[2 * (byte)msg.gameType + 2]).GetComponent<BoardGamePlayer>();
+                var player = Instantiate(BoardGameNetworkManager.singleton.spawnPrefabs[2 * (byte)msg.gameType + 3]).GetComponent<BoardGamePlayer>();
                 player.GetComponent<NetworkMatch>().matchId = id;
                 NetworkServer.AddPlayerForConnection(conn, player.gameObject);
                 NetworkServer.Spawn((rooms[id] as MonoBehaviour).gameObject);
@@ -118,25 +118,12 @@ namespace OnlineBoardGames
         private void OnCreateRoomRequest(NetworkConnectionToClient conn, CreateRoomMessage msg){
             {
                 var newMatchID = GenerateRoomID();
-                var room = Instantiate(BoardGameNetworkManager.singleton.spawnPrefabs[2 * (byte)msg.gameType + 1]).GetComponent<IRoom>();
+                var room = Instantiate(BoardGameNetworkManager.singleton.spawnPrefabs[2 * (byte)msg.gameType + 2]).GetComponent<IRoom>();
                 room.RoomName = msg.reqName;
                 (room as MonoBehaviour).GetComponent<NetworkMatch>().matchId = newMatchID;
                 (conn.authenticationData as AuthData).roomID = newMatchID;
-                //NetworkServer.Spawn((room as MonoBehaviour).gameObject);
                 rooms.Add(newMatchID, room);
-
-
-
-
-
-
-                //var player = Instantiate(BoardGameNetworkManager.singleton.spawnPrefabs[2 * (byte)msg.gameType + 2]).GetComponent<BoardGamePlayer>();
-                //player.GetComponent<NetworkMatch>().matchId = newMatchID;
-                //NetworkServer.AddPlayerForConnection(conn, player.gameObject);
-                //NetworkServer.Spawn((room as MonoBehaviour).gameObject);
                 conn.Send(new SceneMessage { sceneName = "Room" });
-                //NetworkServer.SetClientNotReady(conn);
-                //room.AddPlayer(player);
             }
         }
 

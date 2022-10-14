@@ -1,38 +1,50 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 namespace OnlineBoardGames.SET
 {
     [System.Serializable]
     public class CardData
     {
-        public byte color;
-        public byte shape;
-        public byte shading;
-        public byte count;
-        public byte RawByte { get; private set; }
+        public byte Color { get; private set; }
+        public byte Shape { get; private set; }
+        public byte CountIndex { get; private set; }
+        public byte Shading { get; private set; }
+        private byte RawByte { get; set; }
 
-        public CardData(byte byteIn){
-            RefreshData(byteIn);
+        public CardData()
+        {
+            RawByte = 0b11111111;
+            Color = Shape = CountIndex = Shading = 4;
         }
 
-        public void RefreshData(byte cardByte){
-            RawByte = cardByte;
+        public CardData(byte byteIn)
+        {
+            RawByte = byteIn;
             byte mask = 3;
-            color = (byte)(cardByte & mask);
-
+            Color = (byte)(byteIn & mask);
             mask = 12;
-            shape = (byte)((cardByte & mask) >> 2);
-
+            Shape = (byte)((byteIn & mask) >> 2);
             mask = 48;
-            shading = (byte)((cardByte & mask) >> 4);
-
+            CountIndex = (byte)((byteIn & mask) >> 4);
             mask = 192;
-            count = (byte)((cardByte & mask) >> 6);
+            Shading = (byte)((byteIn & mask) >> 6);
         }
 
-        public static bool isValid(byte cardByte){
+        public CardData(byte color, byte shape, byte count, byte shading)
+        {
+            Color = color;
+            Shape = shape;
+            CountIndex = count;
+            Shading = shading;
+            RawByte = (byte)((Color) | (Shape << 2) | (CountIndex << 4) | (Shading << 6));
+        }
+
+        [Mirror.Server]
+        public static bool isValid(byte cardByte)
+        {
             byte mask = 3;
             if ((cardByte & mask) == 3)
                 return false;
@@ -46,28 +58,40 @@ namespace OnlineBoardGames.SET
                 return false;
 
             mask = 192;
-            if ((cardByte & mask) == 0)
+            if ((cardByte & mask) == 192)
                 return false;
             return true;
         }
 
-        public override string ToString(){
-            return $"({color}, {shape}, {shading}, {count})";
+        public override string ToString()
+        {
+            return $"({Color}, {Shape}, {CountIndex}, {Shading})";
         }
 
-        public static byte CheckSET(byte card1, byte card2, byte card3){
-            byte result = 0, mask = 3;
-            result = (byte)(result | (byte)(MyUtils.CompareItems(card1 & mask, card2 & mask, card3 & mask)));
-            mask = 12;
-            result = (byte)(result | (byte)(MyUtils.CompareItems(card1 & mask, card2 & mask, card3 & mask)) << 2);
-            mask = 48;
-            result = (byte)(result | (byte)(MyUtils.CompareItems(card1 & mask, card2 & mask, card3 & mask)) << 4);
-            mask = 192;
-            result = (byte)(result | (byte)(MyUtils.CompareItems(card1 & mask, card2 & mask, card3 & mask)) << 6);
+        public override bool Equals(object obj)
+        {
+            CardData data = obj as CardData;
+            return data.RawByte == RawByte;
+        }
+
+        public override int GetHashCode()
+        {
+            return RawByte;
+        }
+
+        [Mirror.Server]
+        public static byte CheckSET(CardData card1, CardData card2, CardData card3)
+        {
+            byte result = 0;
+            result = (byte)(result | (byte)(MyUtils.CompareItems(card1.Color, card2.Color, card3.Color)));
+            result = (byte)(result | (byte)(MyUtils.CompareItems(card1.Shape, card2.Shape, card3.Shape)) << 2);
+            result = (byte)(result | (byte)(MyUtils.CompareItems(card1.CountIndex, card2.CountIndex, card3.CountIndex)) << 4);
+            result = (byte)(result | (byte)(MyUtils.CompareItems(card1.Shading, card2.Shading, card3.Shading)) << 6);
             return result;
         }
 
-        public static TripleComparisonResult[] Byte2Result(byte result){
+        public static TripleComparisonResult[] Byte2Result(byte result)
+        {
             TripleComparisonResult[] g = new TripleComparisonResult[4];
             byte mask = 3;
             g[0] = (TripleComparisonResult)(result & mask);
@@ -94,8 +118,32 @@ namespace OnlineBoardGames.SET
             if ((TripleComparisonResult)((result & mask) >> 4) == TripleComparisonResult.NONE) return false;
 
             mask = 192;
-            if ((TripleComparisonResult)((result & mask) >> 4) == TripleComparisonResult.NONE) return false;
+            if ((TripleComparisonResult)((result & mask) >> 6) == TripleComparisonResult.NONE) return false;
             return true;
+        }
+    }
+
+    public static class CardDataSerializer
+    {
+        public static CardData ReadCardData(this Mirror.NetworkReader reader)
+        {
+            Debug.Log($"Read CardData");
+            byte data = reader.ReadByte();
+            byte mask = 3;
+            byte color = (byte)(data & mask);
+            mask = 12;
+            byte shape = (byte)((data & mask) >> 2);
+            mask = 48;
+            byte countIndex = (byte)((data & mask) >> 4);
+            mask = 192;
+            byte shading = (byte)((data & mask) >> 6);
+            return new CardData(color, shape, countIndex, shading);
+        }
+
+        public static void WriteCardData(this Mirror.NetworkWriter writer, CardData cardData)
+        {
+            Debug.Log($"Write CardData");
+            writer.WriteByte((byte)((cardData.Color) | (cardData.Shape << 2) | (cardData.CountIndex << 4) | (cardData.Shading << 6)));
         }
     }
 }
