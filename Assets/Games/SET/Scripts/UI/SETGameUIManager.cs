@@ -1,4 +1,4 @@
-using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,7 +9,7 @@ namespace OnlineBoardGames.SET
     public class SETGameUIManager : MonoBehaviour
     {
         [SerializeField] ObjectPoolManager pool;
-        [SerializeField] Button guessBtn, cardBtn;
+        [SerializeField] Button guessBtn, cardBtn, hintBtn;
         [SerializeField] Transform cardHolder;
         [SerializeField] Text remainTxt;
         [SerializeField] GraphicRaycaster cardRaycaster;
@@ -24,14 +24,8 @@ namespace OnlineBoardGames.SET
         int cardCount = 81;
         SETRoomNetworkManager sessionManager;
         List<CardUI> selected = new List<CardUI>(3);
+        List<CardUI> hints = new List<CardUI>(3);
         List<CardUI> placedCardUIs = new List<CardUI>(18);
-
-        //Vector2[] poses = new Vector2[]
-        //{
-        //    new Vector2(-180, -970),
-        //    new Vector2(180, -970),
-        //    new Vector2(0, -1190)
-        //};
 
         public bool UpdateSelected(CardUI card)
         {
@@ -81,7 +75,10 @@ namespace OnlineBoardGames.SET
 
         public void RefreshBtns(SETGameState state)
         {
-            guessBtn.interactable = cardBtn.interactable = (state == SETGameState.Normal);
+            guessBtn.interactable = cardBtn.interactable = hintBtn.interactable = (state == SETGameState.Normal);
+            for (int i = 0; i < hints.Count; i++)
+                hints[i].Mark(false);
+            hints.Clear();
             cardRaycaster.enabled = (state == SETGameState.Guess);
         }
 
@@ -152,6 +149,11 @@ namespace OnlineBoardGames.SET
             Mirror.NetworkClient.Send(new DestributeRequest { });
         }
 
+        public void SendHint()
+        {
+            Mirror.NetworkClient.Send(new HintMessageRequest { });
+        }
+
         public void RemoveSelected()
         {
             foreach (var s in selected)
@@ -165,6 +167,20 @@ namespace OnlineBoardGames.SET
         public void ClearSelected()
         {
             selected.Clear();
+        }
+
+        public void MarkHints(CardData[] cards)
+        {
+            hints.Clear();
+            if(cards.Length == 0) return;
+            foreach (var c in placedCardUIs)
+            {
+                if (c.info.Equals(cards[0]) || c.info.Equals(cards[1]) || c.info.Equals(cards[2]))
+                {
+                    c.MarkHint();
+                    hints.Add(c);
+                }
+            }
         }
     }
 }

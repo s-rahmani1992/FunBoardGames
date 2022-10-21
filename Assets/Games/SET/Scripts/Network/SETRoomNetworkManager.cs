@@ -41,6 +41,42 @@ namespace OnlineBoardGames.SET {
         int cursor = 0;
         int voteYesCount, voteNoCount = 0;
         Coroutine guessProcess;
+        List<CardData> hintCards = new List<CardData>(3);
+
+        [Server]
+        void UpdateHintCards()
+        {
+            hintCards.Clear();
+            List<CardData> cards = new List<CardData>();
+
+            foreach(var card in placedCards)
+            {
+                if (card != null)
+                    cards.Add(card);
+            }
+
+            for (int i = 0; i < cards.Count; i++)
+            {
+                for(int j = i + 1; j < cards.Count; j++)
+                {
+                    CardData thirdCard = new CardData((byte)((2 * (cards[i].Color + cards[j].Color)) % 3)
+                                                    , (byte)((2 * (cards[i].Shape + cards[j].Shape)) % 3)
+                                                    , (byte)((2 * (cards[i].CountIndex + cards[j].CountIndex)) % 3)
+                                                    , (byte)((2 * (cards[i].Shading + cards[j].Shading)) % 3));
+
+                    for (int k = j + 1; k < cards.Count; k++)
+                    {
+                        if (cards[k].Equals(thirdCard))
+                        {
+                            hintCards.Add(cards[i]);
+                            hintCards.Add(cards[j]);
+                            hintCards.Add(cards[k]);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
 
         [Server]
         bool ValidateGuess(CardData c1, CardData c2, CardData c3){
@@ -61,6 +97,8 @@ namespace OnlineBoardGames.SET {
                 temp[i] = (byte)i;
                 placedCards[i] = BoardGameCardDataHolder.Instance.GetCard(deck[i]);
             }
+
+            UpdateHintCards();
             RPCPlaceCards(deck.ToList().GetRange(cursor, 12).Select(c => BoardGameCardDataHolder.Instance.GetCard(c)).ToArray(), temp);
             cursor = 12;
             yield return new WaitForSeconds(2.5f);
@@ -104,6 +142,7 @@ namespace OnlineBoardGames.SET {
                         }
                     }
 
+                    UpdateHintCards();
                     RPCPlaceCards(deck.ToList().GetRange(cursor, 3).Select(c => BoardGameCardDataHolder.Instance.GetCard(c)).ToArray(), places2Add);
                     cursor += 3;
                     yield return new WaitForSeconds(0.7f);
@@ -116,6 +155,7 @@ namespace OnlineBoardGames.SET {
                     temp = placedCards.IndexOf(msg.card3);
                     placedCards[temp] = null;
                     placedCardCount -= 3;
+                    UpdateHintCards();
                     yield return new WaitForSeconds(0.2f);
                 }
             }
@@ -256,7 +296,8 @@ namespace OnlineBoardGames.SET {
         #endregion
 
         #region MessageHandlers
-        internal void OnAttemptGuess(NetworkConnectionToClient conn, AttempSETGuess msg){
+        internal void OnAttemptGuess(NetworkConnectionToClient conn, AttempSETGuess msg)
+        {
             if (guessingPlayer == null && state == SETGameState.Normal && guessProcess == null){
                 guessingPlayer = conn.identity;
                 conn.identity.GetComponent<SETNetworkPlayer>().isGuessing = true;
@@ -265,7 +306,8 @@ namespace OnlineBoardGames.SET {
             }
         }
 
-        internal void OnSETGuess(NetworkConnectionToClient conn, GuessSETMessage msg){
+        internal void OnSETGuess(NetworkConnectionToClient conn, GuessSETMessage msg)
+        {
             if (state == SETGameState.Guess && guessingPlayer != null && conn.identity == guessingPlayer && ValidateGuess(msg.card1, msg.card2, msg.card3)){
                 byte r = CardData.CheckSET(msg.card1, msg.card2, msg.card3);
                 state = SETGameState.Process;
@@ -274,7 +316,8 @@ namespace OnlineBoardGames.SET {
             }
         }
 
-        internal void OnRequestDestribute(NetworkConnectionToClient conn, DestributeRequest msg){
+        internal void OnRequestDestribute(NetworkConnectionToClient conn, DestributeRequest msg)
+        {
             if(state == SETGameState.Normal && cursor < 81){
                 state = SETGameState.Request;
                 conn.identity.GetComponent<SETNetworkPlayer>().voteState = VoteStat.YES;
@@ -284,7 +327,8 @@ namespace OnlineBoardGames.SET {
             }
         }
 
-        internal void OnPlayerVote(NetworkConnectionToClient conn, VoteMessage msg){
+        internal void OnPlayerVote(NetworkConnectionToClient conn, VoteMessage msg)
+        {
             if(state == SETGameState.Request && conn.identity.GetComponent<SETNetworkPlayer>().voteState == VoteStat.NULL){
                 if (msg.isYes){
                     conn.identity.GetComponent<SETNetworkPlayer>().voteState = VoteStat.YES;
@@ -299,6 +343,11 @@ namespace OnlineBoardGames.SET {
                     StartCoroutine(ProcessVote(voteYesCount >= voteNoCount));
                 }
             }
+        }
+
+        internal void OnHintRequest(NetworkConnectionToClient conn, HintMessageRequest msg)
+        {
+            TargetGetHint(conn, hintCards.ToArray());
         }
         #endregion
 
@@ -338,8 +387,15 @@ namespace OnlineBoardGames.SET {
         /// Called on every NetworkBehaviour when it is activated on a client.
         /// <para>Objects on the host have this function called, as there is a local client on the host. The values of SyncVars on object are guaranteed to be initialized correctly with the latest state from the server when this function is called on the client.</para>
         /// </summary>
-        public override void OnStartClient() {
+        public override void OnStartClient() 
+        {
             base.OnStartClient();
+        }
+
+        [TargetRpc]
+        private void TargetGetHint(NetworkConnection conn, CardData[] cards)
+        {
+            SETGameUIManager.Instance.MarkHints(cards);
         }
 
         /// <summary>

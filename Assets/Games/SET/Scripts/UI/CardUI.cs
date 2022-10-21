@@ -63,6 +63,11 @@ namespace OnlineBoardGames.SET
             GetComponent<Image>().color = (isSelected ? Color.yellow : Color.white);
         }
 
+        public void MarkHint()
+        {
+            GetComponent<Image>().color = new Color(0, 0.6135f, 1);
+        }
+
         public void MoveBack()
         {
             move.MoveInLine(new Vector2(-320 + 320 * position.x, -270 - 220f * position.y), MoveMode.FixedTime, 0.2f, 

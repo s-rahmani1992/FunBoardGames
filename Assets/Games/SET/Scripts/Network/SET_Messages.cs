@@ -16,4 +16,6 @@ namespace OnlineBoardGames.SET
     {
         public bool isYes;
     }
+
+    public struct HintMessageRequest : NetworkMessage { }
 }
