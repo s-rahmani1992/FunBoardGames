@@ -269,11 +269,8 @@ namespace OnlineBoardGames
             NetworkServer.Spawn(lobby);
             NetworkServer.Spawn(Instantiate(spawnPrefabs[1]));
 
-            NetworkServer.RegisterHandler<SET.AttempSETGuess>((conn, msg) => { lobbyManager.GetRoomManager<SET.SETRoomNetworkManager>((conn.authenticationData as AuthData).roomID).OnAttemptGuess(conn, msg); }, false);
             NetworkServer.RegisterHandler<SET.GuessSETMessage>((conn, msg) => { lobbyManager.GetRoomManager<SET.SETRoomNetworkManager>((conn.authenticationData as AuthData).roomID).OnSETGuess(conn, msg); }, false);
-            NetworkServer.RegisterHandler<SET.DestributeRequest>((conn, msg) => { lobbyManager.GetRoomManager<SET.SETRoomNetworkManager>((conn.authenticationData as AuthData).roomID).OnRequestDestribute(conn, msg); }, false);
             NetworkServer.RegisterHandler<SET.VoteMessage>((conn, msg) => { lobbyManager.GetRoomManager<SET.SETRoomNetworkManager>((conn.authenticationData as AuthData).roomID).OnPlayerVote(conn, msg); }, false);
-            NetworkServer.RegisterHandler<SET.HintMessageRequest>((conn, msg) => {lobbyManager.GetRoomManager<SET.SETRoomNetworkManager>((conn.authenticationData as AuthData).roomID).OnHintRequest(conn, msg); }, false);
         }
 
         /// <summary>

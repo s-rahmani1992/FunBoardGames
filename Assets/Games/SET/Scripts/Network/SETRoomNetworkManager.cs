@@ -296,19 +296,11 @@ namespace OnlineBoardGames.SET {
         #endregion
 
         #region MessageHandlers
-        internal void OnAttemptGuess(NetworkConnectionToClient conn, AttempSETGuess msg)
-        {
-            if (guessingPlayer == null && state == SETGameState.Normal && guessProcess == null){
-                guessingPlayer = conn.identity;
-                conn.identity.GetComponent<SETNetworkPlayer>().isGuessing = true;
-                state = SETGameState.Guess;
-                guessProcess = StartCoroutine(ProcessGuess());
-            }
-        }
-
+        
         internal void OnSETGuess(NetworkConnectionToClient conn, GuessSETMessage msg)
         {
-            if (state == SETGameState.Guess && guessingPlayer != null && conn.identity == guessingPlayer && ValidateGuess(msg.card1, msg.card2, msg.card3)){
+            if (state == SETGameState.Guess && guessingPlayer != null && conn.identity == guessingPlayer && ValidateGuess(msg.card1, msg.card2, msg.card3))
+            {
                 byte r = CardData.CheckSET(msg.card1, msg.card2, msg.card3);
                 state = SETGameState.Process;
                 StopCoroutine(guessProcess);
@@ -316,38 +308,59 @@ namespace OnlineBoardGames.SET {
             }
         }
 
-        internal void OnRequestDestribute(NetworkConnectionToClient conn, DestributeRequest msg)
-        {
-            if(state == SETGameState.Normal && cursor < 81){
-                state = SETGameState.Request;
-                conn.identity.GetComponent<SETNetworkPlayer>().voteState = VoteStat.YES;
-                voteYesCount++;
-                RPCPlayerVoted(conn.identity);
-                RPCBeginVote(conn.identity);
-            }
-        }
-
         internal void OnPlayerVote(NetworkConnectionToClient conn, VoteMessage msg)
         {
             if(state == SETGameState.Request && conn.identity.GetComponent<SETNetworkPlayer>().voteState == VoteStat.NULL){
-                if (msg.isYes){
+                if (msg.isYes)
+                {
                     conn.identity.GetComponent<SETNetworkPlayer>().voteState = VoteStat.YES;
                     voteYesCount++;
                 }
-                else{
+                else
+                {
                     conn.identity.GetComponent<SETNetworkPlayer>().voteState = VoteStat.NO;
                     voteNoCount++;
                 }
                 RPCPlayerVoted(conn.identity);
-                if (voteNoCount + voteYesCount == playerCount){
+                if (voteNoCount + voteYesCount == playerCount)
+                {
                     StartCoroutine(ProcessVote(voteYesCount >= voteNoCount));
                 }
             }
         }
 
-        internal void OnHintRequest(NetworkConnectionToClient conn, HintMessageRequest msg)
+        #endregion
+
+        #region Commands
+        [Command(requiresAuthority = false)]
+        internal void CmdAttemptGuess(NetworkIdentity identity)
         {
-            TargetGetHint(conn, hintCards.ToArray());
+            if (guessingPlayer == null && state == SETGameState.Normal && guessProcess == null)
+            {
+                guessingPlayer = identity;
+                identity.GetComponent<SETNetworkPlayer>().isGuessing = true;
+                state = SETGameState.Guess;
+                guessProcess = StartCoroutine(ProcessGuess());
+            }
+        }
+
+        [Command(requiresAuthority = false)]
+        internal void CmdRequestDestribute(NetworkIdentity identity)
+        {
+            if (state == SETGameState.Normal && cursor < 81)
+            {
+                state = SETGameState.Request;
+                identity.GetComponent<SETNetworkPlayer>().voteState = VoteStat.YES;
+                voteYesCount++;
+                RPCPlayerVoted(identity);
+                RPCBeginVote(identity);
+            }
+        }
+
+        [Command(requiresAuthority = false)]
+        internal void CmdHintRequest(NetworkIdentity identity)
+        {
+            TargetGetHint(identity.connectionToClient, hintCards.ToArray());
         }
         #endregion
 

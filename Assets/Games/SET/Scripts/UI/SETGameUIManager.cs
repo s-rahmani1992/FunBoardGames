@@ -84,7 +84,7 @@ namespace OnlineBoardGames.SET
 
         public void AttemptGuess()
         {
-            Mirror.NetworkClient.Send(new AttempSETGuess());
+            sessionManager.CmdAttemptGuess(Mirror.NetworkClient.connection.identity);
         }
 
         public void AlertGuess()
@@ -146,12 +146,12 @@ namespace OnlineBoardGames.SET
 
         public void SendCardRequest()
         {
-            Mirror.NetworkClient.Send(new DestributeRequest { });
+            sessionManager.CmdRequestDestribute(Mirror.NetworkClient.connection.identity);
         }
 
         public void SendHint()
         {
-            Mirror.NetworkClient.Send(new HintMessageRequest { });
+            sessionManager.CmdHintRequest(Mirror.NetworkClient.connection.identity);
         }
 
         public void RemoveSelected()
