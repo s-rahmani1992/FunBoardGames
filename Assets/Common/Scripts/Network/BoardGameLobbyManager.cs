@@ -26,16 +26,16 @@ namespace OnlineBoardGames
         public string roomName;
         public byte playerCount;
         public SerializableRoom() { }
-        public SerializableRoom(IRoom room, Guid rID){
+        public SerializableRoom(BoardGameRoomManager room, Guid rID){
             id = rID;
-            roomName = room.RoomName;
+            roomName = room.roomName;
             playerCount = room.playerCount;
         }
     }
 
     public class BoardGameLobbyManager : NetworkBehaviour
     {
-        Dictionary<Guid, IRoom> rooms = new Dictionary<Guid, IRoom>();
+        Dictionary<Guid, BoardGameRoomManager> rooms = new Dictionary<Guid, BoardGameRoomManager>();
 
         [Server]
         Guid GenerateRoomID(){
@@ -71,7 +71,7 @@ namespace OnlineBoardGames
             var data = conn.authenticationData as AuthData;
             if(data.roomID != Guid.Empty)
             {
-                IRoom r = rooms[data.roomID];
+                BoardGameRoomManager r = rooms[data.roomID];
                 r.Remove(conn.identity.GetComponent<BoardGamePlayer>());
                 conn.Send(new SceneMessage { sceneName = "Menu" });
                 if(r.playerCount == 0)
@@ -118,8 +118,8 @@ namespace OnlineBoardGames
         private void OnCreateRoomRequest(NetworkConnectionToClient conn, CreateRoomMessage msg){
             {
                 var newMatchID = GenerateRoomID();
-                var room = Instantiate(BoardGameNetworkManager.singleton.spawnPrefabs[2 * (byte)msg.gameType + 2]).GetComponent<IRoom>();
-                room.RoomName = msg.reqName;
+                var room = Instantiate(BoardGameNetworkManager.singleton.spawnPrefabs[2 * (byte)msg.gameType + 2]).GetComponent<BoardGameRoomManager>();
+                room.roomName = msg.reqName;
                 (room as MonoBehaviour).GetComponent<NetworkMatch>().matchId = newMatchID;
                 (conn.authenticationData as AuthData).roomID = newMatchID;
                 rooms.Add(newMatchID, room);

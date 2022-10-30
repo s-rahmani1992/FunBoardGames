@@ -30,7 +30,7 @@ namespace OnlineBoardGames.SET {
         public int roundCount;
     }
 
-    public class SETRoomNetworkManager : BoardGameRoomManager<SETNetworkPlayer>
+    public class SETRoomNetworkManager : BoardGameRoomManager
     {
         public bool CanSelect { get => (state == SETGameState.Guess) && (guessingPlayer != null) && (guessingPlayer.hasAuthority); }
 
@@ -189,7 +189,7 @@ namespace OnlineBoardGames.SET {
                     RPCPlaceCards(deck.ToList().GetRange(cursor, 3).Select(c => BoardGameCardDataHolder.Instance.GetCard(c)).ToArray(), placed2Add);
                     cursor += 3;
                     foreach (var p in roomPlayers)
-                        p.voteState = VoteStat.NULL;
+                        (p as SETNetworkPlayer).voteState = VoteStat.NULL;
                     RPCEndVote();
                     yield return new WaitForSeconds(0.7f);
                 }
@@ -198,13 +198,13 @@ namespace OnlineBoardGames.SET {
                     yield return new WaitForSeconds(0.2f);
                 }
                 foreach (var p in roomPlayers)
-                    p.voteState = VoteStat.NULL;
+                    (p as SETNetworkPlayer).voteState = VoteStat.NULL;
                 state = SETGameState.Normal;
             }
             else{
                 state = SETGameState.Normal;
                 foreach (var p in roomPlayers)
-                    p.voteState = VoteStat.NULL;
+                    (p as SETNetworkPlayer).voteState = VoteStat.NULL;
             }
         }
         #endregion
@@ -229,21 +229,6 @@ namespace OnlineBoardGames.SET {
         #endregion
 
         #region Client RPCs
-        [ClientRpc(includeOwner = false)]
-        protected override void RPCPlayerJoin(NetworkIdentity identity){
-            base.RPCPlayerJoin(identity);
-        }
-
-        [ClientRpc]
-        protected override void RPCAllPlayersReady(){
-            base.RPCAllPlayersReady();
-        }
-
-        [ClientRpc(includeOwner = false)]
-        protected override void RPCPlayerLeave(NetworkIdentity identity){
-            base.RPCPlayerLeave(identity);
-        }
-
         [ClientRpc]
         private void RPCBeginGame() {
             SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.StartGame);

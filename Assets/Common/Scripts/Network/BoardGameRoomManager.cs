@@ -10,26 +10,17 @@ using System;
 
 // NOTE: Do not put objects in DontDestroyOnLoad (DDOL) in Awake.  You can do that in Start instead.
 namespace OnlineBoardGames {
-    public interface IRoom
+    public abstract class BoardGameRoomManager : NetworkBehaviour
     {
-        byte playerCount { get; }
-        bool IsAcceptingPlayer { get; }
-        string RoomName { get; set; }
-        void AddPlayer(BoardGamePlayer player);
-        void Remove(BoardGamePlayer player, bool canRefreshIndices = true);
-        void OnPlayerReady(NetworkConnectionToClient conn, PlayerReadyMessage msg);
-    }
-
-    public abstract class BoardGameRoomManager<T> : NetworkBehaviour, IRoom where T: BoardGamePlayer
-    {
-        protected T host;
-        public List<T> roomPlayers = new List<T>();
+        protected BoardGamePlayer host;
+        public List<BoardGamePlayer> roomPlayers = new List<BoardGamePlayer>();
         int readyCount;
+
+        public byte playerCount => (byte)roomPlayers.Count;
+        public bool IsAcceptingPlayer {get; private set;}
 
         [SyncVar]
         public string roomName;
-
-        bool _acceptPlayer;
 
         protected virtual void Awake(){
             DontDestroyOnLoad(gameObject);
@@ -37,15 +28,18 @@ namespace OnlineBoardGames {
 
 
         #region Virtual RPCClients
+        [ClientRpc]
         protected virtual void RPCAllPlayersReady(){
             SingletonUIHandler.GetInstance<RoomUIEventHandler>()?.OnAllPlayersReady();
         }
 
+        [ClientRpc]
         protected virtual void RPCPlayerJoin(NetworkIdentity identity){
             if(!identity.hasAuthority)
                 SingletonUIHandler.GetInstance<RoomUIEventHandler>()?.OnOtherPlayerJoined?.Invoke(identity.GetComponent<BoardGamePlayer>().playerName);
         }
 
+        [ClientRpc]
         protected virtual void RPCPlayerLeave(NetworkIdentity identity){
             if (!identity.hasAuthority)
                 SingletonUIHandler.GetInstance<RoomUIEventHandler>()?.OnOtherPlayerLeft?.Invoke(identity.GetComponent<BoardGamePlayer>().playerName);
@@ -53,12 +47,12 @@ namespace OnlineBoardGames {
         #endregion
 
         #region Message Handlers
-        void IRoom.OnPlayerReady(NetworkConnectionToClient conn, PlayerReadyMessage msg){
+        internal void OnPlayerReady(NetworkConnectionToClient conn, PlayerReadyMessage msg){
             conn.identity.GetComponent<BoardGamePlayer>().isReady = true;
             readyCount++;
             if (playerCount >= 2 && readyCount == playerCount){
                 RPCAllPlayersReady();
-                _acceptPlayer = false;
+                IsAcceptingPlayer = false;
                 MyUtils.DelayAction(() => {
                     NetworkServer.SendToReadyObservers(conn.identity, new SceneMessage { sceneName = "Game" });
                 }, 1, this);
@@ -77,8 +71,9 @@ namespace OnlineBoardGames {
         /// <para>This could be triggered by NetworkServer.Listen() for objects in the scene, or by NetworkServer.Spawn() for objects that are dynamically created.</para>
         /// <para>This will be called for objects on a "host" as well as for object on a dedicated server.</para>
         /// </summary>
-        public override void OnStartServer() {
-            _acceptPlayer = true;
+        public override void OnStartServer() 
+        {
+            IsAcceptingPlayer = true;
         }
 
         protected abstract void BeginGame();
@@ -132,32 +127,32 @@ namespace OnlineBoardGames {
 
         #endregion
 
-        #region interface
-        public byte playerCount => (byte)roomPlayers.Count;
-        public bool IsAcceptingPlayer => _acceptPlayer;
-        public string RoomName { get => roomName; set { roomName = value; } }
-
         [Server]
-        public void AddPlayer(BoardGamePlayer player){
-            roomPlayers.Add((T)player);
+        public void AddPlayer(BoardGamePlayer player)
+        {
+            roomPlayers.Add(player);
             RPCPlayerJoin(player.netIdentity);
+
             for (int i = 0; i < roomPlayers.Count; i++)
                 roomPlayers[i].playerIndex = (byte)(i + 1);
         }
 
         [Server]
         public void Remove(BoardGamePlayer player, bool canRefreshIndices = true){
-            if (roomPlayers.Remove((T)player)){
+            if (roomPlayers.Remove(player))
+            {
                 RPCPlayerLeave(player.netIdentity);
                 if (player.isReady)
                     readyCount--;
-                if (canRefreshIndices){
+
+                if (canRefreshIndices)
+                {
                     for (int i = 0; i < playerCount; i++)
                         roomPlayers[i].playerIndex = (byte)(i + 1);
                 }
+
                 NetworkServer.RemovePlayerForConnection(player.connectionToClient, true);
             }
         }
-        #endregion
     }
 }
