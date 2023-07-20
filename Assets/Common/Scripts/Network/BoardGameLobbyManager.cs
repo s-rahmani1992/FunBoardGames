@@ -57,9 +57,9 @@ namespace OnlineBoardGames
         /// <para>This could be triggered by NetworkServer.Listen() for objects in the scene, or by NetworkServer.Spawn() for objects that are dynamically created.</para>
         /// <para>This will be called for objects on a "host" as well as for object on a dedicated server.</para>
         /// </summary>
-        public override void OnStartServer() {
+        public override void OnStartServer() 
+        {
             NetworkServer.RegisterHandler<CreateRoomMessage>(OnCreateRoomRequest);
-            NetworkServer.RegisterHandler<AddPlayerForMatch>(OnAddPlayerForMatch);
             NetworkServer.RegisterHandler<GetRoomListMessage>(OnRoomListRequest);
             NetworkServer.RegisterHandler<JoinMatchMessage>(OnJoinRoomRequest);
             NetworkServer.RegisterHandler<PlayerReadyMessage>((conn, msg) => { rooms[(conn.authenticationData as AuthData).roomID].OnPlayerReady(conn, msg); }, false);
@@ -85,10 +85,10 @@ namespace OnlineBoardGames
 
         private void OnJoinRoomRequest(NetworkConnectionToClient conn, JoinMatchMessage msg)
         {
-            if (rooms.ContainsKey(msg.matchID))
+            if (rooms.TryGetValue(msg.matchID, out BoardGameRoomManager room))
             {
                 (conn.authenticationData as AuthData).roomID = msg.matchID;
-                conn.Send(new SceneMessage { sceneName = "Room" });
+                AddPlayerForMatch(conn, room);
             }
         }
 
@@ -102,29 +102,25 @@ namespace OnlineBoardGames
             conn.Send(new RoomListResponse { rooms = roomList.ToArray() });
         }
 
-        private void OnAddPlayerForMatch(NetworkConnectionToClient conn, AddPlayerForMatch msg)
+        private void AddPlayerForMatch(NetworkConnectionToClient conn, BoardGameRoomManager room)
         {
-            var id = (conn.authenticationData as AuthData).roomID;
-            if(id != Guid.Empty)
-            {
-                var player = Instantiate(BoardGameNetworkManager.singleton.spawnPrefabs[2 * (byte)msg.gameType + 3]).GetComponent<BoardGamePlayer>();
-                player.GetComponent<NetworkMatch>().matchId = id;
-                NetworkServer.AddPlayerForConnection(conn, player.gameObject);
-                NetworkServer.Spawn((rooms[id] as MonoBehaviour).gameObject);
-                rooms[id].AddPlayer(player);
-            }
+            NetworkMatch match = room.GetComponent<NetworkMatch>();
+            var player = Instantiate(BoardGameNetworkManager.singleton.spawnPrefabs[2 * (byte)room.GameType + 3]).GetComponent<BoardGamePlayer>();
+            player.GetComponent<NetworkMatch>().matchId = match.matchId;
+            NetworkServer.AddPlayerForConnection(conn, player.gameObject);
+            room.AddPlayer(player);
         }
 
-        private void OnCreateRoomRequest(NetworkConnectionToClient conn, CreateRoomMessage msg){
-            {
-                var newMatchID = GenerateRoomID();
-                var room = Instantiate(BoardGameNetworkManager.singleton.spawnPrefabs[2 * (byte)msg.gameType + 2]).GetComponent<BoardGameRoomManager>();
-                room.roomName = msg.reqName;
-                (room as MonoBehaviour).GetComponent<NetworkMatch>().matchId = newMatchID;
-                (conn.authenticationData as AuthData).roomID = newMatchID;
-                rooms.Add(newMatchID, room);
-                conn.Send(new SceneMessage { sceneName = "Room" });
-            }
+        private void OnCreateRoomRequest(NetworkConnectionToClient conn, CreateRoomMessage msg)
+        {
+            var newMatchID = GenerateRoomID();
+            var room = Instantiate(BoardGameNetworkManager.singleton.spawnPrefabs[2 * (byte)msg.gameType + 2]).GetComponent<BoardGameRoomManager>();
+            room.roomName = msg.reqName;
+            room.GetComponent<NetworkMatch>().matchId = newMatchID;
+            (conn.authenticationData as AuthData).roomID = newMatchID;
+            rooms.Add(newMatchID, room);
+            NetworkServer.Spawn(room.gameObject);
+            AddPlayerForMatch(conn, room);
         }
 
         /// <summary>

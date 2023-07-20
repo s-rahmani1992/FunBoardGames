@@ -1,6 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace OnlineBoardGames
@@ -13,6 +12,7 @@ namespace OnlineBoardGames
         ObjectPoolManager pool;
         [SerializeField]
         Transform content;
+        [SerializeField] RoomRequestContainer roomContainer;
 
         // Start is called before the first frame update
         void Start()
@@ -28,7 +28,8 @@ namespace OnlineBoardGames
 
         public void SendCreateRoom()
         {
-            Mirror.NetworkClient.Send(new CreateRoomMessage {reqName = roomNameIn.text, gameType = BoardGameTypes.SET });
+            roomContainer.SetParameters(true, roomNameIn.text, BoardGameTypes.SET);
+            SceneManager.LoadScene("Room");
         }
 
         public void SendRoomListRequest()

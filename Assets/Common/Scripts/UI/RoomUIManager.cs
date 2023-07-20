@@ -1,10 +1,6 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
-using System.Linq;
 
 namespace OnlineBoardGames
 {
@@ -14,10 +10,12 @@ namespace OnlineBoardGames
 
         [SerializeField]
         RectTransform playersPanel;
+        [SerializeField] RoomPlayerUI roomPlyerUI;
         [SerializeField]
         Button readyBtn;
         [SerializeField]
         Text roomTxt, logTxt;
+        [SerializeField] RoomRequestContainer roomContainer;
 
         Coroutine toast;
         
@@ -25,16 +23,33 @@ namespace OnlineBoardGames
             Instance = this;
         }
 
-        private IEnumerator Start(){
+        private void Start()
+        {
+            roomContainer.RoomGenerated += OnRoomGenerated;
+            roomContainer.PlayerAdded += OnPlayerAdded;
+
+            if (roomContainer.IsCreate)
+                Mirror.NetworkClient.Send(new CreateRoomMessage { reqName = roomContainer.RoomName, gameType = roomContainer.GameType });
+            else
+                Mirror.NetworkClient.Send(new JoinMatchMessage { matchID = roomContainer.MatchId });
+
             var eventHandler = SingletonUIHandler.GetInstance<RoomUIEventHandler>();
             eventHandler.OnLocalPlayerReady += () => { readyBtn.interactable = false; };
             eventHandler.OnOtherPlayerJoined += (player) => { Log($"Player {player} Joined"); };
             eventHandler.OnOtherPlayerLeft += (player) => { Log($"Player {player} Left"); };
             eventHandler.OnAllPlayersReady += () => { logTxt.text = "Wait For Game to Load"; };
             eventHandler.OnBeginStatChanged += (stat) => { logTxt.text = (stat ? "" : "Not Enough Players. Wait For Others to join"); };
-            //while (BoardGameNetworkManager.singleton.session == null)
-            yield return null;
-            //roomTxt.text = (FindObjectsOfType<Mirror.NetworkBehaviour>().OfType<IRoom>().ToArray())[0].RoomName;
+        }
+
+        private void OnPlayerAdded(BoardGamePlayer player)
+        {
+            RoomPlayerUI UIPlayer = Instantiate(roomPlyerUI, playersPanel);
+            UIPlayer.SetPlayer(player);
+        }
+
+        private void OnRoomGenerated(BoardGameRoomManager room)
+        {
+            roomTxt.text = room.roomName;
         }
 
         private void OnDestroy(){
@@ -47,7 +62,6 @@ namespace OnlineBoardGames
         }
 
         public void ReaveRoom(){
-            //BoardGameNetworkManager.singleton.StopClient();
             Mirror.NetworkClient.Send(new LeaveRoomMessage { });
         }
 

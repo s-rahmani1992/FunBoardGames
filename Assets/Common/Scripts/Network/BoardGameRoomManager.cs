@@ -12,9 +12,11 @@ using System;
 namespace OnlineBoardGames {
     public abstract class BoardGameRoomManager : NetworkBehaviour
     {
+        [SerializeField] RoomRequestContainer roomContainer;
         protected BoardGamePlayer host;
         public List<BoardGamePlayer> roomPlayers = new List<BoardGamePlayer>();
         int readyCount;
+        public virtual BoardGameTypes GameType { get; }
 
         public byte playerCount => (byte)roomPlayers.Count;
         public bool IsAcceptingPlayer {get; private set;}
@@ -91,7 +93,7 @@ namespace OnlineBoardGames {
         public override void OnStartClient() {
 
             DebugStep.Log("NetworkRoomManager.OnStartClient()");
-            //BoardGameNetworkManager.singleton.session = this;
+            roomContainer.Invoke(this);
         }
 
         /// <summary>

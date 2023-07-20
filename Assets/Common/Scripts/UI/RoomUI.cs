@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace OnlineBoardGames
@@ -13,6 +14,7 @@ namespace OnlineBoardGames
         Text nameTxt, numberTxt;
         [SerializeField]
         Button joinBtn;
+        [SerializeField] RoomRequestContainer roomContainer;
 
         public void OnPull(params object[] parameters)
         {
@@ -41,7 +43,8 @@ namespace OnlineBoardGames
 
         public void Join()
         {
-            Mirror.NetworkClient.Send(new JoinMatchMessage { matchID = id });
+            roomContainer.SetParameters(id);
+            SceneManager.LoadScene("Room");
         }
     }
 }

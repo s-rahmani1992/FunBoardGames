@@ -149,8 +149,6 @@ namespace OnlineBoardGames
         /// </summary>
         public override void OnClientSceneChanged(){
             base.OnClientSceneChanged();
-            if (SceneManager.GetActiveScene().name == "Room" && NetworkClient.connection.identity == null)
-                NetworkClient.Send(new AddPlayerForMatch { gameType = BoardGameTypes.SET });
         }
 
         #endregion

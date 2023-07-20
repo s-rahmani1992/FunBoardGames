@@ -14,8 +14,11 @@ namespace OnlineBoardGames
 {
     public class BoardGamePlayer : NetworkBehaviour
     {
-        [SerializeField]
-        RoomPlayerUI roomPlayerUI;
+        [SerializeField] RoomRequestContainer roomContainer;
+
+        public event Action<bool> ReadyChanged;
+        public event Action<int, int> IndexChanged;
+        public event Action LeftGame;
 
         #region Syncvars
         [SyncVar]
@@ -29,17 +32,17 @@ namespace OnlineBoardGames
         #endregion
 
         #region Syncvar Hooks
-        protected virtual void OnReadyChanged(bool oldVal, bool newVal){
-            roomPlayerUI?.RefreshUI(playerName, isReady);
+        protected virtual void OnReadyChanged(bool oldVal, bool newVal)
+        {
+            ReadyChanged?.Invoke(newVal);
+            
             if (newVal && hasAuthority)
                 SingletonUIHandler.GetInstance<RoomUIEventHandler>()?.OnLocalPlayerReady?.Invoke();
         }
 
-        protected virtual void OnIndexChanged(byte oldVal, byte newVal) {
-            roomPlayerUI?.gameObject.SetActive(false);
-            roomPlayerUI = RoomUIManager.Instance?.GetUI(newVal);
-            roomPlayerUI?.RefreshUI(playerName, isReady);
-            roomPlayerUI?.gameObject.SetActive(true);
+        protected virtual void OnIndexChanged(byte oldVal, byte newVal) 
+        {
+            IndexChanged?.Invoke(oldVal, newVal);
         }
         #endregion
 
@@ -55,17 +58,13 @@ namespace OnlineBoardGames
         #endregion
 
         #region Scene Management
-        private void SceneManager_sceneLoaded(Scene scene1, LoadSceneMode mode){
-            if (scene1.name == "Room"){
-                roomPlayerUI = RoomUIManager.Instance.GetUI(playerIndex);
-                roomPlayerUI?.RefreshUI(playerName, isReady);
+        private void SceneManager_sceneLoaded(Scene scene1, LoadSceneMode mode)
+        {
+            if (scene1.name == "Room")
                 OnRoomSceneLoaded();
-            }
 
-            else if (scene1.name == "Game"){
-                roomPlayerUI = null;
+            else if (scene1.name == "Game")
                 OnGameSceneLoaded();
-            }
         }
         protected virtual void OnRoomSceneLoaded() { }
         protected virtual void OnGameSceneLoaded() { }
@@ -92,14 +91,16 @@ namespace OnlineBoardGames
         /// </summary>
         public override void OnStartClient() {
             DebugStep.Log("BoardGamePlayer.OnStartClient()");
+            roomContainer.Invoke(this);
         }
 
         /// <summary>
         /// This is invoked on clients when the server has caused this object to be destroyed.
         /// <para>This can be used as a hook to invoke effects or do client specific cleanup.</para>
         /// </summary>
-        public override void OnStopClient() {
-            roomPlayerUI?.PlayerLeft();
+        public override void OnStopClient() 
+        {
+            LeftGame?.Invoke();
         }
 
         /// <summary>

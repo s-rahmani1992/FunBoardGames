@@ -7,21 +7,27 @@ using System;
 namespace OnlineBoardGames
 {
     public struct PlayerReadyMessage : NetworkMessage { }
-    public struct CreateRoomMessage : NetworkMessage{
+
+    public struct CreateRoomMessage : NetworkMessage
+    {
         public string reqName;
         public BoardGameTypes gameType;
     }
-    public struct AddPlayerForMatch : NetworkMessage {
+
+    public struct GetRoomListMessage : NetworkMessage
+    {
         public BoardGameTypes gameType;
     }
-    public struct GetRoomListMessage : NetworkMessage{
-        public BoardGameTypes gameType;
-    }
-    public struct RoomListResponse : NetworkMessage{
+
+    public struct RoomListResponse : NetworkMessage
+    {
         public SerializableRoom[] rooms;
     }
-    public struct JoinMatchMessage : NetworkMessage {
+
+    public struct JoinMatchMessage : NetworkMessage 
+    {
         public Guid matchID;
     }
+
     public struct LeaveRoomMessage : NetworkMessage { }
 }
