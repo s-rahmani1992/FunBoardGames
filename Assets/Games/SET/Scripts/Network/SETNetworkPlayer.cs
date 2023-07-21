@@ -1,27 +1,14 @@
-using System.Collections.Generic;
-using UnityEngine;
 using Mirror;
 using System;
-using UnityEngine.UI;
 
 /*
 	Documentation: https://mirror-networking.gitbook.io/docs/guides/networkbehaviour
 	API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkBehaviour.html
 */
 
-
-
 // NOTE: Do not put objects in DontDestroyOnLoad (DDOL) in Awake.  You can do that in Start instead.
 namespace OnlineBoardGames.SET
 {
-    public struct PlayerData
-    {
-        public string name;
-        public int wrong;
-        public int correct;
-        public bool isGuessing;
-    }
-
     [Serializable]
     public enum VoteStat
     {
@@ -32,14 +19,16 @@ namespace OnlineBoardGames.SET
 
     public class SETNetworkPlayer : BoardGamePlayer
     {
-        public PlayerUI playerUI { get; private set; } = null;
-        public PlayerVoteUI playerVoteUI { get; private set; } = null;
+        public event Action<int, int> WrongGuessChanged;
+        public event Action<int, int> CorrectGuessChanged;
+        public event Action<bool> GuessChanged;
+        public event Action<VoteStat, VoteStat> VoteChanged;
 
         #region Syncvars
-        [SyncVar( hook = nameof(PlayerDataChanged))]
+        [SyncVar( hook = nameof(PlayerWrongChanged))]
         public byte wrongs;
 
-        [SyncVar(hook = nameof(PlayerDataChanged))]
+        [SyncVar(hook = nameof(PlayerCorrectChanged))]
         public byte corrects;
 
         [SyncVar(hook = nameof(OnGuessChanged))]
@@ -54,14 +43,21 @@ namespace OnlineBoardGames.SET
             base.OnIndexChanged(oldVal, newVal);
             if (newVal < 1)
                 return;
-            RefreshUI();
         }
 
-        void PlayerDataChanged(byte oldVal, byte newVal){
-            RefreshUI();
+        void PlayerCorrectChanged(byte oldVal, byte newVal)
+        {
+            CorrectGuessChanged?.Invoke(oldVal, newVal);
+        }
+
+        void PlayerWrongChanged(byte oldVal, byte newVal)
+        {
+            WrongGuessChanged?.Invoke(oldVal, newVal);
         }
 
         void OnGuessChanged(bool oldVal, bool newVal){
+            GuessChanged?.Invoke(newVal);
+
             if (!oldVal && newVal){
                 SETGameUIManager.Instance.AlertGuess();
                 if (hasAuthority)
@@ -69,30 +65,21 @@ namespace OnlineBoardGames.SET
                 else
                     SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnOtherStateEvent?.Invoke(UIStates.GuessBegin, playerName);
             }
-            RefreshUI();
         }
 
-        void OnVoteChanged(VoteStat oldVal, VoteStat newVal){
-            playerVoteUI?.RefreshVote(newVal);
+        void OnVoteChanged(VoteStat oldVal, VoteStat newVal)
+        {
+            VoteChanged?.Invoke(oldVal, newVal);
         }
         #endregion
-
-        public void SetVoteUI(PlayerVoteUI voteUI) {
-            playerVoteUI = voteUI;
-        }
 
         protected override void Awake(){
             base.Awake();
         }
 
-        protected override void OnRoomSceneLoaded(){
-            playerUI = null;
-        }
+        protected override void OnRoomSceneLoaded() { }
 
-        protected override void OnGameSceneLoaded(){
-            playerUI = SETGameUIManager.Instance.playerPanel.GetChild(playerIndex - 1).GetComponent<PlayerUI>();
-            RefreshUI();
-        }
+        protected override void OnGameSceneLoaded() { }
 
         #region Start & Stop Callbacks
 
@@ -118,34 +105,18 @@ namespace OnlineBoardGames.SET
         /// Called on every NetworkBehaviour when it is activated on a client.
         /// <para>Objects on the host have this function called, as there is a local client on the host. The values of SyncVars on object are guaranteed to be initialized correctly with the latest state from the server when this function is called on the client.</para>
         /// </summary>
-        public override void OnStartClient() {
-            base.OnStartClient();
-            DialogManager.OnSETVoteDialogSpawned += OnVoteBegin;
-        }
-
-        [Client]
-        private void OnVoteBegin(SETVoteDialog dialog)
+        public override void OnStartClient() 
         {
-            playerVoteUI = dialog.GetVoteUI(playerIndex);
-            playerVoteUI?.UpdateUI(voteState);
-            playerVoteUI?.UpdateText(playerName);
-            playerVoteUI?.gameObject.SetActive(true);
-        }
-
-        [Client]
-        public void RefreshUI(){
-            //playerUI = UIManager.playerPanel.GetChild(playerIndex - 1).GetComponent<PlayerUI>();
-            playerUI?.RefreshUI(new PlayerData { name = (hasAuthority ? "You" : playerName), correct = corrects, wrong = wrongs, isGuessing = isGuessing} );
+            base.OnStartClient();
         }
 
         /// <summary>
         /// This is invoked on clients when the server has caused this object to be destroyed.
         /// <para>This can be used as a hook to invoke effects or do client specific cleanup.</para>
         /// </summary>
-        public override void OnStopClient(){
+        public override void OnStopClient()
+        {
             base.OnStopClient();
-            DialogManager.OnSETVoteDialogSpawned -= OnVoteBegin;
-            playerUI?.PlayerLeft();
         }
 
         /// <summary>

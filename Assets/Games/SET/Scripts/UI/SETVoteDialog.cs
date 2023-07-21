@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,27 +10,53 @@ namespace OnlineBoardGames.SET
         Button yesBtn, noBtn;
         [SerializeField] RectTransform voteUIPlayers;
 
+        SETRoomNetworkManager manager;
+        List<SETNetworkPlayer> players;
+        SETNetworkPlayer localPlayer;
+
         public override void Show()
         {
             var eventHandler = SingletonUIHandler.GetInstance<SETUIEventHandler>();
-            eventHandler.OnCommonOrLocalStateEvent += OnLocalVote;
-            DialogManager.OnSETVoteDialogSpawned?.Invoke(this);
             base.Show();
+
+            manager.StateChanged += OnStateChanged;
+
+            foreach(var player in players)
+            {
+                GetVoteUI(player.playerIndex).SetPlayer(player);
+
+                if (player.hasAuthority)
+                {
+                    localPlayer = player;
+                    OnLocalPlayerVoteChanged(VoteStat.NULL, localPlayer.voteState);
+                    localPlayer.VoteChanged += OnLocalPlayerVoteChanged; 
+                } 
+            }
+        }
+
+        private void OnLocalPlayerVoteChanged(VoteStat _, VoteStat state)
+        {
+            noBtn.interactable = yesBtn.interactable = (state == VoteStat.NULL);
+        }
+
+        private void OnStateChanged(SETGameState oldVal, SETGameState _)
+        {
+            if (oldVal == SETGameState.Request)
+                Close();
         }
 
         public override void Close()
         {
             var eventHandler = SingletonUIHandler.GetInstance<SETUIEventHandler>();
-            eventHandler.OnCommonOrLocalStateEvent -= OnLocalVote;
+            manager.StateChanged -= OnStateChanged;
+            localPlayer.VoteChanged -= OnLocalPlayerVoteChanged;
             base.Close();
         }
 
-        private void OnLocalVote(UIStates state)
+        public void Init(SETRoomNetworkManager manager, List<SETNetworkPlayer> players)
         {
-            if (state == UIStates.PlaceVote || state == UIStates.BeginVote)
-                noBtn.interactable = yesBtn.interactable = false;
-            else if (state == UIStates.Clear)
-                noBtn.interactable = yesBtn.interactable = true;
+            this.manager = manager;
+            this.players = players;
         }
 
         public void SendVote(bool yes)

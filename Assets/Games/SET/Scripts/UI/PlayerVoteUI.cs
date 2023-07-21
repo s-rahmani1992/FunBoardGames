@@ -1,7 +1,4 @@
 using OnlineBoardGames.SET;
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,7 +11,10 @@ public class PlayerVoteUI : MonoBehaviour
     [SerializeField]
     Texture2D[] stateTextures;
 
-    internal void UpdateUI(VoteStat newVal){
+    SETNetworkPlayer networkPlayer;
+
+    internal void UpdateUI(VoteStat newVal)
+    {
         switch (newVal){
             case VoteStat.NULL:
                 correct.texture = wrong.texture = stateTextures[0];
@@ -35,12 +35,56 @@ public class PlayerVoteUI : MonoBehaviour
         }
     }
 
-    internal void UpdateText(string str){
+    internal void UpdateText(string str)
+    {
         gameObject.SetActive(true);
         playerTxt.text = str;
     }
 
-    internal void RefreshVote(VoteStat newVal){
+    internal void RefreshVote(VoteStat newVal)
+    {
         UpdateUI(newVal);
+    }
+
+    public void SetPlayer(SETNetworkPlayer player)
+    {
+        if (networkPlayer != null)
+            UnSubscribe();
+
+        networkPlayer = player; 
+        playerTxt.text = networkPlayer.playerName;
+        gameObject.SetActive(true);
+        UpdateUI(networkPlayer.voteState);
+        Subscribe();
+    }
+
+    private void OnDestroy()
+    {
+        if (networkPlayer == null)
+            return;
+
+        UnSubscribe();
+    }
+
+    void Subscribe()
+    {
+        networkPlayer.VoteChanged += OnVoteChanged;
+        networkPlayer.LeftGame += PlayerLeft;
+    }
+
+    public void PlayerLeft()
+    {
+        gameObject.SetActive(false);
+    }
+
+    private void OnVoteChanged(VoteStat _, VoteStat vote)
+    {
+        UpdateUI(vote);
+    }
+
+    void UnSubscribe()
+    {
+        networkPlayer.VoteChanged -= OnVoteChanged;
+        networkPlayer.LeftGame -= PlayerLeft;
     }
 }

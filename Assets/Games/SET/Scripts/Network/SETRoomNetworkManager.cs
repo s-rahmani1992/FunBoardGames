@@ -33,6 +33,7 @@ namespace OnlineBoardGames.SET {
     public class SETRoomNetworkManager : BoardGameRoomManager
     {
         public bool CanSelect { get => (state == SETGameState.Guess) && (guessingPlayer != null) && (guessingPlayer.hasAuthority); }
+        public event Action<SETGameState, SETGameState> StateChanged;
 
         #region Server Only
         byte[] deck;
@@ -190,13 +191,12 @@ namespace OnlineBoardGames.SET {
                     cursor += 3;
                     foreach (var p in roomPlayers)
                         (p as SETNetworkPlayer).voteState = VoteStat.NULL;
-                    RPCEndVote();
+                    
                     yield return new WaitForSeconds(0.7f);
                 }
-                else{
-                    RPCEndVote();
+                else
                     yield return new WaitForSeconds(0.2f);
-                }
+
                 foreach (var p in roomPlayers)
                     (p as SETNetworkPlayer).voteState = VoteStat.NULL;
                 state = SETGameState.Normal;
@@ -222,7 +222,7 @@ namespace OnlineBoardGames.SET {
 
         #region Syncvar Hooks
         void GameStateChanged(SETGameState oldVal, SETGameState newVal){
-            SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnGameStateChanged?.Invoke(newVal);
+            StateChanged?.Invoke(oldVal, newVal);
             if (newVal == SETGameState.Normal)
                 SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.Clear);
         }
@@ -261,23 +261,11 @@ namespace OnlineBoardGames.SET {
         }
 
         [ClientRpc]
-        private void RPCBeginVote(NetworkIdentity identity)
-        {
-            SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnPlayerBeginVote?.Invoke(identity.GetComponent<SETNetworkPlayer>(), identity.hasAuthority);
-            DialogManager.Instance.SpawnDialog<SETVoteDialog>(DialogShowOptions.OverAll);
-        }
-
-        [ClientRpc]
         void RPCPlayerVoted(NetworkIdentity identity){
             if (identity.hasAuthority)
                 SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.PlaceVote);
         }
 
-        [ClientRpc]
-        void RPCEndVote()
-        {
-            DialogManager.Instance.CloseDialog<SETVoteDialog>();
-        }
         #endregion
 
         #region MessageHandlers
@@ -338,7 +326,6 @@ namespace OnlineBoardGames.SET {
                 identity.GetComponent<SETNetworkPlayer>().voteState = VoteStat.YES;
                 voteYesCount++;
                 RPCPlayerVoted(identity);
-                RPCBeginVote(identity);
             }
         }
 

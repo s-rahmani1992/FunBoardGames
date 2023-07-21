@@ -16,10 +16,7 @@ namespace OnlineBoardGames
         [SerializeField] UnityEngine.UI.GraphicRaycaster raycaster;
         [SerializeField] BaseDialog[] allDialog;
 
-        List<BaseDialog> opendialogs = new List<BaseDialog>();
-
-        public static System.Action<SET.SETVoteDialog> OnSETVoteDialogSpawned;
-
+        List<BaseDialog> opendialogs = new();
         public static DialogManager Instance { get; private set; }
 
         private void Awake()

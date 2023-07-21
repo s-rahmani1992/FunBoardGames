@@ -23,9 +23,10 @@ namespace OnlineBoardGames.SET
 
         int cardCount = 81;
         SETRoomNetworkManager sessionManager;
-        List<CardUI> selected = new List<CardUI>(3);
-        List<CardUI> hints = new List<CardUI>(3);
-        List<CardUI> placedCardUIs = new List<CardUI>(18);
+        List<SETNetworkPlayer> players = new();
+        List<CardUI> selected = new(3);
+        List<CardUI> hints = new(3);
+        List<CardUI> placedCardUIs = new(18);
 
         public bool UpdateSelected(CardUI card)
         {
@@ -47,15 +48,42 @@ namespace OnlineBoardGames.SET
         {
             Instance = this;
             sessionManager = FindObjectOfType<SETRoomNetworkManager>();
+            players = new(FindObjectsOfType<SETNetworkPlayer>());
+
+            foreach(var player in players)
+            {
+                playerPanel.GetChild(player.playerIndex - 1).GetComponent<PlayerUI>().SetPlayer(player);
+                player.LeftGame += () => players.Remove(player);
+            }
+
+            Subscribe();
         }
 
-        private void Start()
+        void Subscribe()
         {
-            SingletonUIHandler.GetInstance<SETUIEventHandler>().OnGameStateChanged += RefreshBtns;
+            sessionManager.StateChanged += OnStateChanged;
+        }
+
+        void UnSubscribe()
+        {
+            sessionManager.StateChanged -= OnStateChanged;
+        }
+
+        private void OnStateChanged(SETGameState _, SETGameState state)
+        {
+            RefreshBtns(state);
+            
+            if(state == SETGameState.Request)
+            {
+                DialogManager.Instance.SpawnDialog<SETVoteDialog>(DialogShowOptions.OverAll, (dialog) => {
+                    (dialog as SETVoteDialog).Init(sessionManager, players);
+                });
+            }
         }
 
         private void OnDestroy()
         {
+            UnSubscribe();
             Instance = null;
         }
 
@@ -73,7 +101,7 @@ namespace OnlineBoardGames.SET
             }
         }
 
-        public void RefreshBtns(SETGameState state)
+        void RefreshBtns(SETGameState state)
         {
             guessBtn.interactable = cardBtn.interactable = hintBtn.interactable = (state == SETGameState.Normal);
             for (int i = 0; i < hints.Count; i++)
