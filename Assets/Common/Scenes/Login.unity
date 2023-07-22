@@ -152,6 +152,7 @@ RectTransform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1532437140}
   m_Father: {fileID: 1005174161}
@@ -206,8 +207,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1005174162}
-        m_TargetAssemblyTypeName: LoginUI, Assembly-CSharp
+      - m_Target: {fileID: 2062099708}
+        m_TargetAssemblyTypeName: OnlineBoardGames.LoginUIManager, Assembly-CSharp
         m_MethodName: AtemptLogin
         m_Mode: 1
         m_Arguments:
@@ -284,6 +285,7 @@ RectTransform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 860031931}
   m_RootOrder: 1
@@ -364,6 +366,7 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2075030985}
   - {fileID: 425004389}
@@ -426,13 +429,16 @@ MonoBehaviour:
   m_HideMobileInput: 0
   m_CharacterValidation: 0
   m_CharacterLimit: 0
-  m_OnEndEdit:
+  m_OnSubmit:
+    m_PersistentCalls:
+      m_Calls: []
+  m_OnDidEndEdit:
     m_PersistentCalls:
       m_Calls: []
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1005174162}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: LoginUI, Assembly-CSharp
         m_MethodName: UpdateBtn
         m_Mode: 1
@@ -502,7 +508,6 @@ GameObject:
   - component: {fileID: 1005174160}
   - component: {fileID: 1005174159}
   - component: {fileID: 1005174158}
-  - component: {fileID: 1005174162}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -581,6 +586,7 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0, y: 0, z: 0}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 302590670}
   - {fileID: 860031931}
@@ -593,21 +599,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &1005174162
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1005174157}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 298935cc988ed4d409515b016170401e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  nameField: {fileID: 860031932}
-  loginBtn: {fileID: 302590671}
-  logTxt: {fileID: 1043224355}
 --- !u!1 &1043224353
 GameObject:
   m_ObjectHideFlags: 0
@@ -636,6 +627,7 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1005174161}
   m_RootOrder: 2
@@ -766,6 +758,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -800,6 +793,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f231c4fb786f3946a6b90b886c48677, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_SendPointerHoverToParent: 1
   m_HorizontalAxis: Horizontal
   m_VerticalAxis: Vertical
   m_SubmitButton: Submit
@@ -832,6 +826,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 3
@@ -864,6 +859,7 @@ RectTransform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 302590670}
   m_RootOrder: 0
@@ -976,6 +972,17 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
+--- !u!114 &1977170790 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7475147692941367167, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
+  m_PrefabInstance: {fileID: 1977170789}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30579c307bbbc094a9f30cd9c854ff59, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2062099705
 GameObject:
   m_ObjectHideFlags: 0
@@ -985,9 +992,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2062099706}
-  - component: {fileID: 2062099707}
+  - component: {fileID: 2062099708}
   m_Layer: 0
-  m_Name: LoginEventHandler
+  m_Name: LoginUIManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1003,11 +1010,12 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2062099707
+--- !u!114 &2062099708
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1016,9 +1024,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 2062099705}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9e0694f0653746d499414205dfb358e8, type: 3}
+  m_Script: {fileID: 11500000, guid: 298935cc988ed4d409515b016170401e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  nameField: {fileID: 860031932}
+  loginBtn: {fileID: 302590671}
+  logTxt: {fileID: 1043224355}
+  authenticator: {fileID: 1977170790}
 --- !u!1 &2075030984
 GameObject:
   m_ObjectHideFlags: 0
@@ -1047,6 +1059,7 @@ RectTransform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 860031931}
   m_RootOrder: 0

@@ -163,7 +163,6 @@ namespace OnlineBoardGames
         public override void OnServerConnect(NetworkConnectionToClient conn)
         {
             DebugStep.Log($"NetworkManager.OnServerConnect({conn.connectionId})");
-            conn.Send(new SceneMessage { sceneName = "Menu" });
         }
 
         /// <summary>

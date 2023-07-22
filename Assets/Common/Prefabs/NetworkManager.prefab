@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7475147692941367165}
   - component: {fileID: 7475147692941367167}
   - component: {fileID: 476712039503384676}
+  - component: {fileID: 7764211167230200391}
   - component: {fileID: 7475147692941367166}
   m_Layer: 0
   m_Name: NetworkManager
@@ -30,6 +31,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 954.14374, y: 520.9099, z: -47.834053}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -52,7 +54,7 @@ MonoBehaviour:
   serverTickRate: 30
   offlineScene: 
   onlineScene: 
-  transport: {fileID: 7475147692941367166}
+  transport: {fileID: 7764211167230200391}
   networkAddress: 192.168.1.242
   maxConnections: 100
   authenticator: {fileID: 7475147692941367167}
@@ -97,6 +99,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d09f5c8bf2f4747b7a9284ef5d9ce2a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &7764211167230200391
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7475147692941367160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96b149f511061407fb54895c057b7736, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wrap: {fileID: 7475147692941367166}
+  latencySpikeMultiplier: 0
+  latencySpikeSpeedMultiplier: 1
+  reliableLatency: 1
+  unreliableLoss: 0
+  unreliableLatency: 0
+  unreliableScramble: 0
 --- !u!114 &7475147692941367166
 MonoBehaviour:
   m_ObjectHideFlags: 0

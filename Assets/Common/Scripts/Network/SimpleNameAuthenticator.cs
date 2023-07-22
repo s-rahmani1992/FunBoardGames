@@ -24,6 +24,9 @@ namespace OnlineBoardGames
 
     public class SimpleNameAuthenticator : NetworkAuthenticator
     {
+        public event Action LoginSuccess;
+        public event Action<string> LoginFailed;
+
         #region Developer
 
         public string reqName;
@@ -37,11 +40,13 @@ namespace OnlineBoardGames
 
         #region Messages
 
-        public struct AuthRequestMessage : NetworkMessage{
+        public struct AuthRequestMessage : NetworkMessage
+        {
             public string requestedName;
         }
 
-        public struct AuthResponseMessage : NetworkMessage{
+        public struct AuthResponseMessage : NetworkMessage
+        {
             public byte resultCode;
             public string message;
         }
@@ -54,7 +59,8 @@ namespace OnlineBoardGames
         /// Called on server from StartServer to initialize the Authenticator
         /// <para>Server message handlers should be registered in this method.</para>
         /// </summary>
-        public override void OnStartServer(){
+        public override void OnStartServer()
+        {
             DebugStep.Log("SimpleNameAuthenticator.OnStartServer");
             // register a handler for the authentication request we expect from client
             NetworkServer.RegisterHandler<AuthRequestMessage>(OnAuthRequestMessage, false);
@@ -64,7 +70,8 @@ namespace OnlineBoardGames
         /// Called on server from OnServerAuthenticateInternal when a client needs to authenticate
         /// </summary>
         /// <param name="conn">Connection to client.</param>
-        public override void OnServerAuthenticate(NetworkConnectionToClient conn){
+        public override void OnServerAuthenticate(NetworkConnectionToClient conn)
+        {
             DebugStep.Log($"SimpleNameAuthenticator.OnServerAuthenticate({conn.connectionId})");
         }
 
@@ -73,34 +80,28 @@ namespace OnlineBoardGames
         /// </summary>
         /// <param name="conn">Connection to client.</param>
         /// <param name="msg">The message payload</param>
-        public void OnAuthRequestMessage(NetworkConnectionToClient conn, AuthRequestMessage msg){
-            AuthResponseMessage authResponseMessage = new AuthResponseMessage();
-            if (msg.requestedName.Contains("%")){
+        public void OnAuthRequestMessage(NetworkConnectionToClient conn, AuthRequestMessage msg)
+        {
+            AuthResponseMessage authResponseMessage = new();
+
+            if (msg.requestedName.Contains("%"))
+            {
                 authResponseMessage.resultCode = 1;
                 authResponseMessage.message = "Player name cannot contain '%' character!";
             }
-
-            //else if (BoardGameNetworkManager.singleton.session.playerCount > 3){
-            //    authResponseMessage.resultCode = 1;
-            //    authResponseMessage.message = "Room is full! Try Again later.";
-            //}
-
-            //else if (!BoardGameNetworkManager.singleton.session.IsAcceptingPlayer){
-            //    authResponseMessage.resultCode = 1;
-            //    authResponseMessage.message = "Room is in the middle of the game! Try Again later.";
-            //}
-
-            else if (playerNames.Add(msg.requestedName)){
+            else if (playerNames.Add(msg.requestedName))
+            {
                 conn.authenticationData = new AuthData {playerName = msg.requestedName, roomID = Guid.Empty };
                 authResponseMessage.resultCode = 0;
                 authResponseMessage.message = "Authentication Success";
                 ServerAccept(conn);
             }
-
-            else{
+            else
+            {
                 authResponseMessage.resultCode = 1;
                 authResponseMessage.message = $"Player with name '{msg.requestedName}' already exists!";
             }
+
             conn.Send(authResponseMessage);
         }
 
@@ -112,7 +113,8 @@ namespace OnlineBoardGames
         /// Called on client from StartClient to initialize the Authenticator
         /// <para>Client message handlers should be registered in this method.</para>
         /// </summary>
-        public override void OnStartClient(){
+        public override void OnStartClient()
+        {
             DebugStep.Log($"SimpleNameAuthenticator.OnStartClient()");
             // register a handler for the authentication response we expect from server
             NetworkClient.RegisterHandler<AuthResponseMessage>(OnAuthResponseMessage, false);
@@ -121,10 +123,10 @@ namespace OnlineBoardGames
         /// <summary>
         /// Called on client from OnClientAuthenticateInternal when a client needs to authenticate
         /// </summary>
-        public override void OnClientAuthenticate(){
+        public override void OnClientAuthenticate()
+        {
             DebugStep.Log($"SimpleNameAuthenticator.OnClientAuthenticate()");
             AuthRequestMessage authRequestMessage = new AuthRequestMessage { requestedName = reqName };
-
             NetworkClient.Send(authRequestMessage);
         }
 
@@ -132,17 +134,20 @@ namespace OnlineBoardGames
         /// Called on client when the server's AuthResponseMessage arrives
         /// </summary>
         /// <param name="msg">The message payload</param>
-        public void OnAuthResponseMessage(AuthResponseMessage msg){
+        public void OnAuthResponseMessage(AuthResponseMessage msg)
+        {
             // Authentication has been accepted
-            if (msg.resultCode != 0){
+            if (msg.resultCode != 0)
+            {
                 reqName = null;
                 playerProfile = null;
-                SingletonUIHandler.GetInstance<LoginUIEventHandler>()?.OnLoginError?.Invoke(msg.message);
+                LoginFailed?.Invoke(msg.message);
                 ClientReject();
             }
-            else{
-                playerProfile = new PlayerData { playerName = reqName }; 
-                SingletonUIHandler.GetInstance<LoginUIEventHandler>()?.OnLoginSuccess?.Invoke();
+            else
+            {
+                playerProfile = new PlayerData { playerName = reqName };
+                LoginSuccess?.Invoke();
                 ClientAccept();
             }
         }
