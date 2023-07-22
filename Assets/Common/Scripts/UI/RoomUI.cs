@@ -29,12 +29,6 @@ namespace OnlineBoardGames
             gameObject.SetActive(false);
         }
 
-        // Start is called before the first frame update
-        void Start()
-        {
-            SingletonUIHandler.GetInstance<MenuUIEventHandler>().OnJoinRoomAttempt += () => { joinBtn.gameObject.SetActive(false); };
-        }
-
         void RefreshUI(SerializableRoom room){
             nameTxt.text = room.roomName;
             numberTxt.text = room.playerCount.ToString();

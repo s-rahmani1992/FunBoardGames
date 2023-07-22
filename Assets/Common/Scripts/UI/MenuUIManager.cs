@@ -14,16 +14,21 @@ namespace OnlineBoardGames
         Transform content;
         [SerializeField] RoomRequestContainer roomContainer;
 
+        BoardGameNetworkManager networkManager;
+
         // Start is called before the first frame update
         void Start()
         {
-            SingletonUIHandler.GetInstance<MenuUIEventHandler>().OnRoomListRefresh += (list) =>
-            {
-                while (content.childCount > 0)
-                    pool.Push2List(content.GetChild(0).gameObject);
-                foreach (var r in list)
-                    pool.PullFromList(0, content, r);
-            };
+            networkManager = FindObjectOfType<BoardGameNetworkManager>();
+            networkManager.RoomListReceived += OnRoomListReceived;
+        }
+
+        private void OnRoomListReceived(SerializableRoom[] list)
+        {
+            while (content.childCount > 0)
+                pool.Push2List(content.GetChild(0).gameObject);
+            foreach (var r in list)
+                pool.PullFromList(0, content, r);
         }
 
         public void SendCreateRoom()
@@ -35,6 +40,11 @@ namespace OnlineBoardGames
         public void SendRoomListRequest()
         {
             Mirror.NetworkClient.Send(new GetRoomListMessage { gameType = BoardGameTypes.SET });
+        }
+
+        private void OnDestroy()
+        {
+            networkManager.RoomListReceived -= OnRoomListReceived;
         }
     }
 }

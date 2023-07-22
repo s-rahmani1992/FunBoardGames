@@ -31,7 +31,7 @@ namespace OnlineBoardGames
                 StartServer();
         }
 #endif
-
+        public event Action<SerializableRoom[]> RoomListReceived;
         public static new BoardGameNetworkManager singleton { get; private set; }
 
         #region Server Methods & Variables
@@ -280,10 +280,8 @@ namespace OnlineBoardGames
 
         private void OnGetRoomList(RoomListResponse rList)
         {
-            SingletonUIHandler.GetInstance<MenuUIEventHandler>().OnRoomListRefresh?.Invoke(rList.rooms);
+            RoomListReceived?.Invoke(rList.rooms);
         }
-
-
 
         /// <summary>
         /// This is called when a host is stopped.
