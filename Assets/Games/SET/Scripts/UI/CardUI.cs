@@ -30,7 +30,7 @@ namespace OnlineBoardGames.SET
         public void OnPull(params object[] parameters)
         {
             info = (CardData)(parameters[0]);
-            position = new Vector2Int((byte)parameters[1] % 3, (byte)parameters[1] / 3);
+            position = new Vector2Int((int)parameters[1] % 3, (int)parameters[1] / 3);
             transform.SetParent(parameters[3] as Transform);
             transform.localPosition = Vector3.zero;
             transform.localScale = Vector3.one;

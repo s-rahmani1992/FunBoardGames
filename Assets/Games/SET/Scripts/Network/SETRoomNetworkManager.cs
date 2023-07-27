@@ -16,11 +16,12 @@ namespace OnlineBoardGames.SET {
     [Serializable]
     public enum SETGameState : byte
     {
+        Start,
         Normal,
-        Guess,
         Destribute,
-        Process,
-        Request
+        Guess,
+        ProcessGuess,
+        CardVote
     }
 
     [Serializable]
@@ -34,15 +35,19 @@ namespace OnlineBoardGames.SET {
     {
         public bool CanSelect { get => (state == SETGameState.Guess) && (guessingPlayer != null) && (guessingPlayer.hasAuthority); }
         public event Action<SETGameState, SETGameState> StateChanged;
+        public event Action<CardData[], int[]> NewCardsReceived;
+        public event Action<SETNetworkPlayer> GuessBegin;
+        public event Action<SETNetworkPlayer, CardData[], byte> PlayerGuessReceived;
+        public event Action<SETNetworkPlayer> PlayerStartedVote;
 
         #region Server Only
         byte[] deck;
-        List<CardData> placedCards = new List<CardData>(18);
+        List<CardData> placedCards = new(18);
         int placedCardCount;
         int cursor = 0;
         int voteYesCount, voteNoCount = 0;
         Coroutine guessProcess;
-        List<CardData> hintCards = new List<CardData>(3);
+        List<CardData> hintCards = new(3);
 
         [Server]
         void UpdateHintCards()
@@ -80,17 +85,19 @@ namespace OnlineBoardGames.SET {
         }
 
         [Server]
-        bool ValidateGuess(CardData c1, CardData c2, CardData c3){
+        bool ValidateGuess(CardData c1, CardData c2, CardData c3)
+        {
             if (MyUtils.CompareItems(c1, c2, c3) != TripleComparisonResult.ALL_DIFFERRENT) return false;
             if (!placedCards.Contains(c1) || !placedCards.Contains(c2) || !placedCards.Contains(c3)) return false;
             return true;
         }
 
         [Server]
-        public IEnumerator DelaySendBegin(){
+        public IEnumerator DelaySendBegin()
+        {
             yield return new WaitForSeconds(0.5f);
-            RPCBeginGame();
-            yield return new WaitForSeconds(roomInfo.guessTime);
+            state = SETGameState.Start;
+            yield return new WaitForSeconds(4);
             byte[] temp = new byte[12];
 
             placedCardCount = 12;
@@ -100,6 +107,7 @@ namespace OnlineBoardGames.SET {
             }
 
             UpdateHintCards();
+            state = SETGameState.Destribute;
             RPCPlaceCards(deck.ToList().GetRange(cursor, 12).Select(c => BoardGameCardDataHolder.Instance.GetCard(c)).ToArray(), temp);
             cursor = 12;
             yield return new WaitForSeconds(2.5f);
@@ -107,53 +115,64 @@ namespace OnlineBoardGames.SET {
         }
 
         [Server]
-        IEnumerator ProcessGuess(){
+        IEnumerator ProcessGuess()
+        {
             yield return new WaitForSeconds(roomInfo.guessTime);
-            state = SETGameState.Process;
-            RPCPopTimeout(guessingPlayer);
+            state = SETGameState.ProcessGuess;
+            RPCPopResult(guessingPlayer, null, 0);
             yield return new WaitForSeconds(2);
-            guessingPlayer.GetComponent<SETNetworkPlayer>().wrongs++;
-            guessingPlayer.GetComponent<SETNetworkPlayer>().isGuessing = false;
+            guessingPlayer.wrongs++;
+            guessingPlayer.isGuessing = false;
             state = SETGameState.Normal;
             guessProcess = null;
             guessingPlayer = null;
         }
 
         [Server]
-        IEnumerator ResultProcess(byte result, GuessSETMessage msg)
+        IEnumerator ResultProcess(byte result, CardData[] cards)
         {
-            RPCPopResult(msg, result, guessingPlayer);
+            RPCPopResult(guessingPlayer, cards, result);
             yield return new WaitForSeconds(6.8f);
             guessingPlayer.GetComponent<SETNetworkPlayer>().isGuessing = false;
-            if (CardData.IsSET(result)){
+            
+            if (CardData.IsSET(result))
+            {
                 guessingPlayer.GetComponent<SETNetworkPlayer>().corrects++;
-                if (cursor < 81 && placedCardCount == 12){
-                    placedCards[placedCards.IndexOf(msg.card1)] = null;
-                    placedCards[placedCards.IndexOf(msg.card2)] = null;
-                    placedCards[placedCards.IndexOf(msg.card3)] = null;
+                
+                if (cursor < 81 && placedCardCount == 12)
+                {
+                    placedCards[placedCards.IndexOf(cards[0])] = null;
+                    placedCards[placedCards.IndexOf(cards[1])] = null;
+                    placedCards[placedCards.IndexOf(cards[2])] = null;
                     byte[] places2Add = new byte[3];
                     int place = 0;
-                    for (int i = 0; i < placedCards.Count; i++){
-                        if (placedCards[i] == null){
+
+                    for (int i = 0; i < placedCards.Count; i++)
+                    {
+                        if (placedCards[i] == null)
+                        {
                             places2Add[place] = (byte)i;
                             placedCards[i] = BoardGameCardDataHolder.Instance.GetCard(deck[cursor + place]);
                             place++;
+
                             if (place == 3)
                                 break;
                         }
                     }
 
                     UpdateHintCards();
+                    state = SETGameState.Destribute;
                     RPCPlaceCards(deck.ToList().GetRange(cursor, 3).Select(c => BoardGameCardDataHolder.Instance.GetCard(c)).ToArray(), places2Add);
                     cursor += 3;
                     yield return new WaitForSeconds(0.7f);
                 }
-                else{
-                    int temp = placedCards.IndexOf(msg.card1);
+                else
+                {
+                    int temp = placedCards.IndexOf(cards[0]);
                     placedCards[temp] = null;
-                    temp = placedCards.IndexOf(msg.card2);
+                    temp = placedCards.IndexOf(cards[1]);
                     placedCards[temp] = null;
-                    temp = placedCards.IndexOf(msg.card3);
+                    temp = placedCards.IndexOf(cards[2]);
                     placedCards[temp] = null;
                     placedCardCount -= 3;
                     UpdateHintCards();
@@ -171,6 +190,7 @@ namespace OnlineBoardGames.SET {
         [Server]
         IEnumerator ProcessVote(bool v){
             voteNoCount = voteYesCount = 0;
+            voteStarter = null;
             yield return new WaitForSeconds(1);
             if (v){
                 state = SETGameState.Destribute;
@@ -187,6 +207,7 @@ namespace OnlineBoardGames.SET {
                         }
                     }
                     placedCardCount += 3;
+                    state = SETGameState.Destribute;
                     RPCPlaceCards(deck.ToList().GetRange(cursor, 3).Select(c => BoardGameCardDataHolder.Instance.GetCard(c)).ToArray(), placed2Add);
                     cursor += 3;
                     foreach (var p in roomPlayers)
@@ -211,34 +232,42 @@ namespace OnlineBoardGames.SET {
 
         #region Syncvars
         [SyncVar(hook = nameof(GameStateChanged))]
-        public SETGameState state;
+        public SETGameState state = SETGameState.Normal;
 
         [SyncVar]
         public RoomData roomInfo;
 
-        [SyncVar]
-        public NetworkIdentity guessingPlayer;
+        [SyncVar(hook = nameof(PlayerStartGuess))]
+        public SETNetworkPlayer guessingPlayer;
+
+        [SyncVar(hook = nameof(OnPlayerStartVote))]
+        public SETNetworkPlayer voteStarter;
         #endregion
 
         #region Syncvar Hooks
-        void GameStateChanged(SETGameState oldVal, SETGameState newVal){
+        void GameStateChanged(SETGameState oldVal, SETGameState newVal)
+        {
             StateChanged?.Invoke(oldVal, newVal);
-            if (newVal == SETGameState.Normal)
-                SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.Clear);
+        }
+
+        void PlayerStartGuess(SETNetworkPlayer _, SETNetworkPlayer newPlayer)
+        {
+            if(newPlayer != null)
+                GuessBegin?.Invoke(newPlayer);
+        }
+
+        void OnPlayerStartVote(SETNetworkPlayer _, SETNetworkPlayer newPlayer)
+        {
+            if (newPlayer != null)
+                PlayerStartedVote?.Invoke(newPlayer);
         }
         #endregion
 
         #region Client RPCs
         [ClientRpc]
-        private void RPCBeginGame() {
-            SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.StartGame);
-            SETGameUIManager.Instance.timer.StartCountdown(roomInfo.guessTime, true,  () => { SingletonUIHandler.GetInstance<SETUIEventHandler>().OnCommonOrLocalStateEvent?.Invoke(UIStates.CardDestribute); });
-        }
-
-        [ClientRpc]
-        private void RPCPlaceCards(CardData[] cards, byte[] cardPoses){
-            SETGameUIManager.Instance.PlaceCards(cards, cardPoses);
-            SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.CardDestribute);
+        private void RPCPlaceCards(CardData[] cards, byte[] cardPoses)
+        {
+            NewCardsReceived?.Invoke(cards, cardPoses.Select(x => (int)x).ToArray());
         }
 
         [ClientRpc]
@@ -247,85 +276,35 @@ namespace OnlineBoardGames.SET {
         }
 
         [ClientRpc]
-        void RPCPopTimeout(NetworkIdentity guessPlayer){
-            SETGameUIManager.Instance.PopTimeout(guessPlayer.hasAuthority ? "You did not guess in time!\nYou lost one point!" : $"{guessPlayer.GetComponent<SETNetworkPlayer>().playerName} did not guess in time!\nHe lost one point!");
-            if (guessPlayer.hasAuthority)
-                SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.GuessTimeout);
-            else
-                SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnOtherStateEvent?.Invoke(UIStates.GuessTimeout, guessPlayer.GetComponent<SETNetworkPlayer>().playerName);
-        }
-
-        [ClientRpc]
-        void RPCPopResult(GuessSETMessage msg, byte result, NetworkIdentity guessPlayer){
-            SETGameUIManager.Instance.PopResult(result, msg, guessPlayer);
-        }
-
-        [ClientRpc]
-        void RPCPlayerVoted(NetworkIdentity identity){
-            if (identity.hasAuthority)
-                SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.PlaceVote);
-        }
-
-        #endregion
-
-        #region MessageHandlers
-        
-        internal void OnSETGuess(NetworkConnectionToClient conn, GuessSETMessage msg)
+        void RPCPopResult(SETNetworkPlayer guessPlayer, CardData[] cards, byte result)
         {
-            if (state == SETGameState.Guess && guessingPlayer != null && conn.identity == guessingPlayer && ValidateGuess(msg.card1, msg.card2, msg.card3))
-            {
-                byte r = CardData.CheckSET(msg.card1, msg.card2, msg.card3);
-                state = SETGameState.Process;
-                StopCoroutine(guessProcess);
-                StartCoroutine(ResultProcess(r, msg));
-            }
-        }
-
-        internal void OnPlayerVote(NetworkConnectionToClient conn, VoteMessage msg)
-        {
-            if(state == SETGameState.Request && conn.identity.GetComponent<SETNetworkPlayer>().voteState == VoteStat.NULL){
-                if (msg.isYes)
-                {
-                    conn.identity.GetComponent<SETNetworkPlayer>().voteState = VoteStat.YES;
-                    voteYesCount++;
-                }
-                else
-                {
-                    conn.identity.GetComponent<SETNetworkPlayer>().voteState = VoteStat.NO;
-                    voteNoCount++;
-                }
-                RPCPlayerVoted(conn.identity);
-                if (voteNoCount + voteYesCount == playerCount)
-                {
-                    StartCoroutine(ProcessVote(voteYesCount >= voteNoCount));
-                }
-            }
+            PlayerGuessReceived?.Invoke(guessPlayer, cards, result);
         }
 
         #endregion
 
         #region Commands
         [Command(requiresAuthority = false)]
-        internal void CmdAttemptGuess(NetworkIdentity identity)
+        internal void CmdAttemptGuess(SETNetworkPlayer identity)
         {
             if (guessingPlayer == null && state == SETGameState.Normal && guessProcess == null)
             {
                 guessingPlayer = identity;
-                identity.GetComponent<SETNetworkPlayer>().isGuessing = true;
+                identity.isGuessing = true;
                 state = SETGameState.Guess;
                 guessProcess = StartCoroutine(ProcessGuess());
             }
         }
 
         [Command(requiresAuthority = false)]
-        internal void CmdRequestDestribute(NetworkIdentity identity)
+        internal void CmdRequestMoreCards(SETNetworkPlayer player)
         {
             if (state == SETGameState.Normal && cursor < 81)
             {
-                state = SETGameState.Request;
-                identity.GetComponent<SETNetworkPlayer>().voteState = VoteStat.YES;
+                voteStarter = player;
+                state = SETGameState.CardVote;
+                player.voteState = VoteStat.YES;
                 voteYesCount++;
-                RPCPlayerVoted(identity);
             }
         }
 
@@ -333,6 +312,39 @@ namespace OnlineBoardGames.SET {
         internal void CmdHintRequest(NetworkIdentity identity)
         {
             TargetGetHint(identity.connectionToClient, hintCards.ToArray());
+        }
+
+        [Command(requiresAuthority = false)]
+        internal void CmdGuessCards(SETNetworkPlayer player, CardData[] cards)
+        {
+            if (state == SETGameState.Guess && guessingPlayer == player && ValidateGuess(cards[0], cards[1], cards[2]))
+            {
+                byte r = CardData.CheckSET(cards[0], cards[1], cards[2]);
+                state = SETGameState.ProcessGuess;
+                StopCoroutine(guessProcess);
+                StartCoroutine(ResultProcess(r, cards));
+            }
+        }
+
+        [Command(requiresAuthority = false)]
+        internal void CmdSendVote(SETNetworkPlayer player, bool isYes)
+        {
+            if (state == SETGameState.CardVote && player.voteState == VoteStat.NULL)
+            {
+                if (isYes)
+                {
+                    player.voteState = VoteStat.YES;
+                    voteYesCount++;
+                }
+                else
+                {
+                    player.voteState = VoteStat.NO;
+                    voteNoCount++;
+                }
+
+                if (voteNoCount + voteYesCount == playerCount)
+                    StartCoroutine(ProcessVote(voteYesCount >= voteNoCount));
+            }
         }
         #endregion
 

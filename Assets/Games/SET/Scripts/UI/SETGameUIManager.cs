@@ -13,6 +13,7 @@ namespace OnlineBoardGames.SET
         [SerializeField] Transform cardHolder;
         [SerializeField] Text remainTxt;
         [SerializeField] GraphicRaycaster cardRaycaster;
+        [SerializeField] GameLogger gameLogger;
 
         public static SETGameUIManager Instance { get; private set; }
 
@@ -24,6 +25,7 @@ namespace OnlineBoardGames.SET
         int cardCount = 81;
         SETRoomNetworkManager sessionManager;
         List<SETNetworkPlayer> players = new();
+        SETNetworkPlayer localPlayer;
         List<CardUI> selected = new(3);
         List<CardUI> hints = new(3);
         List<CardUI> placedCardUIs = new(18);
@@ -31,17 +33,18 @@ namespace OnlineBoardGames.SET
         public bool UpdateSelected(CardUI card)
         {
             if (!sessionManager.CanSelect || selected.Contains(card)) return false;
+
             if (selected.Count < 3)
             {
                 selected.Add(card);
+
                 if (selected.Count == 3 && sessionManager.state == SETGameState.Guess)
-                    Mirror.NetworkClient.Send(new GuessSETMessage { card1 = selected[0].info, card2 = selected[1].info, card3 = selected[2].info });
+                    sessionManager.CmdGuessCards(localPlayer, selected.Select((cardUI) => cardUI.info).ToArray());
+
                 return true;
             }
             else
-            {
                 return false;
-            }
         }
 
         private void Awake()
@@ -54,6 +57,9 @@ namespace OnlineBoardGames.SET
             {
                 playerPanel.GetChild(player.playerIndex - 1).GetComponent<PlayerUI>().SetPlayer(player);
                 player.LeftGame += () => players.Remove(player);
+
+                if (player.hasAuthority)
+                    localPlayer = player;
             }
 
             Subscribe();
@@ -62,22 +68,72 @@ namespace OnlineBoardGames.SET
         void Subscribe()
         {
             sessionManager.StateChanged += OnStateChanged;
+            sessionManager.NewCardsReceived += PlaceCards;
+            sessionManager.GuessBegin += OnPlayerStartedGuess;
+            sessionManager.PlayerGuessReceived += OnPlayerGuessReceived;
+            sessionManager.PlayerStartedVote += OnPlayerStartedVote;
+            localPlayer.VoteChanged += OnLocalPlayerVoteChanged;
+        }
+
+        private void OnPlayerStartedVote(SETNetworkPlayer player)
+        {
+            gameLogger.SetText(player.hasAuthority ? "Wait For Others to vote." : $"{player.playerName} Started Vote destribute. place your vote.");
+        }
+
+        private void OnLocalPlayerVoteChanged(VoteStat _, VoteStat vote)
+        {
+            if(vote != VoteStat.NULL)
+                gameLogger.SetText("Wait For Others to vote.");
+        }
+
+        private void OnPlayerGuessReceived(SETNetworkPlayer player, CardData[] cards, byte result)
+        {
+            if(cards == null)
+            {
+                for (int i = 0; i < selected.Count; i++)
+                    selected[i].Mark(false);
+                selected.Clear();
+                gameLogger.SetText(player.hasAuthority ? "You didn't guess in time. You lost 1 point" : $"{player.playerName} didn't guess in time. {player.playerName} lost 1 point");
+                return;
+            }
+
+            PopResult(result, cards, player);
+        }
+
+        private void OnPlayerStartedGuess(SETNetworkPlayer player)
+        {
+            timer.StartCountdown(sessionManager.roomInfo.guessTime);
+            gameLogger.SetText(player.hasAuthority ? "Your are guessing. Guess quickly" : $"{player.playerName} is guessing");
         }
 
         void UnSubscribe()
         {
             sessionManager.StateChanged -= OnStateChanged;
+            sessionManager.NewCardsReceived -= PlaceCards;
+            sessionManager.GuessBegin -= OnPlayerStartedGuess;
+            sessionManager.PlayerGuessReceived -= OnPlayerGuessReceived;
+            sessionManager.PlayerStartedVote -= OnPlayerStartedVote;
+            localPlayer.VoteChanged -= OnLocalPlayerVoteChanged;
         }
 
         private void OnStateChanged(SETGameState _, SETGameState state)
         {
             RefreshBtns(state);
+
+            if (state == SETGameState.Normal)
+                gameLogger.SetText("");
             
-            if(state == SETGameState.Request)
+            if(state == SETGameState.CardVote)
             {
                 DialogManager.Instance.SpawnDialog<SETVoteDialog>(DialogShowOptions.OverAll, (dialog) => {
                     (dialog as SETVoteDialog).Init(sessionManager, players);
                 });
+            }
+
+            if(state == SETGameState.Start)
+            {
+                timer.StartCountdown(4);
+                gameLogger.SetText("Wait For The Game To Start.");
             }
         }
 
@@ -93,12 +149,12 @@ namespace OnlineBoardGames.SET
             remainTxt.text = cardCount.ToString();
         }
 
-        public void PlaceCards(CardData[] cardInfos, byte[] cardPoses)
+        void PlaceCards(CardData[] cardInfos, int[] cardPoses)
         {
+            gameLogger.SetText("Destributing Cards");
+
             for (int i = 0; i < cardInfos.Length; i++)
-            {
                 placedCardUIs.Add(pool.PullFromList(0, cardInfos[i], cardPoses[i], 0.2f * i, cardHolder).GetComponent<CardUI>());
-            }
         }
 
         void RefreshBtns(SETGameState state)
@@ -112,34 +168,21 @@ namespace OnlineBoardGames.SET
 
         public void AttemptGuess()
         {
-            sessionManager.CmdAttemptGuess(Mirror.NetworkClient.connection.identity);
+            sessionManager.CmdAttemptGuess(localPlayer);
         }
 
-        public void AlertGuess()
+        public void PopResult(byte result, CardData[] cards, SETNetworkPlayer player)
         {
-            timer.StartCountdown(sessionManager.roomInfo.guessTime);
-        }
-
-        public void PopTimeout(string str)
-        {
-            for (int i = 0; i < selected.Count; i++)
-                selected[i].Mark(false);
-            selected.Clear();
-            MyUtils.DelayAction(() => { SingletonUIHandler.GetInstance<SETUIEventHandler>().OnCommonOrLocalStateEvent?.Invoke(UIStates.Clear); }, 3, this);
-        }
-
-        public void PopResult(byte result, GuessSETMessage msg, Mirror.NetworkIdentity player)
-        {
-            SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.Clear);
+            gameLogger.SetText("");
             bool isCorrect = CardData.IsSET(result);
             string p = null;
             if (!player.hasAuthority)
             {
-                p = player.GetComponent<SETNetworkPlayer>()?.playerName;
+                p = player.playerName;
                 selected.Clear();
                 foreach (var c in placedCardUIs)
                 {
-                    if (c.info.Equals(msg.card1) || c.info.Equals(msg.card2) || c.info.Equals(msg.card3))
+                    if (c.info.Equals(cards[0]) || c.info.Equals(cards[1]) || c.info.Equals(cards[2]))
                     {
                         c.Mark(true);
                         selected.Add(c);
@@ -151,30 +194,25 @@ namespace OnlineBoardGames.SET
 
             GuessResultDialog.Show(selected.ToArray(), result);
             timer.Stop();
-            StartCoroutine(DisplayResult(isCorrect, p));
+            StartCoroutine(DisplayResult(isCorrect, player));
         }
 
-        IEnumerator DisplayResult(bool isSet, string playerName)
+        IEnumerator DisplayResult(bool isSet, SETNetworkPlayer player)
         {
             yield return new WaitForSeconds(0.5f);
-            if (playerName != null)
-            {
-                if (isSet)
-                    SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnOtherStateEvent?.Invoke(UIStates.GuessRight, playerName);
-                else
-                    SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnOtherStateEvent?.Invoke(UIStates.GuessWrong, playerName);
-            }
+
+            if (isSet)
+                gameLogger.SetText(player.hasAuthority ? "You Guessed Right! You Got 1 point." : $"{player.playerName} Guessed Right! He Got 1 point.");
             else
-                SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(isSet ? UIStates.GuessRight : UIStates.GuessWrong);
-            
+                gameLogger.SetText(player.hasAuthority ? "Your Guess was Wrong! You lost 1 point." : $"{player.playerName}'s Guess was Wrong! He lost 1 point.");
+
             yield return new WaitForSeconds(6);
             DialogManager.Instance.CloseDialog<GuessResultDialog>();
-            SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.Clear);
         }
 
         public void SendCardRequest()
         {
-            sessionManager.CmdRequestDestribute(Mirror.NetworkClient.connection.identity);
+            sessionManager.CmdRequestMoreCards(localPlayer);
         }
 
         public void SendHint()

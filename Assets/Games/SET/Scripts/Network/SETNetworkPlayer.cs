@@ -55,16 +55,9 @@ namespace OnlineBoardGames.SET
             WrongGuessChanged?.Invoke(oldVal, newVal);
         }
 
-        void OnGuessChanged(bool oldVal, bool newVal){
+        void OnGuessChanged(bool _, bool newVal)
+        {
             GuessChanged?.Invoke(newVal);
-
-            if (!oldVal && newVal){
-                SETGameUIManager.Instance.AlertGuess();
-                if (hasAuthority)
-                    SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnCommonOrLocalStateEvent?.Invoke(UIStates.GuessBegin);
-                else
-                    SingletonUIHandler.GetInstance<SETUIEventHandler>()?.OnOtherStateEvent?.Invoke(UIStates.GuessBegin, playerName);
-            }
         }
 
         void OnVoteChanged(VoteStat oldVal, VoteStat newVal)

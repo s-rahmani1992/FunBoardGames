@@ -16,7 +16,6 @@ namespace OnlineBoardGames.SET
 
         public override void Show()
         {
-            var eventHandler = SingletonUIHandler.GetInstance<SETUIEventHandler>();
             base.Show();
 
             manager.StateChanged += OnStateChanged;
@@ -41,13 +40,12 @@ namespace OnlineBoardGames.SET
 
         private void OnStateChanged(SETGameState oldVal, SETGameState _)
         {
-            if (oldVal == SETGameState.Request)
+            if (oldVal == SETGameState.CardVote)
                 Close();
         }
 
         public override void Close()
         {
-            var eventHandler = SingletonUIHandler.GetInstance<SETUIEventHandler>();
             manager.StateChanged -= OnStateChanged;
             localPlayer.VoteChanged -= OnLocalPlayerVoteChanged;
             base.Close();
@@ -61,7 +59,7 @@ namespace OnlineBoardGames.SET
 
         public void SendVote(bool yes)
         {
-            Mirror.NetworkClient.Send(new VoteMessage { isYes = yes });
+            manager.CmdSendVote(localPlayer, yes);
         }
 
         public PlayerVoteUI GetVoteUI(int index)
