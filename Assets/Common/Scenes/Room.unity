@@ -934,50 +934,6 @@ RectTransform:
   m_AnchoredPosition: {x: 17.006582, y: 606.27637}
   m_SizeDelta: {x: 977.3369, y: 264.0908}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!1 &1059338267
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1059338269}
-  - component: {fileID: 1059338268}
-  m_Layer: 0
-  m_Name: RoomEventHandler
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1059338268
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1059338267}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 320e1247108ca4b428efb736152df066, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!4 &1059338269
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1059338267}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 4
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1467255586
 GameObject:
   m_ObjectHideFlags: 0
@@ -1144,6 +1100,7 @@ MonoBehaviour:
   playersPanel: {fileID: 315975365}
   roomPlyerUI: {fileID: 102447323708335501, guid: 9e5bb6372a9fb8845a6d3b0beadc7a74, type: 3}
   readyBtn: {fileID: 265111274}
+  leaveBtn: {fileID: 1467255588}
   roomTxt: {fileID: 442756329}
   logTxt: {fileID: 962471718}
   roomContainer: {fileID: 11400000, guid: 9a13183f417641945bb175163d62f312, type: 2}

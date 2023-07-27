@@ -1,5 +1,4 @@
-using System.Collections.Generic;
-using UnityEngine;using UnityEngine.SceneManagement;
+using UnityEngine.SceneManagement;
 using Mirror;
 using System;
 
@@ -14,8 +13,6 @@ namespace OnlineBoardGames
 {
     public class BoardGamePlayer : NetworkBehaviour
     {
-        [SerializeField] RoomRequestContainer roomContainer;
-
         public event Action<bool> ReadyChanged;
         public event Action<int, int> IndexChanged;
         public event Action LeftGame;
@@ -35,9 +32,6 @@ namespace OnlineBoardGames
         protected virtual void OnReadyChanged(bool oldVal, bool newVal)
         {
             ReadyChanged?.Invoke(newVal);
-            
-            if (newVal && hasAuthority)
-                SingletonUIHandler.GetInstance<RoomUIEventHandler>()?.OnLocalPlayerReady?.Invoke();
         }
 
         protected virtual void OnIndexChanged(byte oldVal, byte newVal) 
@@ -89,9 +83,9 @@ namespace OnlineBoardGames
         /// Called on every NetworkBehaviour when it is activated on a client.
         /// <para>Objects on the host have this function called, as there is a local client on the host. The values of SyncVars on object are guaranteed to be initialized correctly with the latest state from the server when this function is called on the client.</para>
         /// </summary>
-        public override void OnStartClient() {
+        public override void OnStartClient() 
+        {
             DebugStep.Log("BoardGamePlayer.OnStartClient()");
-            roomContainer.Invoke(this);
         }
 
         /// <summary>

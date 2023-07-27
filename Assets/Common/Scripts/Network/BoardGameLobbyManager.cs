@@ -35,7 +35,8 @@ namespace OnlineBoardGames
 
     public class BoardGameLobbyManager : NetworkBehaviour
     {
-        Dictionary<Guid, BoardGameRoomManager> rooms = new Dictionary<Guid, BoardGameRoomManager>();
+        Dictionary<Guid, BoardGameRoomManager> rooms = new();
+        public event Action<BoardGameRoomManager, NetworkConnectionToClient> RoomRequested;
 
         [Server]
         Guid GenerateRoomID(){
@@ -108,6 +109,7 @@ namespace OnlineBoardGames
             var player = Instantiate(BoardGameNetworkManager.singleton.spawnPrefabs[2 * (byte)room.GameType + 3]).GetComponent<BoardGamePlayer>();
             player.GetComponent<NetworkMatch>().matchId = match.matchId;
             NetworkServer.AddPlayerForConnection(conn, player.gameObject);
+            RoomRequested?.Invoke(room, conn);
             room.AddPlayer(player);
         }
 

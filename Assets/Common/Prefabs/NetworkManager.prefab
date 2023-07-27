@@ -55,7 +55,7 @@ MonoBehaviour:
   offlineScene: 
   onlineScene: 
   transport: {fileID: 7764211167230200391}
-  networkAddress: 192.168.1.242
+  networkAddress: localhost
   maxConnections: 100
   authenticator: {fileID: 7475147692941367167}
   playerPrefab: {fileID: 0}
@@ -114,7 +114,7 @@ MonoBehaviour:
   wrap: {fileID: 7475147692941367166}
   latencySpikeMultiplier: 0
   latencySpikeSpeedMultiplier: 1
-  reliableLatency: 1
+  reliableLatency: 0
   unreliableLoss: 0
   unreliableLatency: 0
   unreliableScramble: 0

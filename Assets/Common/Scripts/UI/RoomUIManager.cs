@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace OnlineBoardGames
@@ -8,51 +9,88 @@ namespace OnlineBoardGames
     {
         public static RoomUIManager Instance { get; private set; }
 
-        [SerializeField]
-        RectTransform playersPanel;
+        [SerializeField] RectTransform playersPanel;
         [SerializeField] RoomPlayerUI roomPlyerUI;
-        [SerializeField]
-        Button readyBtn;
-        [SerializeField]
-        Text roomTxt, logTxt;
+        [SerializeField] Button readyBtn;
+        [SerializeField] Button leaveBtn;
+        [SerializeField] Text roomTxt;
+        [SerializeField] Text logTxt;
         [SerializeField] RoomRequestContainer roomContainer;
 
+        BoardGameRoomManager roomManager;
         Coroutine toast;
         
-        void Awake(){
+        void Awake()
+        {
             Instance = this;
         }
 
         private void Start()
         {
-            roomContainer.RoomGenerated += OnRoomGenerated;
-            roomContainer.PlayerAdded += OnPlayerAdded;
+            BoardGameNetworkManager.singleton.JoinedRoom += OnRoomGenerated;
 
             if (roomContainer.IsCreate)
                 Mirror.NetworkClient.Send(new CreateRoomMessage { reqName = roomContainer.RoomName, gameType = roomContainer.GameType });
             else
                 Mirror.NetworkClient.Send(new JoinMatchMessage { matchID = roomContainer.MatchId });
-
-            var eventHandler = SingletonUIHandler.GetInstance<RoomUIEventHandler>();
-            eventHandler.OnLocalPlayerReady += () => { readyBtn.interactable = false; };
-            eventHandler.OnOtherPlayerJoined += (player) => { Log($"Player {player} Joined"); };
-            eventHandler.OnOtherPlayerLeft += (player) => { Log($"Player {player} Left"); };
-            eventHandler.OnAllPlayersReady += () => { logTxt.text = "Wait For Game to Load"; };
-            eventHandler.OnBeginStatChanged += (stat) => { logTxt.text = (stat ? "" : "Not Enough Players. Wait For Others to join"); };
         }
 
         private void OnPlayerAdded(BoardGamePlayer player)
         {
             RoomPlayerUI UIPlayer = Instantiate(roomPlyerUI, playersPanel);
             UIPlayer.SetPlayer(player);
+
+            if(player.hasAuthority)
+                player.ReadyChanged += OnReadyChanged;
+        }
+
+        private void OnReadyChanged(bool ready)
+        {
+            readyBtn.interactable = !ready;
+            leaveBtn.interactable = !ready;
         }
 
         private void OnRoomGenerated(BoardGameRoomManager room)
         {
+            roomManager = room;
+            roomManager.PlayerAdded += OnPlayerAdded;
+            roomManager.PlayerJoined += OnPlayerJoined;
+            roomManager.PlayerLeft += OnPlayerLeft;
+            roomManager.AllPlayersReady += OnAllPlayersReady;
             roomTxt.text = room.roomName;
         }
 
-        private void OnDestroy(){
+        private void OnAllPlayersReady()
+        {
+            logTxt.text = "Wait For Game to Load";
+            MyUtils.DelayAction(() => {
+                SceneManager.LoadScene("Game");;
+            }, 1, this);
+        }
+
+        private void OnPlayerLeft(BoardGamePlayer player)
+        {
+            if(!player.hasAuthority)
+                Log($"{player.playerName} Left the room");
+        }
+
+        private void OnPlayerJoined(BoardGamePlayer player)
+        {
+            Log($"{(player.hasAuthority ? "you" : player.playerName)} Joined the room");
+        }
+
+        private void OnDestroy()
+        {
+            BoardGameNetworkManager.singleton.JoinedRoom -= OnRoomGenerated;
+
+            if(roomManager != null)
+            {
+                roomManager.PlayerAdded -= OnPlayerAdded;
+                roomManager.PlayerJoined -= OnPlayerJoined; 
+                roomManager.PlayerLeft -= OnPlayerLeft;
+                roomManager.AllPlayersReady -= OnAllPlayersReady;
+            }
+            
             Instance = null;
         }
 
@@ -61,24 +99,29 @@ namespace OnlineBoardGames
             return playersPanel.GetChild(number - 1).GetComponent<RoomPlayerUI>();
         }
 
-        public void ReaveRoom(){
+        public void ReaveRoom()
+        {
             Mirror.NetworkClient.Send(new LeaveRoomMessage { });
         }
 
-        public void SendReady(){
+        public void SendReady()
+        {
             Mirror.NetworkClient.Send(new PlayerReadyMessage { });
         }
 
-        void Log(string str){
+        void Log(string str)
+        {
             if (toast == null)
                 toast = StartCoroutine(Toast(str));
-            else{
+            else
+            {
                 StopCoroutine(toast);
                 toast = StartCoroutine(Toast(str));
             }
         }
 
-        IEnumerator Toast(string str){
+        IEnumerator Toast(string str)
+        {
             string currentTxt = logTxt.text;
             logTxt.text = str;
             yield return new WaitForSeconds(3);

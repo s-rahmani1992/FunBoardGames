@@ -30,4 +30,9 @@ namespace OnlineBoardGames
     }
 
     public struct LeaveRoomMessage : NetworkMessage { }
+
+    public struct NotifyJoinRoom : NetworkMessage
+    {
+        public BoardGameRoomManager room;
+    }
 }

@@ -18,6 +18,11 @@ namespace OnlineBoardGames {
         int readyCount;
         public virtual BoardGameTypes GameType { get; }
 
+        public event Action<BoardGamePlayer> PlayerAdded;
+        public event Action<BoardGamePlayer> PlayerJoined;
+        public event Action<BoardGamePlayer> PlayerLeft;
+        public event Action AllPlayersReady;
+
         public byte playerCount => (byte)roomPlayers.Count;
         public bool IsAcceptingPlayer {get; private set;}
 
@@ -31,37 +36,42 @@ namespace OnlineBoardGames {
 
         #region Virtual RPCClients
         [ClientRpc]
-        protected virtual void RPCAllPlayersReady(){
-            SingletonUIHandler.GetInstance<RoomUIEventHandler>()?.OnAllPlayersReady();
+        protected void UpdatePlayers(BoardGamePlayer[] players)
+        {
+            foreach(var player in players)
+            {
+                if (roomPlayers.Contains(player))
+                    continue;
+
+                roomPlayers.Add(player);
+                player.LeftGame += () => 
+                {
+                    PlayerLeft?.Invoke(player);
+                    roomPlayers.Remove(player);
+                };
+                PlayerAdded?.Invoke(player);
+            }
         }
 
         [ClientRpc]
-        protected virtual void RPCPlayerJoin(NetworkIdentity identity){
-            if(!identity.hasAuthority)
-                SingletonUIHandler.GetInstance<RoomUIEventHandler>()?.OnOtherPlayerJoined?.Invoke(identity.GetComponent<BoardGamePlayer>().playerName);
+        protected virtual void RPCAllPlayersReady()
+        {
+            AllPlayersReady?.Invoke();
         }
 
         [ClientRpc]
-        protected virtual void RPCPlayerLeave(NetworkIdentity identity){
-            if (!identity.hasAuthority)
-                SingletonUIHandler.GetInstance<RoomUIEventHandler>()?.OnOtherPlayerLeft?.Invoke(identity.GetComponent<BoardGamePlayer>().playerName);
+        protected virtual void RPCPlayerJoin(NetworkIdentity identity)
+        {
+            PlayerJoined?.Invoke(identity.GetComponent<BoardGamePlayer>());
         }
         #endregion
 
         #region Message Handlers
-        internal void OnPlayerReady(NetworkConnectionToClient conn, PlayerReadyMessage msg){
+        internal void OnPlayerReady(NetworkConnectionToClient conn, PlayerReadyMessage msg)
+        {
             conn.identity.GetComponent<BoardGamePlayer>().isReady = true;
             readyCount++;
-            if (playerCount >= 2 && readyCount == playerCount){
-                RPCAllPlayersReady();
-                IsAcceptingPlayer = false;
-                MyUtils.DelayAction(() => {
-                    NetworkServer.SendToReadyObservers(conn.identity, new SceneMessage { sceneName = "Game" });
-                }, 1, this);
-                MyUtils.DelayAction(() => {
-                    BeginGame();
-                }, 1.2f, this);
-            }
+            CheckAllReady();
         }
 
         #endregion
@@ -90,10 +100,9 @@ namespace OnlineBoardGames {
         /// Called on every NetworkBehaviour when it is activated on a client.
         /// <para>Objects on the host have this function called, as there is a local client on the host. The values of SyncVars on object are guaranteed to be initialized correctly with the latest state from the server when this function is called on the client.</para>
         /// </summary>
-        public override void OnStartClient() {
-
+        public override void OnStartClient() 
+        {
             DebugStep.Log("NetworkRoomManager.OnStartClient()");
-            roomContainer.Invoke(this);
         }
 
         /// <summary>
@@ -137,15 +146,19 @@ namespace OnlineBoardGames {
 
             for (int i = 0; i < roomPlayers.Count; i++)
                 roomPlayers[i].playerIndex = (byte)(i + 1);
+
+            UpdatePlayers(roomPlayers.ToArray());
         }
 
         [Server]
-        public void Remove(BoardGamePlayer player, bool canRefreshIndices = true){
+        public void Remove(BoardGamePlayer player, bool canRefreshIndices = true)
+        {
             if (roomPlayers.Remove(player))
             {
-                RPCPlayerLeave(player.netIdentity);
                 if (player.isReady)
                     readyCount--;
+
+                CheckAllReady();
 
                 if (canRefreshIndices)
                 {
@@ -154,6 +167,18 @@ namespace OnlineBoardGames {
                 }
 
                 NetworkServer.RemovePlayerForConnection(player.connectionToClient, true);
+            }
+        }
+
+        void CheckAllReady()
+        {
+            if (playerCount >= 2 && readyCount == playerCount)
+            {
+                RPCAllPlayersReady();
+                IsAcceptingPlayer = false;
+                MyUtils.DelayAction(() => {
+                    BeginGame();
+                }, 1.3f, this);
             }
         }
     }

@@ -2,9 +2,6 @@ using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Mirror;
-using System.Collections.Generic;
-using System.Collections;
-using System.Linq;
 
 /*
 	Documentation: https://mirror-networking.gitbook.io/docs/components/network-manager
@@ -32,6 +29,7 @@ namespace OnlineBoardGames
         }
 #endif
         public event Action<SerializableRoom[]> RoomListReceived;
+        public event Action<BoardGameRoomManager> JoinedRoom;
         public static new BoardGameNetworkManager singleton { get; private set; }
 
         #region Server Methods & Variables
@@ -259,10 +257,12 @@ namespace OnlineBoardGames
         /// This is invoked when a server is started - including when a host is started.
         /// <para>StartServer has multiple signatures, but they all cause this hook to be called.</para>
         /// </summary>
-        public override void OnStartServer() {
+        public override void OnStartServer() 
+        {
             DebugStep.Log("NetworkManager.OnStartServer()");
             var lobby = Instantiate(spawnPrefabs[0]);
             lobbyManager = lobby.GetComponent<BoardGameLobbyManager>();
+            lobbyManager.RoomRequested += OnRoomRequested;
             NetworkServer.Spawn(lobby);
             NetworkServer.Spawn(Instantiate(spawnPrefabs[1]));
 
@@ -270,11 +270,22 @@ namespace OnlineBoardGames
             NetworkServer.RegisterHandler<SET.VoteMessage>((conn, msg) => { lobbyManager.GetRoomManager<SET.SETRoomNetworkManager>((conn.authenticationData as AuthData).roomID).OnPlayerVote(conn, msg); }, false);
         }
 
+        private void OnRoomRequested(BoardGameRoomManager room, NetworkConnectionToClient conn)
+        {
+            conn.Send(new NotifyJoinRoom { room = room });
+        }
+
         /// <summary>
         /// This is invoked when the client is started.
         /// </summary>
         public override void OnStartClient(){
             NetworkClient.RegisterHandler<RoomListResponse>(OnGetRoomList);
+            NetworkClient.RegisterHandler<NotifyJoinRoom>(OnRoomClientCreated);
+        }
+
+        private void OnRoomClientCreated(NotifyJoinRoom roomMsg)
+        {
+            JoinedRoom?.Invoke(roomMsg.room);
         }
 
         private void OnGetRoomList(RoomListResponse rList)
