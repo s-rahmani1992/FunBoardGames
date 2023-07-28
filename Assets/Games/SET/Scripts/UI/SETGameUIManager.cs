@@ -55,7 +55,7 @@ namespace OnlineBoardGames.SET
 
             foreach(var player in players)
             {
-                playerPanel.GetChild(player.playerIndex - 1).GetComponent<PlayerUI>().SetPlayer(player);
+                playerPanel.GetChild(player.Index - 1).GetComponent<PlayerUI>().SetPlayer(player);
                 player.LeftGame += () => players.Remove(player);
 
                 if (player.hasAuthority)
@@ -77,7 +77,7 @@ namespace OnlineBoardGames.SET
 
         private void OnPlayerStartedVote(SETNetworkPlayer player)
         {
-            gameLogger.SetText(player.hasAuthority ? "Wait For Others to vote." : $"{player.playerName} Started Vote destribute. place your vote.");
+            gameLogger.SetText(player.hasAuthority ? "Wait For Others to vote." : $"{player.Name} Started Vote destribute. place your vote.");
         }
 
         private void OnLocalPlayerVoteChanged(VoteStat _, VoteStat vote)
@@ -93,7 +93,7 @@ namespace OnlineBoardGames.SET
                 for (int i = 0; i < selected.Count; i++)
                     selected[i].Mark(false);
                 selected.Clear();
-                gameLogger.SetText(player.hasAuthority ? "You didn't guess in time. You lost 1 point" : $"{player.playerName} didn't guess in time. {player.playerName} lost 1 point");
+                gameLogger.SetText(player.hasAuthority ? "You didn't guess in time. You lost 1 point" : $"{player.Name} didn't guess in time. {player.Name} lost 1 point");
                 return;
             }
 
@@ -103,7 +103,7 @@ namespace OnlineBoardGames.SET
         private void OnPlayerStartedGuess(SETNetworkPlayer player)
         {
             timer.StartCountdown(sessionManager.roomInfo.guessTime);
-            gameLogger.SetText(player.hasAuthority ? "Your are guessing. Guess quickly" : $"{player.playerName} is guessing");
+            gameLogger.SetText(player.hasAuthority ? "Your are guessing. Guess quickly" : $"{player.Name} is guessing");
         }
 
         void UnSubscribe()
@@ -178,7 +178,7 @@ namespace OnlineBoardGames.SET
             string p = null;
             if (!player.hasAuthority)
             {
-                p = player.playerName;
+                p = player.Name;
                 selected.Clear();
                 foreach (var c in placedCardUIs)
                 {
@@ -202,9 +202,9 @@ namespace OnlineBoardGames.SET
             yield return new WaitForSeconds(0.5f);
 
             if (isSet)
-                gameLogger.SetText(player.hasAuthority ? "You Guessed Right! You Got 1 point." : $"{player.playerName} Guessed Right! He Got 1 point.");
+                gameLogger.SetText(player.hasAuthority ? "You Guessed Right! You Got 1 point." : $"{player.Name} Guessed Right! He Got 1 point.");
             else
-                gameLogger.SetText(player.hasAuthority ? "Your Guess was Wrong! You lost 1 point." : $"{player.playerName}'s Guess was Wrong! He lost 1 point.");
+                gameLogger.SetText(player.hasAuthority ? "Your Guess was Wrong! You lost 1 point." : $"{player.Name}'s Guess was Wrong! He lost 1 point.");
 
             yield return new WaitForSeconds(6);
             DialogManager.Instance.CloseDialog<GuessResultDialog>();

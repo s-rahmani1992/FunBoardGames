@@ -39,7 +39,7 @@ namespace OnlineBoardGames
         {
             this.player = player;
             Subscribe();
-            RefreshUI(player.playerName, player.isReady);
+            RefreshUI(player.Name, player.IsReady);
         }
 
         void Subscribe()

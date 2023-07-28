@@ -61,7 +61,7 @@ namespace OnlineBoardGames {
             RPCPlayerJoin(player.netIdentity);
 
             for (int i = 0; i < Players.Count; i++)
-                Players[i].playerIndex = (byte)(i + 1);
+                Players[i].SetIndex(i + 1);
 
             UpdatePlayers(Players.ToArray());
         }
@@ -71,7 +71,7 @@ namespace OnlineBoardGames {
         {
             if (Players.Remove(player))
             {
-                if (player.isReady)
+                if (player.IsReady)
                     readyCount--;
 
                 CheckAllReady();
@@ -79,7 +79,7 @@ namespace OnlineBoardGames {
                 if (canRefreshIndices)
                 {
                     for (int i = 0; i < PlayerCount; i++)
-                        Players[i].playerIndex = (byte)(i + 1);
+                        Players[i].SetIndex(i + 1);
                 }
 
                 NetworkServer.RemovePlayerForConnection(player.connectionToClient, true);
@@ -105,7 +105,7 @@ namespace OnlineBoardGames {
 
         internal void OnPlayerReady(NetworkConnectionToClient conn, PlayerReadyMessage msg)
         {
-            conn.identity.GetComponent<BoardGamePlayer>().isReady = true;
+            conn.identity.GetComponent<BoardGamePlayer>().SetReady();
             readyCount++;
             CheckAllReady();
         }

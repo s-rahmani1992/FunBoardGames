@@ -71,12 +71,12 @@ namespace OnlineBoardGames
         private void OnPlayerLeft(BoardGamePlayer player)
         {
             if(!player.hasAuthority)
-                Log($"{player.playerName} Left the room");
+                Log($"{player.Name} Left the room");
         }
 
         private void OnPlayerJoined(BoardGamePlayer player)
         {
-            Log($"{(player.hasAuthority ? "you" : player.playerName)} Joined the room");
+            Log($"{(player.hasAuthority ? "you" : player.Name)} Joined the room");
         }
 
         private void OnDestroy()

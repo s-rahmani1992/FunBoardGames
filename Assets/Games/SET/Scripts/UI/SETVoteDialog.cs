@@ -22,7 +22,7 @@ namespace OnlineBoardGames.SET
 
             foreach(var player in players)
             {
-                GetVoteUI(player.playerIndex).SetPlayer(player);
+                GetVoteUI(player.Index).SetPlayer(player);
 
                 if (player.hasAuthority)
                 {

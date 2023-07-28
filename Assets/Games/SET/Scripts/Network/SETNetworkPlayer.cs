@@ -82,8 +82,7 @@ namespace OnlineBoardGames.SET
         /// <para>This will be called for objects on a "host" as well as for object on a dedicated server.</para>
         /// </summary>
         public override void OnStartServer(){
-            DebugStep.Log($"NetworkBehaviour<{connectionToClient.connectionId}>.OnstartServer()");
-            playerName = (connectionToClient.authenticationData as AuthData).playerName;
+            base.OnStartServer();
             corrects = wrongs = 0;
             voteState = VoteStat.NULL;
         }

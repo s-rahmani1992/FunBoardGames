@@ -17,7 +17,7 @@ namespace OnlineBoardGames.SET
 
         public void RefreshUI(){
             playerTxt.color = (networkPlayer.hasAuthority ? Color.yellow : Color.cyan);
-            playerTxt.text = networkPlayer.playerName;
+            playerTxt.text = networkPlayer.Name;
             correctTxt.text = networkPlayer.corrects.ToString();
             wrongTxt.text = networkPlayer.wrongs.ToString();
             scoreTxt.text = (networkPlayer.corrects - networkPlayer.wrongs).ToString();

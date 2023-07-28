@@ -1,6 +1,7 @@
 using UnityEngine.SceneManagement;
 using Mirror;
 using System;
+using OnlineBoardGames.SET;
 
 /*
 	Documentation: https://mirror-networking.gitbook.io/docs/guides/networkbehaviour
@@ -18,17 +19,16 @@ namespace OnlineBoardGames
         public event Action LeftGame;
 
         #region Syncvars
-        [SyncVar]
-        public string playerName;
 
-        [SyncVar(hook = nameof(OnIndexChanged))]
-        public byte playerIndex;
+        [field: SyncVar]
+        public string Name { get; private set; }
 
-        [SyncVar(hook = nameof(OnReadyChanged))]
-        public bool isReady;
-        #endregion
+        [field: SyncVar(hook = nameof(OnIndexChanged))]
+        public byte Index { get; private set; }
 
-        #region Syncvar Hooks
+        [field: SyncVar(hook = nameof(OnReadyChanged))]
+        public bool IsReady { get; private set; }
+
         protected virtual void OnReadyChanged(bool oldVal, bool newVal)
         {
             ReadyChanged?.Invoke(newVal);
@@ -38,52 +38,54 @@ namespace OnlineBoardGames
         {
             IndexChanged?.Invoke(oldVal, newVal);
         }
+
         #endregion
 
-        #region Unity Messages
-        protected virtual void Awake(){
-            DontDestroyOnLoad(gameObject);
-            SceneManager.sceneLoaded += SceneManager_sceneLoaded;
-        }
-
-        protected virtual void OnDestroy(){
-            SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
-        }
-        #endregion
-
-        #region Scene Management
-        private void SceneManager_sceneLoaded(Scene scene1, LoadSceneMode mode)
+        protected virtual void Awake()
         {
-            if (scene1.name == "Room")
-                OnRoomSceneLoaded();
-
-            else if (scene1.name == "Game")
-                OnGameSceneLoaded();
+            DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
-        protected virtual void OnRoomSceneLoaded() { }
-        protected virtual void OnGameSceneLoaded() { }
-        #endregion
 
-        #region Start & Stop Callbacks
+        protected virtual void OnDestroy()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        #region Server Part
 
         /// <summary>
         /// This is invoked for NetworkBehaviour objects when they become active on the server.
         /// <para>This could be triggered by NetworkServer.Listen() for objects in the scene, or by NetworkServer.Spawn() for objects that are dynamically created.</para>
         /// <para>This will be called for objects on a "host" as well as for object on a dedicated server.</para>
         /// </summary>
-        public override void OnStartServer() { }
+        public override void OnStartServer()
+        {
+            DebugStep.Log($"NetworkBehaviour<{connectionToClient.connectionId}>.OnstartServer()");
+            Name = (connectionToClient.authenticationData as AuthData).playerName;
+        }
 
-        /// <summary>
-        /// Invoked on the server when the object is unspawned
-        /// <para>Useful for saving object data in persistent storage</para>
-        /// </summary>
-        public override void OnStopServer() { }
+        [Server]
+        public void SetIndex(int index)
+        {
+            Index = (byte)index;
+        }
+
+        [Server]
+        public void SetReady()
+        {
+            IsReady = true;
+        }
+
+        #endregion
+
+        #region Client Part
 
         /// <summary>
         /// Called on every NetworkBehaviour when it is activated on a client.
         /// <para>Objects on the host have this function called, as there is a local client on the host. The values of SyncVars on object are guaranteed to be initialized correctly with the latest state from the server when this function is called on the client.</para>
         /// </summary>
-        public override void OnStartClient() 
+        public override void OnStartClient()
         {
             DebugStep.Log("BoardGamePlayer.OnStartClient()");
         }
@@ -92,36 +94,22 @@ namespace OnlineBoardGames
         /// This is invoked on clients when the server has caused this object to be destroyed.
         /// <para>This can be used as a hook to invoke effects or do client specific cleanup.</para>
         /// </summary>
-        public override void OnStopClient() 
+        public override void OnStopClient()
         {
             LeftGame?.Invoke();
         }
+        void OnSceneLoaded(Scene scene1, LoadSceneMode mode)
+        {
+            if (scene1.name == "Room")
+                OnRoomSceneLoaded();
 
-        /// <summary>
-        /// Called when the local player object has been set up.
-        /// <para>This happens after OnStartClient(), as it is triggered by an ownership message from the server. This is an appropriate place to activate components or functionality that should only be active for the local player, such as cameras and input.</para>
-        /// </summary>
-        public override void OnStartLocalPlayer() { }
+            else if (scene1.name == "Game")
+                OnGameSceneLoaded();
+        }
 
-        /// <summary>
-        /// Called when the local player object is being stopped.
-        /// <para>This happens before OnStopClient(), as it may be triggered by an ownership message from the server, or because the player object is being destroyed. This is an appropriate place to deactivate components or functionality that should only be active for the local player, such as cameras and input.</para>
-        /// </summary>
-        public override void OnStopLocalPlayer() { }
-
-        /// <summary>
-        /// This is invoked on behaviours that have authority, based on context and <see cref="NetworkIdentity.hasAuthority">NetworkIdentity.hasAuthority</see>.
-        /// <para>This is called after <see cref="OnStartServer">OnStartServer</see> and before <see cref="OnStartClient">OnStartClient.</see></para>
-        /// <para>When <see cref="NetworkIdentity.AssignClientAuthority">AssignClientAuthority</see> is called on the server, this will be called on the client that owns the object. When an object is spawned with <see cref="NetworkServer.Spawn">NetworkServer.Spawn</see> with a NetworkConnectionToClient parameter included, this will be called on the client that owns the object.</para>
-        /// </summary>
-        public override void OnStartAuthority() { }
-
-        /// <summary>
-        /// This is invoked on behaviours when authority is removed.
-        /// <para>When NetworkIdentity.RemoveClientAuthority is called on the server, this will be called on the client that owns the object.</para>
-        /// </summary>
-        public override void OnStopAuthority() { }
-
+        protected virtual void OnRoomSceneLoaded() { }
+        protected virtual void OnGameSceneLoaded() { }
+        
         #endregion
     }
 }
