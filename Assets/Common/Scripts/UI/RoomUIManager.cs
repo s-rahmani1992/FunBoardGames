@@ -27,7 +27,7 @@ namespace OnlineBoardGames
 
         private void Start()
         {
-            BoardGameNetworkManager.singleton.JoinedRoom += OnRoomGenerated;
+            GameNetworkManager.singleton.JoinedRoom += OnRoomGenerated;
 
             if (roomContainer.IsCreate)
                 Mirror.NetworkClient.Send(new CreateRoomMessage { reqName = roomContainer.RoomName, gameType = roomContainer.GameType });
@@ -81,7 +81,7 @@ namespace OnlineBoardGames
 
         private void OnDestroy()
         {
-            BoardGameNetworkManager.singleton.JoinedRoom -= OnRoomGenerated;
+            GameNetworkManager.singleton.JoinedRoom -= OnRoomGenerated;
 
             if(roomManager != null)
             {

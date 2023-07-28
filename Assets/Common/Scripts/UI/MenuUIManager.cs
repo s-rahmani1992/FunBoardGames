@@ -14,12 +14,12 @@ namespace OnlineBoardGames
         Transform content;
         [SerializeField] RoomRequestContainer roomContainer;
 
-        BoardGameNetworkManager networkManager;
+        GameNetworkManager networkManager;
 
         // Start is called before the first frame update
         void Start()
         {
-            networkManager = FindObjectOfType<BoardGameNetworkManager>();
+            networkManager = FindObjectOfType<GameNetworkManager>();
             networkManager.RoomListReceived += OnRoomListReceived;
         }
 

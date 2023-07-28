@@ -44,8 +44,8 @@ namespace OnlineBoardGames
 
         public void AtemptLogin()
         {
-            (BoardGameNetworkManager.singleton.authenticator as SimpleNameAuthenticator).reqName = nameField.text;
-            BoardGameNetworkManager.singleton.StartClient();
+            (GameNetworkManager.singleton.authenticator as SimpleNameAuthenticator).reqName = nameField.text;
+            GameNetworkManager.singleton.StartClient();
             OnLoginStarted();
         }
 

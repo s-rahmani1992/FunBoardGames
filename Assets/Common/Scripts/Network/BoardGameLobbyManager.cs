@@ -106,7 +106,7 @@ namespace OnlineBoardGames
         private void AddPlayerForMatch(NetworkConnectionToClient conn, BoardGameRoomManager room)
         {
             NetworkMatch match = room.GetComponent<NetworkMatch>();
-            var player = Instantiate(BoardGameNetworkManager.singleton.spawnPrefabs[2 * (byte)room.GameType + 3]).GetComponent<BoardGamePlayer>();
+            var player = Instantiate(GameNetworkManager.singleton.spawnPrefabs[2 * (byte)room.GameType + 3]).GetComponent<BoardGamePlayer>();
             player.GetComponent<NetworkMatch>().matchId = match.matchId;
             NetworkServer.AddPlayerForConnection(conn, player.gameObject);
             RoomRequested?.Invoke(room, conn);
@@ -116,7 +116,7 @@ namespace OnlineBoardGames
         private void OnCreateRoomRequest(NetworkConnectionToClient conn, CreateRoomMessage msg)
         {
             var newMatchID = GenerateRoomID();
-            var room = Instantiate(BoardGameNetworkManager.singleton.spawnPrefabs[2 * (byte)msg.gameType + 2]).GetComponent<BoardGameRoomManager>();
+            var room = Instantiate(GameNetworkManager.singleton.spawnPrefabs[2 * (byte)msg.gameType + 2]).GetComponent<BoardGameRoomManager>();
             room.roomName = msg.reqName;
             room.GetComponent<NetworkMatch>().matchId = newMatchID;
             (conn.authenticationData as AuthData).roomID = newMatchID;
