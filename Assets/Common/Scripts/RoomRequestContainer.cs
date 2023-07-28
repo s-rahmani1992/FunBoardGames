@@ -10,10 +10,10 @@ namespace OnlineBoardGames
     {
         public bool IsCreate { get; private set; }
         public string RoomName { get; private set; }
-        public BoardGameTypes GameType { get; private set; }
+        public BoardGame GameType { get; private set; }
         public Guid MatchId { get; private set; }
 
-        public void SetParameters(bool isCreate, string roomName, BoardGameTypes gameType)
+        public void SetParameters(bool isCreate, string roomName, BoardGame gameType)
         {
             IsCreate = isCreate;
             RoomName = roomName;

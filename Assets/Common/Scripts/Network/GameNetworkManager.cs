@@ -30,7 +30,7 @@ namespace OnlineBoardGames
 #endif
 
 
-        public event Action<SerializableRoom[]> RoomListReceived;
+        public event Action<RoomData[]> RoomListReceived;
         public event Action<BoardGameRoomManager> JoinedRoom;
         public static new GameNetworkManager singleton { get; private set; }
 
@@ -50,7 +50,7 @@ namespace OnlineBoardGames
 
         #region Server Part
 
-        BoardGameLobbyManager lobbyManager;
+        LobbyManager lobbyManager;
 
         /// <summary>
         /// This is invoked when a server is started - including when a host is started.
@@ -60,7 +60,7 @@ namespace OnlineBoardGames
         {
             DebugStep.Log("NetworkManager.OnStartServer()");
             var lobby = Instantiate(spawnPrefabs[0]);
-            lobbyManager = lobby.GetComponent<BoardGameLobbyManager>();
+            lobbyManager = lobby.GetComponent<LobbyManager>();
             lobbyManager.RoomRequested += OnRoomRequested;
             NetworkServer.Spawn(lobby);
             NetworkServer.Spawn(Instantiate(spawnPrefabs[1]));

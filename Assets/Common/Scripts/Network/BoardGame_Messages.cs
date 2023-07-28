@@ -11,17 +11,17 @@ namespace OnlineBoardGames
     public struct CreateRoomMessage : NetworkMessage
     {
         public string reqName;
-        public BoardGameTypes gameType;
+        public BoardGame gameType;
     }
 
     public struct GetRoomListMessage : NetworkMessage
     {
-        public BoardGameTypes gameType;
+        public BoardGame gameType;
     }
 
     public struct RoomListResponse : NetworkMessage
     {
-        public SerializableRoom[] rooms;
+        public RoomData[] rooms;
     }
 
     public struct JoinMatchMessage : NetworkMessage 

@@ -23,7 +23,7 @@ namespace OnlineBoardGames
             networkManager.RoomListReceived += OnRoomListReceived;
         }
 
-        private void OnRoomListReceived(SerializableRoom[] list)
+        private void OnRoomListReceived(RoomData[] list)
         {
             while (content.childCount > 0)
                 pool.Push2List(content.GetChild(0).gameObject);
@@ -33,13 +33,13 @@ namespace OnlineBoardGames
 
         public void SendCreateRoom()
         {
-            roomContainer.SetParameters(true, roomNameIn.text, BoardGameTypes.SET);
+            roomContainer.SetParameters(true, roomNameIn.text, BoardGame.SET);
             SceneManager.LoadScene("Room");
         }
 
         public void SendRoomListRequest()
         {
-            Mirror.NetworkClient.Send(new GetRoomListMessage { gameType = BoardGameTypes.SET });
+            Mirror.NetworkClient.Send(new GetRoomListMessage { gameType = BoardGame.SET });
         }
 
         private void OnDestroy()

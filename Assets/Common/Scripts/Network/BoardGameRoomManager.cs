@@ -16,7 +16,7 @@ namespace OnlineBoardGames {
         protected BoardGamePlayer host;
         public List<BoardGamePlayer> roomPlayers = new List<BoardGamePlayer>();
         int readyCount;
-        public virtual BoardGameTypes GameType { get; }
+        public virtual BoardGame GameType { get; }
 
         public event Action<BoardGamePlayer> PlayerAdded;
         public event Action<BoardGamePlayer> PlayerJoined;

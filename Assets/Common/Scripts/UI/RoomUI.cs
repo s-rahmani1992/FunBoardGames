@@ -19,7 +19,7 @@ namespace OnlineBoardGames
         public void OnPull(params object[] parameters)
         {
             transform.parent = parameters[0] as Transform;
-            RefreshUI(parameters[1] as SerializableRoom);
+            RefreshUI(parameters[1] as RoomData);
             gameObject.SetActive(true);
         }
 
@@ -29,10 +29,10 @@ namespace OnlineBoardGames
             gameObject.SetActive(false);
         }
 
-        void RefreshUI(SerializableRoom room){
-            nameTxt.text = room.roomName;
-            numberTxt.text = room.playerCount.ToString();
-            id = room.id;
+        void RefreshUI(RoomData room){
+            nameTxt.text = room.Name;
+            numberTxt.text = room.PlayerCount.ToString();
+            id = room.Id;
         }
 
         public void Join()
