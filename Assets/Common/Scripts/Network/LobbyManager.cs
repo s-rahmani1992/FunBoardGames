@@ -15,8 +15,8 @@ namespace OnlineBoardGames
 {
     public class LobbyManager : NetworkBehaviour
     {
-        Dictionary<Guid, BoardGameRoomManager> rooms = new();
-        public event Action<BoardGameRoomManager, NetworkConnectionToClient> RoomRequested;
+        Dictionary<Guid, RoomManager> rooms = new();
+        public event Action<RoomManager, NetworkConnectionToClient> RoomRequested;
 
         [Server]
         Guid GenerateRoomID()
@@ -47,11 +47,11 @@ namespace OnlineBoardGames
 
             if(data.roomID != Guid.Empty)
             {
-                BoardGameRoomManager r = rooms[data.roomID];
+                RoomManager r = rooms[data.roomID];
                 r.Remove(conn.identity.GetComponent<BoardGamePlayer>());
                 conn.Send(new SceneMessage { sceneName = "Menu" });
 
-                if(r.playerCount == 0)
+                if(r.PlayerCount == 0)
                 {
                     rooms.Remove(data.roomID);
                     NetworkServer.Destroy((r as NetworkBehaviour).gameObject);
@@ -62,7 +62,7 @@ namespace OnlineBoardGames
 
         void OnJoinRoomRequest(NetworkConnectionToClient conn, JoinMatchMessage msg)
         {
-            if (rooms.TryGetValue(msg.matchID, out BoardGameRoomManager room))
+            if (rooms.TryGetValue(msg.matchID, out RoomManager room))
             {
                 (conn.authenticationData as AuthData).roomID = msg.matchID;
                 AddPlayerForMatch(conn, room);
@@ -75,14 +75,14 @@ namespace OnlineBoardGames
 
             foreach(var room in rooms)
             {
-                if (room.Value.IsAcceptingPlayer && room.Value.playerCount < 4)
+                if (room.Value.IsAcceptingPlayer && room.Value.PlayerCount < 4)
                     roomList.Add(new RoomData(room.Value, room.Key));
             }
 
             conn.Send(new RoomListResponse { rooms = roomList.ToArray() });
         }
 
-        void AddPlayerForMatch(NetworkConnectionToClient conn, BoardGameRoomManager room)
+        void AddPlayerForMatch(NetworkConnectionToClient conn, RoomManager room)
         {
             NetworkMatch match = room.GetComponent<NetworkMatch>();
             var player = Instantiate(GameNetworkManager.singleton.spawnPrefabs[2 * (byte)room.GameType + 3]).GetComponent<BoardGamePlayer>();
@@ -95,8 +95,8 @@ namespace OnlineBoardGames
         void OnCreateRoomRequest(NetworkConnectionToClient conn, CreateRoomMessage msg)
         {
             var newMatchID = GenerateRoomID();
-            var room = Instantiate(GameNetworkManager.singleton.spawnPrefabs[2 * (byte)msg.gameType + 2]).GetComponent<BoardGameRoomManager>();
-            room.roomName = msg.reqName;
+            var room = Instantiate(GameNetworkManager.singleton.spawnPrefabs[2 * (byte)msg.gameType + 2]).GetComponent<RoomManager>();
+            room.SetName(msg.reqName);
             room.GetComponent<NetworkMatch>().matchId = newMatchID;
             (conn.authenticationData as AuthData).roomID = newMatchID;
             rooms.Add(newMatchID, room);

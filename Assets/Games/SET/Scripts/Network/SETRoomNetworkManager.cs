@@ -31,7 +31,7 @@ namespace OnlineBoardGames.SET {
         public int roundCount;
     }
 
-    public class SETRoomNetworkManager : BoardGameRoomManager
+    public class SETRoomNetworkManager : RoomManager
     {
         public bool CanSelect { get => (state == SETGameState.Guess) && (guessingPlayer != null) && (guessingPlayer.hasAuthority); }
         public event Action<SETGameState, SETGameState> StateChanged;
@@ -210,7 +210,7 @@ namespace OnlineBoardGames.SET {
                     state = SETGameState.Destribute;
                     RPCPlaceCards(deck.ToList().GetRange(cursor, 3).Select(c => BoardGameCardDataHolder.Instance.GetCard(c)).ToArray(), placed2Add);
                     cursor += 3;
-                    foreach (var p in roomPlayers)
+                    foreach (var p in Players)
                         (p as SETNetworkPlayer).voteState = VoteStat.NULL;
                     
                     yield return new WaitForSeconds(0.7f);
@@ -218,13 +218,13 @@ namespace OnlineBoardGames.SET {
                 else
                     yield return new WaitForSeconds(0.2f);
 
-                foreach (var p in roomPlayers)
+                foreach (var p in Players)
                     (p as SETNetworkPlayer).voteState = VoteStat.NULL;
                 state = SETGameState.Normal;
             }
             else{
                 state = SETGameState.Normal;
-                foreach (var p in roomPlayers)
+                foreach (var p in Players)
                     (p as SETNetworkPlayer).voteState = VoteStat.NULL;
             }
         }
@@ -342,7 +342,7 @@ namespace OnlineBoardGames.SET {
                     voteNoCount++;
                 }
 
-                if (voteNoCount + voteYesCount == playerCount)
+                if (voteNoCount + voteYesCount == PlayerCount)
                     StartCoroutine(ProcessVote(voteYesCount >= voteNoCount));
             }
         }

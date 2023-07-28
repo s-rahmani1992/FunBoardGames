@@ -33,6 +33,6 @@ namespace OnlineBoardGames
 
     public struct NotifyJoinRoom : NetworkMessage
     {
-        public BoardGameRoomManager room;
+        public RoomManager room;
     }
 }

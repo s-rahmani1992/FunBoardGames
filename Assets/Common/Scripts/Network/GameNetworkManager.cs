@@ -31,7 +31,7 @@ namespace OnlineBoardGames
 
 
         public event Action<RoomData[]> RoomListReceived;
-        public event Action<BoardGameRoomManager> JoinedRoom;
+        public event Action<RoomManager> JoinedRoom;
         public static new GameNetworkManager singleton { get; private set; }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace OnlineBoardGames
             base.OnServerDisconnect(conn);
         }
 
-        void OnRoomRequested(BoardGameRoomManager room, NetworkConnectionToClient conn)
+        void OnRoomRequested(RoomManager room, NetworkConnectionToClient conn)
         {
             conn.Send(new NotifyJoinRoom { room = room });
         }

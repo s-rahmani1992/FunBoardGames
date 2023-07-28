@@ -12,11 +12,11 @@ namespace OnlineBoardGames
 
         public RoomData() { }
 
-        public RoomData(BoardGameRoomManager room, Guid roomId)
+        public RoomData(RoomManager room, Guid roomId)
         {
             Id = roomId;
-            Name = room.roomName;
-            PlayerCount = room.playerCount;
+            Name = room.Name;
+            PlayerCount = room.PlayerCount;
         }
 
         public RoomData(NetworkReader reader)

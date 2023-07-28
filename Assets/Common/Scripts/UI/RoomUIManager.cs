@@ -17,7 +17,7 @@ namespace OnlineBoardGames
         [SerializeField] Text logTxt;
         [SerializeField] RoomRequestContainer roomContainer;
 
-        BoardGameRoomManager roomManager;
+        RoomManager roomManager;
         Coroutine toast;
         
         void Awake()
@@ -50,14 +50,14 @@ namespace OnlineBoardGames
             leaveBtn.interactable = !ready;
         }
 
-        private void OnRoomGenerated(BoardGameRoomManager room)
+        private void OnRoomGenerated(RoomManager room)
         {
             roomManager = room;
             roomManager.PlayerAdded += OnPlayerAdded;
             roomManager.PlayerJoined += OnPlayerJoined;
             roomManager.PlayerLeft += OnPlayerLeft;
             roomManager.AllPlayersReady += OnAllPlayersReady;
-            roomTxt.text = room.roomName;
+            roomTxt.text = room.Name;
         }
 
         private void OnAllPlayersReady()
