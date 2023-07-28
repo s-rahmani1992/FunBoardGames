@@ -28,7 +28,7 @@ namespace OnlineBoardGames {
         [field: SyncVar]
         public string Name { get; private set; }
 
-        protected virtual void Awake()
+        protected virtual void Start()
         {
             DontDestroyOnLoad(gameObject);
         }

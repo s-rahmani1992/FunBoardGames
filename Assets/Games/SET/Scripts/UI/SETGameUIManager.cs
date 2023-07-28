@@ -23,7 +23,7 @@ namespace OnlineBoardGames.SET
         public Sprite[] cardShapes;
 
         int cardCount = 81;
-        SETRoomNetworkManager sessionManager;
+        SETRoomManager sessionManager;
         List<SETNetworkPlayer> players = new();
         SETNetworkPlayer localPlayer;
         List<CardUI> selected = new(3);
@@ -38,7 +38,7 @@ namespace OnlineBoardGames.SET
             {
                 selected.Add(card);
 
-                if (selected.Count == 3 && sessionManager.state == SETGameState.Guess)
+                if (selected.Count == 3 && sessionManager.State == SETGameState.Guess)
                     sessionManager.CmdGuessCards(localPlayer, selected.Select((cardUI) => cardUI.info).ToArray());
 
                 return true;
@@ -50,7 +50,7 @@ namespace OnlineBoardGames.SET
         private void Awake()
         {
             Instance = this;
-            sessionManager = FindObjectOfType<SETRoomNetworkManager>();
+            sessionManager = FindObjectOfType<SETRoomManager>();
             players = new(FindObjectsOfType<SETNetworkPlayer>());
 
             foreach(var player in players)
@@ -102,7 +102,7 @@ namespace OnlineBoardGames.SET
 
         private void OnPlayerStartedGuess(SETNetworkPlayer player)
         {
-            timer.StartCountdown(sessionManager.roomInfo.guessTime);
+            timer.StartCountdown(sessionManager.MetaData.GuessTime);
             gameLogger.SetText(player.hasAuthority ? "Your are guessing. Guess quickly" : $"{player.Name} is guessing");
         }
 

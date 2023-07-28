@@ -10,7 +10,7 @@ namespace OnlineBoardGames.SET
         Button yesBtn, noBtn;
         [SerializeField] RectTransform voteUIPlayers;
 
-        SETRoomNetworkManager manager;
+        SETRoomManager manager;
         List<SETNetworkPlayer> players;
         SETNetworkPlayer localPlayer;
 
@@ -51,7 +51,7 @@ namespace OnlineBoardGames.SET
             base.Close();
         }
 
-        public void Init(SETRoomNetworkManager manager, List<SETNetworkPlayer> players)
+        public void Init(SETRoomManager manager, List<SETNetworkPlayer> players)
         {
             this.manager = manager;
             this.players = players;
