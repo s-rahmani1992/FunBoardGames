@@ -18,9 +18,9 @@ namespace OnlineBoardGames.SET
     {
         public event Action<SETGameState, SETGameState> StateChanged;
         public event Action<CardData[], int[]> NewCardsReceived;
-        public event Action<SETNetworkPlayer> GuessBegin;
-        public event Action<SETNetworkPlayer, CardData[], byte> PlayerGuessReceived;
-        public event Action<SETNetworkPlayer> PlayerStartedVote;
+        public event Action<SETPlayer> GuessBegin;
+        public event Action<SETPlayer, CardData[], byte> PlayerGuessReceived;
+        public event Action<SETPlayer> PlayerStartedVote;
 
         public bool CanSelect { get => (State == SETGameState.Guess) && (GuessingPlayer != null) && (GuessingPlayer.hasAuthority); }
 
@@ -41,23 +41,23 @@ namespace OnlineBoardGames.SET
         public SETRoomMetaData MetaData { get; private set; }
 
         [field: SyncVar(hook = nameof(PlayerStartGuess))]
-        public SETNetworkPlayer GuessingPlayer { get; private set; }
+        public SETPlayer GuessingPlayer { get; private set; }
 
         [field: SyncVar(hook = nameof(OnPlayerStartVote))]
-        public SETNetworkPlayer VoteStarter { get; private set; }
+        public SETPlayer VoteStarter { get; private set; }
 
         void GameStateChanged(SETGameState oldVal, SETGameState newVal)
         {
             StateChanged?.Invoke(oldVal, newVal);
         }
 
-        void PlayerStartGuess(SETNetworkPlayer _, SETNetworkPlayer newPlayer)
+        void PlayerStartGuess(SETPlayer _, SETPlayer newPlayer)
         {
             if (newPlayer != null)
                 GuessBegin?.Invoke(newPlayer);
         }
 
-        void OnPlayerStartVote(SETNetworkPlayer _, SETNetworkPlayer newPlayer)
+        void OnPlayerStartVote(SETPlayer _, SETPlayer newPlayer)
         {
             if (newPlayer != null)
                 PlayerStartedVote?.Invoke(newPlayer);
@@ -85,25 +85,25 @@ namespace OnlineBoardGames.SET
         }
 
         [Command(requiresAuthority = false)]
-        internal void CmdAttemptGuess(SETNetworkPlayer identity)
+        internal void CmdAttemptGuess(SETPlayer player)
         {
             if (GuessingPlayer == null && State == SETGameState.Normal && guessProcess == null)
             {
-                GuessingPlayer = identity;
-                identity.isGuessing = true;
+                GuessingPlayer = player;
+                player.SetGuess(true);
                 State = SETGameState.Guess;
                 guessProcess = StartCoroutine(ProcessGuess());
             }
         }
 
         [Command(requiresAuthority = false)]
-        internal void CmdRequestMoreCards(SETNetworkPlayer player)
+        internal void CmdRequestMoreCards(SETPlayer player)
         {
             if (State == SETGameState.Normal && cursor < 81)
             {
                 VoteStarter = player;
                 State = SETGameState.CardVote;
-                player.voteState = VoteStat.YES;
+                player.SetVote(VoteAnswer.YES);
                 voteYesCount++;
             }
         }
@@ -115,7 +115,7 @@ namespace OnlineBoardGames.SET
         }
 
         [Command(requiresAuthority = false)]
-        internal void CmdGuessCards(SETNetworkPlayer player, CardData[] cards)
+        internal void CmdGuessCards(SETPlayer player, CardData[] cards)
         {
             if (State == SETGameState.Guess && GuessingPlayer == player && ValidateGuess(cards[0], cards[1], cards[2]))
             {
@@ -127,18 +127,18 @@ namespace OnlineBoardGames.SET
         }
 
         [Command(requiresAuthority = false)]
-        internal void CmdSendVote(SETNetworkPlayer player, bool isYes)
+        internal void CmdSendVote(SETPlayer player, bool isYes)
         {
-            if (State == SETGameState.CardVote && player.voteState == VoteStat.NULL)
+            if (State == SETGameState.CardVote && player.VoteAnswer == VoteAnswer.None)
             {
                 if (isYes)
                 {
-                    player.voteState = VoteStat.YES;
+                    player.SetVote(VoteAnswer.YES);
                     voteYesCount++;
                 }
                 else
                 {
-                    player.voteState = VoteStat.NO;
+                    player.SetVote(VoteAnswer.NO);
                     voteNoCount++;
                 }
 
@@ -220,8 +220,8 @@ namespace OnlineBoardGames.SET
             State = SETGameState.ProcessGuess;
             RPCPopResult(GuessingPlayer, null, 0);
             yield return new WaitForSeconds(2);
-            GuessingPlayer.wrongs++;
-            GuessingPlayer.isGuessing = false;
+            GuessingPlayer.IncrementWrong();
+            GuessingPlayer.SetGuess(false);
             State = SETGameState.Normal;
             guessProcess = null;
             GuessingPlayer = null;
@@ -232,11 +232,11 @@ namespace OnlineBoardGames.SET
         {
             RPCPopResult(GuessingPlayer, cards, result);
             yield return new WaitForSeconds(6.8f);
-            GuessingPlayer.GetComponent<SETNetworkPlayer>().isGuessing = false;
+            GuessingPlayer.SetGuess(false);
 
             if (CardData.IsSET(result))
             {
-                GuessingPlayer.GetComponent<SETNetworkPlayer>().corrects++;
+                GuessingPlayer.GetComponent<SETPlayer>().IncrementCorrect();
 
                 if (cursor < 81 && placedCardCount == 12)
                 {
@@ -279,7 +279,7 @@ namespace OnlineBoardGames.SET
                 }
             }
             else
-                GuessingPlayer.GetComponent<SETNetworkPlayer>().wrongs++;
+                GuessingPlayer.GetComponent<SETPlayer>().IncrementWrong();
 
             GuessingPlayer = null;
             State = SETGameState.Normal;
@@ -318,7 +318,7 @@ namespace OnlineBoardGames.SET
                     RPCPlaceCards(deck.ToList().GetRange(cursor, 3).Select(c => BoardGameCardDataHolder.Instance.GetCard(c)).ToArray(), placed2Add);
                     cursor += 3;
                     foreach (var p in Players)
-                        (p as SETNetworkPlayer).voteState = VoteStat.NULL;
+                        (p as SETPlayer).SetVote(VoteAnswer.None);
 
                     yield return new WaitForSeconds(0.7f);
                 }
@@ -326,7 +326,7 @@ namespace OnlineBoardGames.SET
                     yield return new WaitForSeconds(0.2f);
 
                 foreach (var p in Players)
-                    (p as SETNetworkPlayer).voteState = VoteStat.NULL;
+                    (p as SETPlayer).SetVote(VoteAnswer.None);
                 State = SETGameState.Normal;
             }
             else
@@ -334,7 +334,7 @@ namespace OnlineBoardGames.SET
                 State = SETGameState.Normal;
 
                 foreach (var p in Players)
-                    (p as SETNetworkPlayer).voteState = VoteStat.NULL;
+                    (p as SETPlayer).SetVote(VoteAnswer.None);
             }
         }
 
@@ -359,7 +359,7 @@ namespace OnlineBoardGames.SET
         }
 
         [ClientRpc]
-        void RPCPopResult(SETNetworkPlayer guessPlayer, CardData[] cards, byte result)
+        void RPCPopResult(SETPlayer guessPlayer, CardData[] cards, byte result)
         {
             PlayerGuessReceived?.Invoke(guessPlayer, cards, result);
         }

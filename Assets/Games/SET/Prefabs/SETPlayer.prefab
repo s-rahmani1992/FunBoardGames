@@ -74,17 +74,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 4964454825486599653}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7180be9187f7dba4daddf9657cc87886, type: 3}
+  m_Script: {fileID: 11500000, guid: d8edfa86fa7d97940bb033bd97d2befb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  roomPlayerUI: {fileID: 0}
-  roomContainer: {fileID: 11400000, guid: 9a13183f417641945bb175163d62f312, type: 2}
-  playerName: 
-  playerIndex: 0
-  isReady: 0
-  wrongs: 0
-  corrects: 0
-  isGuessing: 0
-  voteState: 0

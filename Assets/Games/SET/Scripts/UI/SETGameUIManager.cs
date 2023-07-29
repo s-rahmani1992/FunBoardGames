@@ -24,8 +24,8 @@ namespace OnlineBoardGames.SET
 
         int cardCount = 81;
         SETRoomManager sessionManager;
-        List<SETNetworkPlayer> players = new();
-        SETNetworkPlayer localPlayer;
+        List<SETPlayer> players = new();
+        SETPlayer localPlayer;
         List<CardUI> selected = new(3);
         List<CardUI> hints = new(3);
         List<CardUI> placedCardUIs = new(18);
@@ -51,7 +51,7 @@ namespace OnlineBoardGames.SET
         {
             Instance = this;
             sessionManager = FindObjectOfType<SETRoomManager>();
-            players = new(FindObjectsOfType<SETNetworkPlayer>());
+            players = new(FindObjectsOfType<SETPlayer>());
 
             foreach(var player in players)
             {
@@ -75,18 +75,18 @@ namespace OnlineBoardGames.SET
             localPlayer.VoteChanged += OnLocalPlayerVoteChanged;
         }
 
-        private void OnPlayerStartedVote(SETNetworkPlayer player)
+        private void OnPlayerStartedVote(SETPlayer player)
         {
             gameLogger.SetText(player.hasAuthority ? "Wait For Others to vote." : $"{player.Name} Started Vote destribute. place your vote.");
         }
 
-        private void OnLocalPlayerVoteChanged(VoteStat _, VoteStat vote)
+        private void OnLocalPlayerVoteChanged(VoteAnswer _, VoteAnswer vote)
         {
-            if(vote != VoteStat.NULL)
+            if(vote != VoteAnswer.None)
                 gameLogger.SetText("Wait For Others to vote.");
         }
 
-        private void OnPlayerGuessReceived(SETNetworkPlayer player, CardData[] cards, byte result)
+        private void OnPlayerGuessReceived(SETPlayer player, CardData[] cards, byte result)
         {
             if(cards == null)
             {
@@ -100,7 +100,7 @@ namespace OnlineBoardGames.SET
             PopResult(result, cards, player);
         }
 
-        private void OnPlayerStartedGuess(SETNetworkPlayer player)
+        private void OnPlayerStartedGuess(SETPlayer player)
         {
             timer.StartCountdown(sessionManager.MetaData.GuessTime);
             gameLogger.SetText(player.hasAuthority ? "Your are guessing. Guess quickly" : $"{player.Name} is guessing");
@@ -171,7 +171,7 @@ namespace OnlineBoardGames.SET
             sessionManager.CmdAttemptGuess(localPlayer);
         }
 
-        public void PopResult(byte result, CardData[] cards, SETNetworkPlayer player)
+        public void PopResult(byte result, CardData[] cards, SETPlayer player)
         {
             gameLogger.SetText("");
             bool isCorrect = CardData.IsSET(result);
@@ -197,7 +197,7 @@ namespace OnlineBoardGames.SET
             StartCoroutine(DisplayResult(isCorrect, player));
         }
 
-        IEnumerator DisplayResult(bool isSet, SETNetworkPlayer player)
+        IEnumerator DisplayResult(bool isSet, SETPlayer player)
         {
             yield return new WaitForSeconds(0.5f);
 

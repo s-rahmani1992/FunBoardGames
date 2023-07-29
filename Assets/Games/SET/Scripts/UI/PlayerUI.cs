@@ -13,16 +13,16 @@ namespace OnlineBoardGames.SET
         [SerializeField] RawImage LED;
         [SerializeField] Texture2D ledOn, ledOff;
 
-        SETNetworkPlayer networkPlayer;
+        SETPlayer networkPlayer;
 
         public void RefreshUI(){
             playerTxt.color = (networkPlayer.hasAuthority ? Color.yellow : Color.cyan);
             playerTxt.text = networkPlayer.Name;
-            correctTxt.text = networkPlayer.corrects.ToString();
-            wrongTxt.text = networkPlayer.wrongs.ToString();
-            scoreTxt.text = (networkPlayer.corrects - networkPlayer.wrongs).ToString();
+            correctTxt.text = networkPlayer.CorrectCount.ToString();
+            wrongTxt.text = networkPlayer.WrongCount.ToString();
+            scoreTxt.text = (networkPlayer.CorrectCount - networkPlayer.WrongCount).ToString();
             gameObject.SetActive(true);
-            LED.texture = (networkPlayer.isGuessing ? ledOn : ledOff);
+            LED.texture = (networkPlayer.IsGuessing ? ledOn : ledOff);
         }
 
         public void PlayerLeft()
@@ -30,11 +30,11 @@ namespace OnlineBoardGames.SET
             playerTxt.text = "Player Left";
         }
 
-        internal void RefreshVote(VoteStat newVal){
+        internal void RefreshVote(VoteAnswer newVal){
             //voteUI?.UpdateUI(newVal);
         }
 
-        public void SetPlayer(SETNetworkPlayer player)
+        public void SetPlayer(SETPlayer player)
         {
             if (networkPlayer != null)
                 UnSubscribe();
@@ -68,13 +68,13 @@ namespace OnlineBoardGames.SET
         private void OnCorrectGuessChanged(int _, int newValue)
         {
             correctTxt.text = newValue.ToString();
-            scoreTxt.text = (newValue - networkPlayer.wrongs).ToString();
+            scoreTxt.text = (newValue - networkPlayer.WrongCount).ToString();
         }
 
         private void OnWrongGuessChanged(int _, int newValue)
         {
             wrongTxt.text = newValue.ToString();
-            scoreTxt.text = (networkPlayer.corrects - newValue).ToString();
+            scoreTxt.text = (networkPlayer.CorrectCount - newValue).ToString();
         }
 
         private void OnDestroy()

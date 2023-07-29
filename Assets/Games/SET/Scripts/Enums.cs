@@ -12,4 +12,12 @@ namespace OnlineBoardGames.SET
         ProcessGuess,
         CardVote,
     }
+
+    [Serializable]
+    public enum VoteAnswer
+    {
+        None = 0,
+        NO = 1,
+        YES = 2
+    }
 }

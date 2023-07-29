@@ -11,8 +11,8 @@ namespace OnlineBoardGames.SET
         [SerializeField] RectTransform voteUIPlayers;
 
         SETRoomManager manager;
-        List<SETNetworkPlayer> players;
-        SETNetworkPlayer localPlayer;
+        List<SETPlayer> players;
+        SETPlayer localPlayer;
 
         public override void Show()
         {
@@ -27,15 +27,15 @@ namespace OnlineBoardGames.SET
                 if (player.hasAuthority)
                 {
                     localPlayer = player;
-                    OnLocalPlayerVoteChanged(VoteStat.NULL, localPlayer.voteState);
+                    OnLocalPlayerVoteChanged(VoteAnswer.None, localPlayer.VoteAnswer);
                     localPlayer.VoteChanged += OnLocalPlayerVoteChanged; 
                 } 
             }
         }
 
-        private void OnLocalPlayerVoteChanged(VoteStat _, VoteStat state)
+        private void OnLocalPlayerVoteChanged(VoteAnswer _, VoteAnswer state)
         {
-            noBtn.interactable = yesBtn.interactable = (state == VoteStat.NULL);
+            noBtn.interactable = yesBtn.interactable = (state == VoteAnswer.None);
         }
 
         private void OnStateChanged(SETGameState oldVal, SETGameState _)
@@ -51,7 +51,7 @@ namespace OnlineBoardGames.SET
             base.Close();
         }
 
-        public void Init(SETRoomManager manager, List<SETNetworkPlayer> players)
+        public void Init(SETRoomManager manager, List<SETPlayer> players)
         {
             this.manager = manager;
             this.players = players;
