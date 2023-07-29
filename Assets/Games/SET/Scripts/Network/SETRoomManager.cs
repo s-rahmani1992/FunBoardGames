@@ -23,6 +23,7 @@ namespace OnlineBoardGames.SET
         public event Action<SETPlayer> PlayerStartedVote;
 
         public bool CanSelect { get => (State == SETGameState.Guess) && (GuessingPlayer != null) && (GuessingPlayer.hasAuthority); }
+        public const int endCursor = 81;
 
         byte[] deck;
         List<CardData> placedCards = new(18);
@@ -31,7 +32,7 @@ namespace OnlineBoardGames.SET
         int voteYesCount, voteNoCount = 0;
         Coroutine guessProcess;
         List<CardData> hintCards = new(3);
-
+        
         #region Syncvars
 
         [field: SyncVar(hook = nameof(GameStateChanged))]
@@ -238,7 +239,7 @@ namespace OnlineBoardGames.SET
             {
                 GuessingPlayer.GetComponent<SETPlayer>().IncrementCorrect();
 
-                if (cursor < 81 && placedCardCount == 12)
+                if (cursor < endCursor && placedCardCount == 12)
                 {
                     placedCards[placedCards.IndexOf(cards[0])] = null;
                     placedCards[placedCards.IndexOf(cards[1])] = null;
@@ -264,6 +265,12 @@ namespace OnlineBoardGames.SET
                     RPCPlaceCards(deck.ToList().GetRange(cursor, 3).Select(c => BoardGameCardDataHolder.Instance.GetCard(c)).ToArray(), places2Add);
                     cursor += 3;
                     yield return new WaitForSeconds(0.7f);
+
+                    if(cursor >= endCursor && hintCards.Count == 0)
+                    {
+                        State = SETGameState.Finish;
+                        yield break;
+                    }
                 }
                 else
                 {
@@ -276,6 +283,12 @@ namespace OnlineBoardGames.SET
                     placedCardCount -= 3;
                     UpdateHintCards();
                     yield return new WaitForSeconds(0.2f);
+
+                    if (cursor >= endCursor && hintCards.Count == 0)
+                    {
+                        State = SETGameState.Finish;
+                        yield break;
+                    }
                 }
             }
             else
@@ -296,7 +309,7 @@ namespace OnlineBoardGames.SET
             if (v)
             {
                 State = SETGameState.Destribute;
-                if (cursor < 81)
+                if (cursor < endCursor)
                 {
                     byte[] placed2Add = new byte[3];
                     int place = 0;
@@ -313,6 +326,7 @@ namespace OnlineBoardGames.SET
                         }
                     }
 
+                    UpdateHintCards();
                     placedCardCount += 3;
                     State = SETGameState.Destribute;
                     RPCPlaceCards(deck.ToList().GetRange(cursor, 3).Select(c => BoardGameCardDataHolder.Instance.GetCard(c)).ToArray(), placed2Add);
@@ -321,6 +335,12 @@ namespace OnlineBoardGames.SET
                         (p as SETPlayer).SetVote(VoteAnswer.None);
 
                     yield return new WaitForSeconds(0.7f);
+
+                    if (cursor >= endCursor && hintCards.Count == 0)
+                    {
+                        State = SETGameState.Finish;
+                        yield break;
+                    }
                 }
                 else
                     yield return new WaitForSeconds(0.2f);

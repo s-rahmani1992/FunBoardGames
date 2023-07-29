@@ -30,6 +30,7 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0, y: 0, z: 0}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -116,3 +117,4 @@ MonoBehaviour:
   allDialog:
   - {fileID: 6076122389970499832, guid: 325c8f850748b4c42b7000b2226033f7, type: 3}
   - {fileID: 3668792101223927869, guid: 52e7ca254a0f86f4ba9bd2d40d749389, type: 3}
+  - {fileID: 258059968493700469, guid: bbf8996fb7ace54458e588df8963e58a, type: 3}

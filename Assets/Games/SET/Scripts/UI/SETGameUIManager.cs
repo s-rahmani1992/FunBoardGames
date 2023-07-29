@@ -22,7 +22,7 @@ namespace OnlineBoardGames.SET
         public Color[] colors;
         public Sprite[] cardShapes;
 
-        int cardCount = 81;
+        int cardCount = SETRoomManager.endCursor;
         SETRoomManager sessionManager;
         List<SETPlayer> players = new();
         SETPlayer localPlayer;
@@ -135,6 +135,15 @@ namespace OnlineBoardGames.SET
                 timer.StartCountdown(4);
                 gameLogger.SetText("Wait For The Game To Start.");
             }
+
+            if(state == SETGameState.Finish)
+            {
+                gameLogger.SetText("Game Finished!");
+                DialogManager.Instance.SpawnDialog<SETResultDialog>(DialogShowOptions.OverAll, (dialog) =>
+                {
+                    (dialog as SETResultDialog).Initialize(sessionManager);
+                });
+            }
         }
 
         private void OnDestroy()
@@ -159,7 +168,8 @@ namespace OnlineBoardGames.SET
 
         void RefreshBtns(SETGameState state)
         {
-            guessBtn.interactable = cardBtn.interactable = hintBtn.interactable = (state == SETGameState.Normal);
+            guessBtn.interactable = hintBtn.interactable = (state == SETGameState.Normal);
+            cardBtn.interactable = (cardCount > 0 && state == SETGameState.Normal);
             for (int i = 0; i < hints.Count; i++)
                 hints[i].Mark(false);
             hints.Clear();

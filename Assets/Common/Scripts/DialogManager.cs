@@ -28,7 +28,7 @@ namespace OnlineBoardGames
             }
 
             else
-                GameObject.DestroyImmediate(gameObject);
+                DestroyImmediate(gameObject);
         }
 
         private void Start()
@@ -39,6 +39,7 @@ namespace OnlineBoardGames
         private void SceneManager_activeSceneChanged(Scene arg0, Scene arg1)
         {
             GetComponent<Canvas>().worldCamera = Camera.main;
+            CloseAllDialogs();
         }
 
         public T SpawnDialog<T>(DialogShowOptions option, System.Action<BaseDialog> onSpawn = null) where T : BaseDialog
@@ -142,6 +143,14 @@ namespace OnlineBoardGames
             newDialog.Show();
             yield return new WaitForSeconds(newDialog.showTime);
             RefreshDialogs();
+        }
+
+        public void CloseAllDialogs()
+        {
+            foreach (var d in opendialogs)
+                Destroy(d.gameObject);
+
+            opendialogs.Clear();
         }
     }
 }

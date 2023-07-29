@@ -16,6 +16,8 @@ namespace OnlineBoardGames.SET
         public event Action<bool> GuessChanged;
         public event Action<VoteAnswer, VoteAnswer> VoteChanged;
 
+        public int Score => CorrectCount - WrongCount;
+
         #region Syncvars
 
         [field: SyncVar( hook = nameof(PlayerWrongChanged))]
@@ -77,6 +79,20 @@ namespace OnlineBoardGames.SET
 
         [Server]
         public void SetVote(VoteAnswer vote) => VoteAnswer = vote;
+
+        #endregion
+
+        #region Client Part
+
+        public static int Compare(SETPlayer player1, SETPlayer player2)
+        {
+            int r = player1.Score.CompareTo(player2.Score);
+
+            if(r == 0)
+                return player1.CorrectCount.CompareTo(player2.CorrectCount);
+
+            return r;
+        }
 
         #endregion
     }

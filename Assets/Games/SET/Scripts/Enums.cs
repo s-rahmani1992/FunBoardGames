@@ -11,6 +11,7 @@ namespace OnlineBoardGames.SET
         Guess,
         ProcessGuess,
         CardVote,
+        Finish,
     }
 
     [Serializable]
