@@ -37,7 +37,6 @@ namespace OnlineBoardGames
             NetworkServer.RegisterHandler<CreateRoomMessage>(OnCreateRoomRequest);
             NetworkServer.RegisterHandler<GetRoomListMessage>(OnRoomListRequest);
             NetworkServer.RegisterHandler<JoinMatchMessage>(OnJoinRoomRequest);
-            NetworkServer.RegisterHandler<PlayerReadyMessage>((conn, msg) => { rooms[(conn.authenticationData as AuthData).roomID].OnPlayerReady(conn, msg); }, false);
             NetworkServer.RegisterHandler<LeaveRoomMessage>(OnLeaveRoomRequest);
         }
 

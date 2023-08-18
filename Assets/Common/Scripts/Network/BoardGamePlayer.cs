@@ -17,6 +17,7 @@ namespace OnlineBoardGames
         public event Action<bool> ReadyChanged;
         public event Action<int, int> IndexChanged;
         public event Action LeftGame;
+        public event Action GameReady;
 
         #region Syncvars
 
@@ -71,10 +72,17 @@ namespace OnlineBoardGames
             Index = (byte)index;
         }
 
-        [Server]
-        public void SetReady()
+        [Command]
+        public void CmdReady()
         {
             IsReady = true;
+            ReadyChanged?.Invoke(true);
+        }
+
+        [Command]
+        public void CmdGameReady()
+        {
+            GameReady?.Invoke();
         }
 
         #endregion

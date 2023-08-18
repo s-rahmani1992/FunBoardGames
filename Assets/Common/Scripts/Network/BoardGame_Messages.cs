@@ -1,13 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using Mirror;
 using System;
 
 namespace OnlineBoardGames
 {
-    public struct PlayerReadyMessage : NetworkMessage { }
-
     public struct CreateRoomMessage : NetworkMessage
     {
         public string reqName;

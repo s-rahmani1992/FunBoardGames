@@ -52,6 +52,7 @@ namespace OnlineBoardGames.SET
             Instance = this;
             sessionManager = FindObjectOfType<SETRoomManager>();
             players = new(FindObjectsOfType<SETPlayer>());
+            sessionManager.LocalPlayer.CmdGameReady();
 
             foreach(var player in players)
             {

@@ -106,7 +106,7 @@ namespace OnlineBoardGames
 
         public void SendReady()
         {
-            Mirror.NetworkClient.Send(new PlayerReadyMessage { });
+            roomManager.LocalPlayer.CmdReady();
         }
 
         void Log(string str)

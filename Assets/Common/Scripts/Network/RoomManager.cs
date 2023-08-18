@@ -14,6 +14,7 @@ namespace OnlineBoardGames {
     {
         public List<BoardGamePlayer> Players { get; private set; } = new();
         public bool IsAcceptingPlayer { get; private set; }
+        public BoardGamePlayer LocalPlayer { get; private set; }
         
         public event Action<BoardGamePlayer> PlayerAdded;
         public event Action<BoardGamePlayer> PlayerJoined;
@@ -24,6 +25,7 @@ namespace OnlineBoardGames {
         public virtual BoardGame GameType { get; }
 
         int readyCount;
+        int gameReadyCount;
 
         [field: SyncVar]
         public string Name { get; private set; }
@@ -58,6 +60,19 @@ namespace OnlineBoardGames {
         public void AddPlayer(BoardGamePlayer player)
         {
             Players.Add(player);
+
+            player.ReadyChanged += (ready) =>
+            {
+                readyCount++;
+                CheckAllReady();
+            };
+
+            player.GameReady += () =>
+            {
+                gameReadyCount++;
+                CheckAllGameReady();
+            };
+
             RPCPlayerJoin(player.netIdentity);
 
             for (int i = 0; i < Players.Count; i++)
@@ -93,7 +108,15 @@ namespace OnlineBoardGames {
             {
                 RPCAllPlayersReady();
                 IsAcceptingPlayer = false;
-                MyUtils.DelayAction(BeginGame, 1.3f, this);
+            }
+        }
+
+        [Server]
+        void CheckAllGameReady()
+        {
+            if (gameReadyCount == PlayerCount)
+            {
+                MyUtils.DelayAction(BeginGame, 0.5f, this);
             }
         }
 
@@ -101,13 +124,6 @@ namespace OnlineBoardGames {
         public void SetName(string name)
         {
             Name = name;
-        }
-
-        internal void OnPlayerReady(NetworkConnectionToClient conn, PlayerReadyMessage msg)
-        {
-            conn.identity.GetComponent<BoardGamePlayer>().SetReady();
-            readyCount++;
-            CheckAllReady();
         }
 
         protected abstract void BeginGame();
@@ -143,6 +159,9 @@ namespace OnlineBoardGames {
         [ClientRpc]
         protected virtual void RPCPlayerJoin(NetworkIdentity identity)
         {
+            if (identity.hasAuthority)
+                LocalPlayer = identity.GetComponent<BoardGamePlayer>();
+
             PlayerJoined?.Invoke(identity.GetComponent<BoardGamePlayer>());
         }
 
