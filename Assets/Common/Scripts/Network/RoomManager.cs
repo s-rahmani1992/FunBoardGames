@@ -20,12 +20,16 @@ namespace OnlineBoardGames {
         public event Action<BoardGamePlayer> PlayerJoined;
         public event Action<BoardGamePlayer> PlayerLeft;
         public event Action AllPlayersReady;
+        public event Action GameBegin;
 
-        public byte PlayerCount => (byte)Players.Count;
+        public byte PlayerCount => GameNetworkManager.singleton.OverrideGame ? (byte)GameNetworkManager.singleton.PlayerCount : (byte)Players.Count;
         public virtual BoardGame GameType { get; }
 
         int readyCount;
         int gameReadyCount;
+
+        [Scene]
+        public string GameScene;
 
         [field: SyncVar]
         public string Name { get; private set; }
@@ -116,6 +120,7 @@ namespace OnlineBoardGames {
         {
             if (gameReadyCount == PlayerCount)
             {
+                RPCSendGameReady();
                 MyUtils.DelayAction(BeginGame, 0.5f, this);
             }
         }
@@ -127,6 +132,9 @@ namespace OnlineBoardGames {
         }
 
         protected abstract void BeginGame();
+
+        [ClientRpc]
+        protected void RPCSendGameReady() => GameBegin?.Invoke();
 
         #endregion
 

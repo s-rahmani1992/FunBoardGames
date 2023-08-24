@@ -38,6 +38,17 @@ namespace OnlineBoardGames
             NetworkServer.RegisterHandler<GetRoomListMessage>(OnRoomListRequest);
             NetworkServer.RegisterHandler<JoinMatchMessage>(OnJoinRoomRequest);
             NetworkServer.RegisterHandler<LeaveRoomMessage>(OnLeaveRoomRequest);
+
+            if (GameNetworkManager.singleton.OverrideGame)
+            {
+                GameNetworkManager m = GameNetworkManager.singleton;
+                var newMatchID = GenerateRoomID();
+                var TestRoom = Instantiate(m.spawnPrefabs[2 * (byte)m.GameType + 2]).GetComponent<RoomManager>();
+                TestRoom.SetName("Test");
+                TestRoom.GetComponent<NetworkMatch>().matchId = GameNetworkManager.TestGuid;
+                rooms.Add(GameNetworkManager.TestGuid, TestRoom);
+                NetworkServer.Spawn(TestRoom.gameObject);
+            }
         }
 
         public void OnLeaveRoomRequest(NetworkConnectionToClient conn, LeaveRoomMessage msg)

@@ -64,7 +64,7 @@ namespace OnlineBoardGames
         {
             logTxt.text = "Wait For Game to Load";
             MyUtils.DelayAction(() => {
-                SceneManager.LoadScene("Game");;
+                SceneManager.LoadScene(roomManager.GameScene);
             }, 1, this);
         }
 

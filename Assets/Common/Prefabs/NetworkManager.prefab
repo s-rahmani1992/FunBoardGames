@@ -67,7 +67,9 @@ MonoBehaviour:
   - {fileID: 7781958062978115182, guid: 3b2cf858f9e19e84fb6229118ff1fdb2, type: 3}
   - {fileID: 4964454825486599653, guid: c07baea60e24c46468486d6a8a4af206, type: 3}
   isEditorServer: 0
-  lobbyManager: {fileID: 0}
+  <OverrideGame>k__BackingField: 0
+  <GameType>k__BackingField: 0
+  <PlayerCount>k__BackingField: 0
 --- !u!114 &7475147692941367167
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -29,6 +29,11 @@ namespace OnlineBoardGames
         }
 #endif
 
+        [field: SerializeField] public bool OverrideGame { get; private set; }
+        [field: SerializeField] public BoardGame GameType { get; private set; }
+        [field: SerializeField] public int PlayerCount { get; private set; }
+
+        public static Guid TestGuid = new(10, 10, 10, new byte[]{1,2,3,4,5,6,7,8});
 
         public event Action<RoomData[]> RoomListReceived;
         public event Action<RoomManager> JoinedRoom;

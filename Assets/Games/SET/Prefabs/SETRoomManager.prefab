@@ -79,11 +79,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  roomContainer: {fileID: 11400000, guid: 9a13183f417641945bb175163d62f312, type: 2}
-  roomPlayers: []
-  roomName: 
-  state: 0
-  roomInfo:
-    guessTime: 0
-    roundCount: 0
-  guessingPlayer: {fileID: 0}
+  GameScene: Assets/Games/SET/Scenes/Game.unity

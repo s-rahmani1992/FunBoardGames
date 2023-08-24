@@ -51,10 +51,25 @@ namespace OnlineBoardGames.SET
         {
             Instance = this;
             sessionManager = FindObjectOfType<SETRoomManager>();
-            players = new(FindObjectsOfType<SETPlayer>());
             sessionManager.LocalPlayer.CmdGameReady();
+            Subscribe();
+        }
 
-            foreach(var player in players)
+        void Subscribe()
+        {
+            sessionManager.GameBegin += OnGameBegin;
+            sessionManager.StateChanged += OnStateChanged;
+            sessionManager.NewCardsReceived += PlaceCards;
+            sessionManager.GuessBegin += OnPlayerStartedGuess;
+            sessionManager.PlayerGuessReceived += OnPlayerGuessReceived;
+            sessionManager.PlayerStartedVote += OnPlayerStartedVote;
+        }
+
+        private void OnGameBegin()
+        {
+            players = new(sessionManager.Players.Select(b => b as SETPlayer));
+
+            foreach (var player in players)
             {
                 playerPanel.GetChild(player.Index - 1).GetComponent<PlayerUI>().SetPlayer(player);
                 player.LeftGame += () => players.Remove(player);
@@ -63,16 +78,6 @@ namespace OnlineBoardGames.SET
                     localPlayer = player;
             }
 
-            Subscribe();
-        }
-
-        void Subscribe()
-        {
-            sessionManager.StateChanged += OnStateChanged;
-            sessionManager.NewCardsReceived += PlaceCards;
-            sessionManager.GuessBegin += OnPlayerStartedGuess;
-            sessionManager.PlayerGuessReceived += OnPlayerGuessReceived;
-            sessionManager.PlayerStartedVote += OnPlayerStartedVote;
             localPlayer.VoteChanged += OnLocalPlayerVoteChanged;
         }
 
@@ -109,6 +114,7 @@ namespace OnlineBoardGames.SET
 
         void UnSubscribe()
         {
+            sessionManager.GameBegin -= OnGameBegin;
             sessionManager.StateChanged -= OnStateChanged;
             sessionManager.NewCardsReceived -= PlaceCards;
             sessionManager.GuessBegin -= OnPlayerStartedGuess;

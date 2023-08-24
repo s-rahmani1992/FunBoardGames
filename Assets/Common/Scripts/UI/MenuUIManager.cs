@@ -1,3 +1,4 @@
+using Mirror;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -21,6 +22,17 @@ namespace OnlineBoardGames
         {
             networkManager = FindObjectOfType<GameNetworkManager>();
             networkManager.RoomListReceived += OnRoomListReceived;
+
+            if (networkManager.OverrideGame)
+            {
+                networkManager.JoinedRoom += OnJoinedRoom;
+                NetworkClient.Send(new JoinMatchMessage { matchID = GameNetworkManager.TestGuid });
+            }
+        }
+
+        private void OnJoinedRoom(RoomManager room)
+        {
+            SceneManager.LoadScene(room.GameScene);
         }
 
         private void OnRoomListReceived(RoomData[] list)
