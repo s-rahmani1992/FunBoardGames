@@ -17,4 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Games/SET/Scenes/Game.unity
     guid: b1b82c3c0c8de1b4b91ae39969f2e4f2
+  - enabled: 1
+    path: Assets/Games/CantStop/Game.unity
+    guid: 52794c8e80828eb49ad31fe0f2860c2f
   m_configObjects: {}

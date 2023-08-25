@@ -4,4 +4,5 @@ using System;
 public enum BoardGame : byte
 {
     SET,
+    CantStop,
 }
