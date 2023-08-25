@@ -6,9 +6,8 @@ namespace OnlineBoardGames.CantStop
 {
     public class CantStopRoomManager : RoomManager
     {
-        protected override void BeginGame()
-        {
-            //throw new System.NotImplementedException();
-        }
+        public override BoardGame GameType => BoardGame.CantStop;
+
+        protected override void BeginGame() { }
     }
 }

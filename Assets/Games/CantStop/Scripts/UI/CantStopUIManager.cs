@@ -2,13 +2,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.CullingGroup;
 
 namespace OnlineBoardGames.CantStop
 {
     public class CantStopUIManager : MonoBehaviour
     {
         CantStopRoomManager roomManager;
+
+        [SerializeField] CantStopPlayerUI[] playerUis;
+        [SerializeField] Color[] playerColors;
 
         private void Awake()
         {
@@ -24,7 +26,10 @@ namespace OnlineBoardGames.CantStop
 
         private void OnGameBegin()
         {
-            Debug.Log("Game Cant stop Begin");
+            foreach(var player in roomManager.Players)
+            {
+                playerUis[player.Index - 1].SetPlayer(player as CantStopPlayer, playerColors[player.Index - 1]);
+            }
         }
     }
 }
