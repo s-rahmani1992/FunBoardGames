@@ -245,6 +245,9 @@ MonoBehaviour:
   coneIcon: {fileID: 2370570644866262627}
   freeConeCount: {fileID: 8075202893775542953}
   scoreText: {fileID: 7311757148711686280}
+  turnLED: {fileID: 1204528236476607658}
+  onTex: {fileID: 2800000, guid: 75708a39bc9a58e4288adba61b5f3e5e, type: 3}
+  offTex: {fileID: 2800000, guid: c664f7f91f8cf184e9dbb26af8d50036, type: 3}
 --- !u!1 &3419004601613915501
 GameObject:
   m_ObjectHideFlags: 0

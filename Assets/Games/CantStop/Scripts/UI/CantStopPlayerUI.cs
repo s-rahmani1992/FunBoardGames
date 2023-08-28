@@ -11,6 +11,8 @@ namespace OnlineBoardGames.CantStop
         [SerializeField] Image coneIcon;
         [SerializeField] Text freeConeCount;
         [SerializeField] Text scoreText;
+        [SerializeField] RawImage turnLED;
+        [SerializeField] Texture2D onTex, offTex;
 
         CantStopPlayer networkPlayer;
         Color playerColor;
@@ -39,12 +41,18 @@ namespace OnlineBoardGames.CantStop
 
         void Subscribe()
         {
-            
+            networkPlayer.TurnStart += OnTurnStart;
+            networkPlayer.TurnEnd += OnTurnEnd;
         }
 
         void UnSubscribe()
         {
-            
+            networkPlayer.TurnStart -= OnTurnStart;
+            networkPlayer.TurnEnd -= OnTurnEnd;
         }
+
+        private void OnTurnEnd() => turnLED.texture = offTex;
+
+        private void OnTurnStart() => turnLED.texture = onTex;
     }
 }
