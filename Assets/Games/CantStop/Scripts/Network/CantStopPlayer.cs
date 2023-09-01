@@ -15,8 +15,21 @@ namespace OnlineBoardGames.CantStop
         [field: SyncVar( hook = nameof(OnTurnChanged))] 
         public bool IsTurn { get; private set; }
 
+        [field: SyncVar(hook = nameof(OnDiceChanged))]
+        public DiceData RolledDices { get; private set; } = DiceData.Empty();
+
+        private void OnDiceChanged(DiceData _, DiceData value)
+        {
+            RollChanged?.Invoke(value);
+        }
+
         public event Action TurnStart;
         public event Action TurnEnd;
+        public event Action<DiceData> RollChanged;
+
+        #region Server Events
+        public event Action<CantStopPlayer> RollRequested;
+        #endregion
 
         private void OnTurnChanged(bool _, bool newValue)
         {
@@ -35,5 +48,11 @@ namespace OnlineBoardGames.CantStop
 
         [Server]
         public void SetTurn(bool turn) => IsTurn = turn;
+
+        [Server]
+        public void SetRoll(DiceData rollData) => RolledDices = rollData;
+
+        [Command]
+        public void CmdRoll() => RollRequested?.Invoke(this);
     }
 }
