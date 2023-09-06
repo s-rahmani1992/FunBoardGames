@@ -1,5 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using TMPro;
 using UnityEngine;
 
 namespace OnlineBoardGames.CantStop
@@ -7,17 +10,91 @@ namespace OnlineBoardGames.CantStop
     public class DiceController : MonoBehaviour
     {
         [SerializeField] DiceItem[] dices;
-        
+        [SerializeField] TextMeshProUGUI number1Text;
+        [SerializeField] TextMeshProUGUI number2Text;
+
+        List<DiceItem> selectedDices = new();
+        List<DiceItem> unselectedDices = new();
+
+        public IEnumerable<int> SelectedIndices => selectedDices.Select(dice => dice.Index);
+
+        public event Action<bool> PairSelected;
+
+        private void Start()
+        {
+            foreach(var dice in dices)
+            {
+                dice.Highlight(false);
+                dice.Clicked += OnDiceClicked;
+            }
+
+            Reset();
+        }
+
+        public void Reset()
+        {
+            unselectedDices = new(dices);
+            selectedDices.Clear();
+            number1Text.text = number2Text.text = "";
+            ClearDices();
+            PairSelected?.Invoke(false);
+        }
+
+        private void OnDiceClicked(DiceItem dice)
+        {
+            if (selectedDices.Contains(dice))
+            {
+                dice.Highlight(false);
+                selectedDices.Remove(dice);
+                unselectedDices.Add(dice);
+            }
+            else
+            {
+                if (selectedDices.Count == 2)
+                    return;
+
+                dice.Highlight(true);
+                unselectedDices.Remove(dice);
+                selectedDices.Add(dice);
+            }
+
+            CheckSelectedDices();
+        }
+
+        void CheckSelectedDices()
+        {
+            if (selectedDices.Count == 2)
+            {
+                number1Text.text = (selectedDices[0].Value + selectedDices[1].Value).ToString();
+                number2Text.text = (unselectedDices[0].Value + unselectedDices[1].Value).ToString();
+                PairSelected?.Invoke(true);
+            }
+            else
+            {
+                number1Text.text = number2Text.text = "";
+                PairSelected?.Invoke(false);
+            }
+        }
+
         public void SetDiceValues(DiceData diceData)
         {
             for (int i = 0; i < dices.Length; i++)
                 dices[i].SetValue(diceData[i]);
         }
 
-        public void Clear()
+        public void ClearDices()
         {
             foreach (var dice in dices)
+            {
                 dice.SetValue(0);
+                dice.Highlight(false);
+            }
+        }
+
+        public void PickDices(int index1, int index2)
+        {
+            OnDiceClicked(dices[index1]);
+            OnDiceClicked(dices[index2]);
         }
     }
 }

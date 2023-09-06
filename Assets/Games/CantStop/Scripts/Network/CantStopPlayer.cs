@@ -29,6 +29,7 @@ namespace OnlineBoardGames.CantStop
 
         #region Server Events
         public event Action<CantStopPlayer> RollRequested;
+        public event Action<CantStopPlayer, int, int> Played;
         #endregion
 
         private void OnTurnChanged(bool _, bool newValue)
@@ -54,5 +55,8 @@ namespace OnlineBoardGames.CantStop
 
         [Command]
         public void CmdRoll() => RollRequested?.Invoke(this);
+
+        [Command]
+        public void CmdPlay(int index1, int index2) => Played?.Invoke(this, index1, index2);
     }
 }

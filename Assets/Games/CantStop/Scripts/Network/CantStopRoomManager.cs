@@ -23,8 +23,10 @@ namespace OnlineBoardGames.CantStop
         int turnIndex = 0;
 
         public IEnumerable<CantStopPlayer> PlayerList => Players.Select(p => p as CantStopPlayer);
+        public bool IsYourTurn => LocalPlayer == CurrentTurnPlayer;
 
         public event Action<CantStopPlayer> TurnStarted;
+        public event Action<int, int> TurnPlayed;
 
         protected override void BeginGame() 
         {
@@ -33,18 +35,27 @@ namespace OnlineBoardGames.CantStop
             foreach(var player in PlayerList)
             {
                 player.RollRequested += OnRollRequested;
+                player.Played += OnPlayed;
             }
         }
 
-        private async void OnRollRequested(CantStopPlayer player)
+        private async void OnPlayed(CantStopPlayer player, int index1, int index2)
+        {
+            if (player != CurrentTurnPlayer)
+                return;
+
+            RpcTurnPlayed(index1, index2);
+            await Task.Delay(2000);
+            turnIndex = (turnIndex + 1) % Players.Count();
+            SetTurn(Players[turnIndex] as CantStopPlayer);
+        }
+
+        private void OnRollRequested(CantStopPlayer player)
         {
             if (player != CurrentTurnPlayer)
                 return;
 
             player.SetRoll(DiceData.Default());
-            await Task.Delay(2000);
-            turnIndex = (turnIndex + 1) % Players.Count();
-            SetTurn(Players[turnIndex] as CantStopPlayer);
         }
 
         [Server]
@@ -55,6 +66,12 @@ namespace OnlineBoardGames.CantStop
 
             player.SetTurn(true);
             CurrentTurnPlayer = player;
+        }
+
+        [ClientRpc(includeOwner = false)]
+        void RpcTurnPlayed(int index1, int index2)
+        {
+            TurnPlayed?.Invoke(index1, index2);
         }
     }
 }
