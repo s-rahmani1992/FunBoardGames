@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61c0d244c4a93874ab6215350adb5979, type: 3}
+  m_Name: GameBoard
+  m_EditorClassIdentifier: 
+  columns:
+    items:
+    - key: 2
+      value: 3
+    - key: 3
+      value: 4
+    - key: 4
+      value: 5
+    - key: 5
+      value: 6
+    - key: 6
+      value: 7
+    - key: 7
+      value: 8
+    - key: 8
+      value: 7
+    - key: 9
+      value: 6
+    - key: 10
+      value: 5
+    - key: 11
+      value: 4
+    - key: 12
+      value: 3

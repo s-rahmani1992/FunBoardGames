@@ -15,6 +15,13 @@ namespace OnlineBoardGames.CantStop
         [field: SyncVar(hook = nameof(OnTurnStarted))] 
         public CantStopPlayer CurrentTurnPlayer { get; private set; }
 
+        [field: SyncVar]
+        public GameBoard Board { get; private set; }
+
+#if UNITY_EDITOR
+        [SerializeField] GameBoard board;
+#endif
+
         private void OnTurnStarted(CantStopPlayer _, CantStopPlayer player)
         {
             TurnStarted?.Invoke(player);
@@ -72,6 +79,19 @@ namespace OnlineBoardGames.CantStop
         void RpcTurnPlayed(int index1, int index2)
         {
             TurnPlayed?.Invoke(index1, index2);
+        }
+
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+#if UNITY_EDITOR
+            if (GameNetworkManager.singleton.OverrideGame)
+                Board = board;
+            else
+                Board = BoardGameCardDataHolder.Instance.Board;
+#else
+            Board = BoardGameCardDataHolder.Instance.Board;
+#endif
         }
     }
 }

@@ -16,6 +16,7 @@ namespace OnlineBoardGames.CantStop
         [SerializeField] Button rollButton;
         [SerializeField] Button playButton;
         [SerializeField] DiceController diceController;
+        [SerializeField] GameBoardUI boardController;
 
         private void Awake()
         {
@@ -72,6 +73,8 @@ namespace OnlineBoardGames.CantStop
 
         private void OnGameBegin()
         {
+            boardController.Initialize(roomManager.Board);
+
             foreach(var player in roomManager.PlayerList)
             {
                 playerUis[player.Index - 1].SetPlayer(player, playerColors[player.Index - 1]);

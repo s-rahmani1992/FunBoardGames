@@ -13,9 +13,11 @@ using Mirror;
 namespace OnlineBoardGames {
     public class BoardGameCardDataHolder : NetworkBehaviour
     {
+        [field: SerializeField] public CantStop.GameBoard Board { get; private set; }
+
         public static BoardGameCardDataHolder Instance { get; private set; }
 
-        private List<SET.CardData> SETCards = new List<SET.CardData>(81);
+        private List<SET.CardData> SETCards = new(81);
 
         private void Awake()
         {

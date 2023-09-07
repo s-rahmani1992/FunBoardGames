@@ -66,6 +66,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   GameScene: Assets/Games/CantStop/Game.unity
+  board: {fileID: 11400000, guid: ec2817a6e46ba0a49815c39902909255, type: 2}
 --- !u!114 &3512530375284432104
 MonoBehaviour:
   m_ObjectHideFlags: 0
