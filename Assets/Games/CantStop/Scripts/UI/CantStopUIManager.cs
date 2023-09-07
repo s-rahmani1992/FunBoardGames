@@ -24,12 +24,17 @@ namespace OnlineBoardGames.CantStop
             playButton.interactable = false;
             roomManager = FindObjectOfType<CantStopRoomManager>();
             roomManager.LocalPlayer.CmdGameReady();
-            diceController.PairSelected += (pair) =>
+            diceController.PairSelected += (v1, v2) =>
             {
                 if (!roomManager.IsYourTurn)
                     return;
 
-                playButton.interactable = pair;
+                playButton.interactable = v1 != null;
+
+                if (v1 != null)
+                    boardController.MarkColumns(v1.GetValueOrDefault(), v2.GetValueOrDefault());
+                else
+                    boardController.ClearMarks();
             };
             Subscribe();
         }

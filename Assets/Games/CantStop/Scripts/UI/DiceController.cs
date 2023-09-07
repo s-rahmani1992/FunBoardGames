@@ -18,7 +18,7 @@ namespace OnlineBoardGames.CantStop
 
         public IEnumerable<int> SelectedIndices => selectedDices.Select(dice => dice.Index);
 
-        public event Action<bool> PairSelected;
+        public event Action<int?, int?> PairSelected;
 
         private void Start()
         {
@@ -37,7 +37,7 @@ namespace OnlineBoardGames.CantStop
             selectedDices.Clear();
             number1Text.text = number2Text.text = "";
             ClearDices();
-            PairSelected?.Invoke(false);
+            PairSelected?.Invoke(null, null);
         }
 
         private void OnDiceClicked(DiceItem dice)
@@ -65,14 +65,16 @@ namespace OnlineBoardGames.CantStop
         {
             if (selectedDices.Count == 2)
             {
-                number1Text.text = (selectedDices[0].Value + selectedDices[1].Value).ToString();
-                number2Text.text = (unselectedDices[0].Value + unselectedDices[1].Value).ToString();
-                PairSelected?.Invoke(true);
+                int p1 = selectedDices[0].Value + selectedDices[1].Value;
+                int p2 = unselectedDices[0].Value + unselectedDices[1].Value;
+                number1Text.text = p1.ToString();
+                number2Text.text = p2.ToString();
+                PairSelected?.Invoke(p1, p2);
             }
             else
             {
                 number1Text.text = number2Text.text = "";
-                PairSelected?.Invoke(false);
+                PairSelected?.Invoke(null, null);
             }
         }
 
