@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,7 +7,6 @@ namespace OnlineBoardGames.CantStop
     {
         [SerializeField] Text nameText;
         [SerializeField] Image coneIcon;
-        [SerializeField] Text freeConeCount;
         [SerializeField] Text scoreText;
         [SerializeField] RawImage turnLED;
         [SerializeField] Texture2D onTex, offTex;
@@ -33,8 +30,6 @@ namespace OnlineBoardGames.CantStop
             nameText.color = (networkPlayer.hasAuthority ? Color.yellow : Color.cyan);
             nameText.text = networkPlayer.Name;
             coneIcon.color = playerColor;
-            freeConeCount.text = networkPlayer.FreeConeCount.ToString();
-            freeConeCount.color = playerColor;
             scoreText.text = networkPlayer.Score.ToString();
             gameObject.SetActive(true);
         }

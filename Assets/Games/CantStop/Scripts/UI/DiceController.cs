@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -95,8 +94,8 @@ namespace OnlineBoardGames.CantStop
 
         public void PickDices(int index1, int index2)
         {
-            OnDiceClicked(dices[index1]);
-            OnDiceClicked(dices[index2]);
+            dices[index1].Highlight(true);
+            dices[index2].Highlight(true);
         }
     }
 }

@@ -1,4 +1,4 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,8 +11,9 @@ namespace OnlineBoardGames.CantStop
 
         SortedDictionary<int, GameBoardColumn> columnList;
 
-        GameBoardColumn marked1;
-        GameBoardColumn marked2;
+        HashSet<GameBoardColumn> selectedColumns = new();
+
+        public event Action<IEnumerable<GameBoardColumn>> SelectedChanged;
 
         public void Initialize(GameBoard board)
         {
@@ -22,35 +23,39 @@ namespace OnlineBoardGames.CantStop
             {
                 var c = Instantiate(column, holder);
                 c.Initalize(pair.Key, pair.Value);
+                c.SelectChanged += OnSelectChanged;
                 columnList.Add(pair.Key, c);
             }
         }
 
-        public void MarkColumns(int c1, int c2)
+        private void OnSelectChanged(GameBoardColumn column, bool selected)
         {
-            ClearMarks();
+            if (selected)
+                selectedColumns.Add(column);
+            else
+                selectedColumns.Remove(column);
 
-            if (c1 == c2)
-            {
-                marked1 = marked2 = columnList[c2];
-                columnList[c2].Mark(true);
-                return;
-            }
+            SelectedChanged?.Invoke(selectedColumns);
+        }
 
-            marked1 = columnList[c1];
-            marked2 = columnList[c2];
-            marked1.Mark(true);
-            marked2.Mark(true);
+        public void MarkColumn(int c1, bool canSelect)
+        {
+            columnList[c1].Mark(canSelect);
         }
 
         public void ClearMarks()
         {
-            if (marked1 == null)
-                return;
+            foreach(var column in columnList.Values)
+            {
+                column.Mark(null);
+                column.ResetToggle();
+            }
+            selectedColumns.Clear();
+        }
 
-            marked1.Mark(null);
-            marked2.Mark(null);
-            marked1 = marked2 = null;
+        public void PlaceCone(int column, PlayerColor color, int cellNumber)
+        {
+            columnList[column].PlaceCone(color, cellNumber);
         }
     }
 }

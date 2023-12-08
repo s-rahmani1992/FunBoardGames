@@ -1,8 +1,5 @@
-using OnlineBoardGames.SET;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Linq;
 using UnityEngine;
 
 namespace OnlineBoardGames.CantStop
@@ -17,6 +14,8 @@ namespace OnlineBoardGames.CantStop
         public DiceData(int[] values) => this.values = values;
 
         public bool IsValid => values[0] > 0;
+
+        public int Sum => values.Sum();
 
         public static DiceData Empty()
         {
