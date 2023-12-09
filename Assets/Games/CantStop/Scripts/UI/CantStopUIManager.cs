@@ -16,6 +16,7 @@ namespace OnlineBoardGames.CantStop
         [SerializeField] Button playButton;
         [SerializeField] DiceController diceController;
         [SerializeField] GameBoardUI boardController;
+        [SerializeField] WhiteConePanel whiteConePanel;
 
         SortedDictionary<int, (int pos, int cone)> possibleMoves = new();
 
@@ -28,6 +29,7 @@ namespace OnlineBoardGames.CantStop
             playButton.interactable = false;
             roomManager = FindObjectOfType<CantStopRoomManager>();
             roomManager.LocalPlayer.CmdGameReady();
+            diceController.Block(!roomManager.IsYourTurn);
             diceController.PairSelected += (v1, v2) =>
             {
                 if (!roomManager.IsYourTurn)
@@ -38,9 +40,8 @@ namespace OnlineBoardGames.CantStop
                 if (v1 != null)
                 {
                     CheckMove(v1.Value, v2.Value);
-
-                    foreach (var p in possibleMoves)
-                        boardController.MarkColumn(p.Key, true);
+                    boardController.MarkColumn(v1.Value, possibleMoves.ContainsKey(v1.Value));
+                    boardController.MarkColumn(v2.Value, possibleMoves.ContainsKey(v2.Value));
                 }
                 else
                     boardController.ClearMarks();
@@ -93,7 +94,15 @@ namespace OnlineBoardGames.CantStop
         {
             selectedNumbers = columns.Select(c => c.Number);
 
-            if(columns.Count() == 0)
+            foreach (var p in possibleMoves)
+                boardController.PreviewColumn(p.Key, null);
+
+            foreach (var p in columns)
+                boardController.PreviewColumn(p.Number, possibleMoves[p.Number].pos);
+
+            whiteConePanel.UpdateUI(CantStopRoomManager.whineConeLimit - roomManager.WhiteConePositions.Count()- columns.Sum(p => possibleMoves[p.Number].cone));
+
+            if (columns.Count() == 0)
             {
                 foreach (var p in possibleMoves)
                     boardController.MarkColumn(p.Key, true);
@@ -159,11 +168,14 @@ namespace OnlineBoardGames.CantStop
             {
                 possibleMoves.Clear();
                 diceController.Reset();
+                diceController.Block(true);
                 placeButton.interactable = false;
                 rollButton.interactable = roomManager.LocalPlayer == roomManager.CurrentTurnPlayer;
+                whiteConePanel.UpdateUI(CantStopRoomManager.whineConeLimit - roomManager.WhiteConePositions.Count());
                 return;
             }
 
+            diceController.Block(!roomManager.IsYourTurn);
             diceController.SetDiceValues(data);
         }
 
@@ -200,6 +212,7 @@ namespace OnlineBoardGames.CantStop
                     break;
             }
 
+            diceController.Block(true);
             boardController.ClearMarks();
         }
 

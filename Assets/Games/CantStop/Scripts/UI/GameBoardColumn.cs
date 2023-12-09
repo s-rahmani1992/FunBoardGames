@@ -17,6 +17,7 @@ namespace OnlineBoardGames.CantStop
         [SerializeField] Toggle toggle;
         [SerializeField] Image conePrefab;
         [SerializeField] CantStopAssetManager assetManager;
+        [SerializeField] GameObject previewCone;
 
         List<BoardCell> cells;
         SortedDictionary<PlayerColor, GameObject> placedCones = new();
@@ -72,6 +73,12 @@ namespace OnlineBoardGames.CantStop
                 placedCones.Add(playerColor, newCcne.gameObject);
                 cells[number].AddCone(newCcne.gameObject);
             }
+        }
+
+        public void PreviewCone(int? pos)
+        {
+            previewCone.SetActive(pos != null);
+            previewCone.transform.position = cells[pos.GetValueOrDefault()].transform.position;
         }
     }
 }

@@ -11,6 +11,7 @@ namespace OnlineBoardGames.CantStop
         [SerializeField] DiceItem[] dices;
         [SerializeField] TextMeshProUGUI number1Text;
         [SerializeField] TextMeshProUGUI number2Text;
+        [SerializeField] GameObject blockObject;
 
         List<DiceItem> selectedDices = new();
         List<DiceItem> unselectedDices = new();
@@ -97,5 +98,7 @@ namespace OnlineBoardGames.CantStop
             dices[index1].Highlight(true);
             dices[index2].Highlight(true);
         }
+
+        public void Block(bool block) => blockObject.SetActive(block);
     }
 }

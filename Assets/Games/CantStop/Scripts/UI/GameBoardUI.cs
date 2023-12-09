@@ -49,6 +49,7 @@ namespace OnlineBoardGames.CantStop
             {
                 column.Mark(null);
                 column.ResetToggle();
+                column.PreviewCone(null);
             }
             selectedColumns.Clear();
         }
@@ -57,5 +58,7 @@ namespace OnlineBoardGames.CantStop
         {
             columnList[column].PlaceCone(color, cellNumber);
         }
+
+        public void PreviewColumn(int number, int? pos) => columnList[number].PreviewCone(pos);
     }
 }
