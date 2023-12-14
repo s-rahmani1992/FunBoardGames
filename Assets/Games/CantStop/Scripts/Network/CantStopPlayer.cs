@@ -1,5 +1,6 @@
 using Mirror;
 using System;
+using System.Collections.Generic;
 
 namespace OnlineBoardGames.CantStop
 {
@@ -18,7 +19,8 @@ namespace OnlineBoardGames.CantStop
         public DiceData RolledDices { get; private set; } = DiceData.Empty();
 
         public PlayerColor PlayerColor => (PlayerColor)Index;
-        
+        public IDictionary<int, int> ConePositions => conePositions;
+
         private void OnDiceChanged(DiceData _, DiceData value)
         {
             RollChanged?.Invoke(value);
@@ -27,10 +29,12 @@ namespace OnlineBoardGames.CantStop
         public event Action TurnStart;
         public event Action TurnEnd;
         public event Action<DiceData> RollChanged;
+        public event Action<CantStopPlayer, int, int> ConePositionChanged;
 
         #region Server Events
         public event Action<CantStopPlayer> RollRequested;
-        public event Action<CantStopPlayer,int, int, int, int?> Placed;
+        public event Action<CantStopPlayer, PlayerPlayData> Placed;
+        public event Action<CantStopPlayer, PlayerPlayData> Played;
         #endregion
 
         private void OnTurnChanged(bool _, bool newValue)
@@ -41,11 +45,31 @@ namespace OnlineBoardGames.CantStop
                 TurnEnd?.Invoke();
         }
 
+        public void UpdateConePosition(IDictionary<int, int> poses)
+        {
+            foreach (var p in poses)
+                conePositions[p.Key] = p.Value; 
+        }
+
         public override void OnStartServer()
         {
             base.OnStartServer();
             FreeConeCount = 12;
             Score = 0;
+        }
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            conePositions.Callback += ConePositions_Callback;
+        }
+
+        private void ConePositions_Callback(SyncIDictionary<int, int>.Operation op, int key, int item)
+        {
+            if (op == SyncIDictionary<int, int>.Operation.OP_ADD || op == SyncIDictionary<int, int>.Operation.OP_SET)
+            {
+                ConePositionChanged?.Invoke(this, key, item);
+            }
         }
 
         [Server]
@@ -58,6 +82,9 @@ namespace OnlineBoardGames.CantStop
         public void CmdRoll() => RollRequested?.Invoke(this);
 
         [Command]
-        public void CmdPlace(int diceIndex1, int diceIndex2, int index1, int? index2) => Placed?.Invoke(this, diceIndex1, diceIndex2, index1, index2);
+        public void CmdPlace(PlayerPlayData data) => Placed?.Invoke(this, data);
+
+        [Command]
+        public void CmdPlay(PlayerPlayData data) => Played?.Invoke(this, data);
     }
 }

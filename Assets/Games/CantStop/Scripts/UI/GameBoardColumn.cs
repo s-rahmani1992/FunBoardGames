@@ -62,16 +62,27 @@ namespace OnlineBoardGames.CantStop
             toggle.SetIsOnWithoutNotify(false);
         }
 
-        public void PlaceCone(PlayerColor playerColor, int number)
+        public void PlaceCone(PlayerColor playerColor, int? number)
         {
             if (placedCones.TryGetValue(playerColor, out GameObject cone))
-                cells[number].AddCone(cone);
+            {
+                if (number == null)
+                    cone.SetActive(false);
+                else
+                {
+                    cone.SetActive(true);
+                    cells[number.Value].AddCone(cone);
+                }
+            }
             else
-            { 
+            {
+                if (number == null)
+                    return;
+
                 var newCcne = Instantiate(conePrefab, transform);
                 newCcne.GetComponent<Image>().color = assetManager.GetPlayerColor(playerColor);
                 placedCones.Add(playerColor, newCcne.gameObject);
-                cells[number].AddCone(newCcne.gameObject);
+                cells[number.Value].AddCone(newCcne.gameObject);
             }
         }
 

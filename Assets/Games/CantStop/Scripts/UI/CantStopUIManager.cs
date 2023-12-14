@@ -19,7 +19,7 @@ namespace OnlineBoardGames.CantStop
         [SerializeField] WhiteConePanel whiteConePanel;
 
         SortedDictionary<int, (int pos, int cone)> possibleMoves = new();
-
+        CantStopPlayer localPlayer;
         IEnumerable<int> selectedNumbers;
 
         private void Awake()
@@ -29,6 +29,7 @@ namespace OnlineBoardGames.CantStop
             playButton.interactable = false;
             roomManager = FindObjectOfType<CantStopRoomManager>();
             roomManager.LocalPlayer.CmdGameReady();
+            localPlayer = roomManager.LocalPlayer as CantStopPlayer;
             diceController.Block(!roomManager.IsYourTurn);
             diceController.PairSelected += (v1, v2) =>
             {
@@ -60,34 +61,67 @@ namespace OnlineBoardGames.CantStop
                 if (g.TryGetValue(v1, out int c))
                     possibleMoves[v1] = (c + 2, 0);
                 else if(g.Count < CantStopRoomManager.whineConeLimit)
-                    possibleMoves[v1] = (1, 1);
-
+                {
+                    if(localPlayer.ConePositions.TryGetValue(v1, out int pos))
+                        possibleMoves[v1] = (pos + 2, 1);
+                    else
+                        possibleMoves[v1] = (1, 1);
+                }
+                    
                 return;
             }
 
-            (int pos, int cone)? c1 = null;
-
-            if (g.TryGetValue(v1, out int cx1))
-                c1 = (cx1 + 1, 0);
-            else if (g.Count < CantStopRoomManager.whineConeLimit)
-                c1 = (0, 1);
-
-            (int pos, int cone)? c2 = null;
-
-            if (g.TryGetValue(v2, out int cx2))
-                c2 = (cx2 + 1, 0);
-            else if(g.Count < CantStopRoomManager.whineConeLimit)
-                c2 = (0, 1);
+            (int pos, int cone)? c1 = GetPosibleMove(v1);
+            (int pos, int cone)? c2 = GetPosibleMove(v2);
 
             if(c1 != null) possibleMoves[v1] = c1.Value;
             if (c2 != null) possibleMoves[v2] = c2.Value;
+        }
+
+        (int pos, int cone)? GetPosibleMove(int columnNumber)
+        {
+            var g = roomManager.WhiteConePositions;
+
+            if (g.TryGetValue(columnNumber, out int whiteCoePos))
+                return (whiteCoePos + 1, 0);
+            else if (g.Count < CantStopRoomManager.whineConeLimit)
+            {
+                if (localPlayer.ConePositions.TryGetValue(columnNumber, out int conePos))
+                    return (conePos + 1, 1);
+                else
+                    return (0, 1);
+            }
+
+            return null;
         }
 
         private void Start()
         {
             rollButton.onClick.AddListener(OnRollClicked);
             placeButton.onClick.AddListener(OnPlaceClicked);
+            playButton.onClick.AddListener(OnPlayClicked);
             boardController.SelectedChanged += OnSelectedChanged;
+        }
+
+        private void OnPlayClicked()
+        {
+            var g = diceController.SelectedIndices.ToArray();
+
+            switch (selectedNumbers.Count())
+            {
+                case 0:
+                    localPlayer.CmdPlay(null);
+                    return;
+                case 1:
+                    localPlayer.CmdPlay(new PlayerPlayData(g[0], g[1], selectedNumbers.ElementAt(0), null));
+                    break;
+                case 2:
+                    localPlayer.CmdPlay(new PlayerPlayData(g[0], g[1], selectedNumbers.ElementAt(0), selectedNumbers.ElementAt(1)));
+                    break;
+            }
+
+            diceController.Block(true);
+            boardController.ClearMarks();
         }
 
         private void OnSelectedChanged(IEnumerable<GameBoardColumn> columns)
@@ -159,7 +193,11 @@ namespace OnlineBoardGames.CantStop
         private void OnTurnStarted(CantStopPlayer player)
         {
             rollButton.interactable = player.hasAuthority;
+            placeButton.interactable = false;
+            playButton.interactable = false;
             diceController.Reset();
+            boardController.RemoveWhiteCones();
+            boardController.ClearMarks();
         }
 
         private void OnRollChanged(DiceData data)
@@ -187,7 +225,14 @@ namespace OnlineBoardGames.CantStop
             {
                 playerUis[player.Index - 1].SetPlayer(player, playerColors.GetPlayerColor(player.PlayerColor));
                 player.RollChanged += OnRollChanged;
+                player.ConePositionChanged += OnConePositionChanged;
             }
+        }
+
+        private void OnConePositionChanged(CantStopPlayer player, int c, int p)
+        {
+            boardController.PlaceCone(c, PlayerColor.None, null);
+            boardController.PlaceCone(c, player.PlayerColor, p);
         }
 
         public void OnRollClicked()
@@ -205,10 +250,10 @@ namespace OnlineBoardGames.CantStop
                 case 0:
                     return;
                 case 1:
-                    (roomManager.LocalPlayer as CantStopPlayer).CmdPlace(g[0], g[1], selectedNumbers.ElementAt(0), null);
+                    localPlayer.CmdPlace(new(g[0], g[1], selectedNumbers.ElementAt(0), null));
                     break;
                 case 2:
-                    (roomManager.LocalPlayer as CantStopPlayer).CmdPlace(g[0], g[1], selectedNumbers.ElementAt(0), selectedNumbers.ElementAt(1));
+                    localPlayer.CmdPlace(new(g[0], g[1], selectedNumbers.ElementAt(0), selectedNumbers.ElementAt(1)));
                     break;
             }
 

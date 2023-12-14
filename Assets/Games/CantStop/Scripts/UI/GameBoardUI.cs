@@ -54,7 +54,13 @@ namespace OnlineBoardGames.CantStop
             selectedColumns.Clear();
         }
 
-        public void PlaceCone(int column, PlayerColor color, int cellNumber)
+        public void RemoveWhiteCones()
+        {
+            foreach (var column in columnList.Values)
+                column.PlaceCone(PlayerColor.None, null);
+        }
+
+        public void PlaceCone(int column, PlayerColor color, int? cellNumber)
         {
             columnList[column].PlaceCone(color, cellNumber);
         }

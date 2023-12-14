@@ -1,6 +1,5 @@
 using Mirror;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -49,31 +48,87 @@ namespace OnlineBoardGames.CantStop
             {
                 player.RollRequested += OnRollRequested;
                 player.Placed += OnPlaced;
+                player.Played += OnPlayed;
             }
         }
 
-        private async void OnPlaced(CantStopPlayer player, int diceIndex1, int diceIndex2, int index1, int? index2)
+        private async void OnPlayed(CantStopPlayer player, PlayerPlayData data)
         {
             if (player != CurrentTurnPlayer)
                 return;
 
-            RpcDiceSelect(diceIndex1, diceIndex2);
-
-            bool single = 2 * (player.RolledDices[diceIndex1] + player.RolledDices[diceIndex2]) == player.RolledDices.Sum;
-
-            if (whiteConePositions.TryGetValue(index1, out int c1))
-                whiteConePositions[index1] = c1 + (single? 2 : 1);
-            else
-                whiteConePositions.Add(index1, c1 + (single ? 1 : 0));
-
-            if (index2 != null)
+            if(data == null)
             {
-                if (whiteConePositions.TryGetValue(index2.Value, out int cx))
-                    whiteConePositions[index2.Value] = cx + 1;
-                else
-                    whiteConePositions.Add(index2.Value, 0);
+                await Task.Delay(2000);
+                turnIndex = (turnIndex + 1) % Players.Count();
+                SetTurn(Players[turnIndex] as CantStopPlayer);
+                return;
             }
 
+            RpcDiceSelect(data.DiceIndex1, data.DiceIndex2);
+
+            bool single = 2 * (player.RolledDices[data.DiceIndex1] + player.RolledDices[data.DiceIndex2]) == player.RolledDices.Sum;
+
+            if (whiteConePositions.TryGetValue(data.ColumnIndex1, out int c1))
+                whiteConePositions[data.ColumnIndex1] = c1 + (single ? 2 : 1);
+            else
+            {
+                if (player.ConePositions.TryGetValue(data.ColumnIndex1, out c1))
+                    whiteConePositions.Add(data.ColumnIndex1, c1 + (single ? 2 : 1));
+                else
+                    whiteConePositions.Add(data.ColumnIndex1, single ? 1 : 0);
+            }
+
+            if (data.ColumnIndex2 != null)
+            {
+                if (whiteConePositions.TryGetValue(data.ColumnIndex2.Value, out int cx))
+                    whiteConePositions[data.ColumnIndex2.Value] = cx + 1;
+                else
+                {
+                    if (player.ConePositions.TryGetValue(data.ColumnIndex2.Value, out cx))
+                        whiteConePositions.Add(data.ColumnIndex2.Value, cx + (single ? 2 : 1));
+                    else
+                        whiteConePositions.Add(data.ColumnIndex2.Value, single ? 1 : 0);
+                }
+            }
+            await Task.Delay(2000);
+            player.UpdateConePosition(whiteConePositions);
+            await Task.Delay(2000);
+            turnIndex = (turnIndex + 1) % Players.Count();
+            SetTurn(Players[turnIndex] as CantStopPlayer);
+        }
+
+        private async void OnPlaced(CantStopPlayer player, PlayerPlayData data)
+        {
+            if (player != CurrentTurnPlayer)
+                return;
+
+            RpcDiceSelect(data.DiceIndex1, data.DiceIndex2);
+
+            bool single = 2 * (player.RolledDices[data.DiceIndex1] + player.RolledDices[data.DiceIndex2]) == player.RolledDices.Sum;
+
+            if (whiteConePositions.TryGetValue(data.ColumnIndex1, out int c1))
+                whiteConePositions[data.ColumnIndex1] = c1 + (single ? 2 : 1);
+            else
+            {
+                if(player.ConePositions.TryGetValue(data.ColumnIndex1, out c1))
+                    whiteConePositions.Add(data.ColumnIndex1, c1 + (single ? 2 : 1));
+                else
+                    whiteConePositions.Add(data.ColumnIndex1, single ? 1 : 0);
+            }
+
+            if (data.ColumnIndex2 != null)
+            {
+                if (whiteConePositions.TryGetValue(data.ColumnIndex2.Value, out int cx))
+                    whiteConePositions[data.ColumnIndex2.Value] = cx + 1;
+                else
+                {
+                    if (player.ConePositions.TryGetValue(data.ColumnIndex2.Value, out cx))
+                        whiteConePositions.Add(data.ColumnIndex2.Value, cx + (single ? 2 : 1));
+                    else
+                        whiteConePositions.Add(data.ColumnIndex2.Value, single ? 1 : 0);
+                }
+            }
 
             await Task.Delay(2000);
             player.SetRoll(DiceData.Empty());
@@ -95,6 +150,8 @@ namespace OnlineBoardGames.CantStop
 
             player.SetTurn(true);
             CurrentTurnPlayer = player;
+            whiteConePositions.Clear();
+            player.SetRoll(DiceData.Empty());
         }
 
         [ClientRpc(includeOwner = false)]
