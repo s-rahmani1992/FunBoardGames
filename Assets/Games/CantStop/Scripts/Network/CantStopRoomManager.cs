@@ -20,6 +20,9 @@ namespace OnlineBoardGames.CantStop
         SyncDictionary<int, int> whiteConePositions = new();
         public IDictionary<int, int> WhiteConePositions => whiteConePositions;
 
+        SyncDictionary<int, CantStopPlayer> playerFinishPositions = new();
+        public IDictionary<int, CantStopPlayer> PlayerFinishPositions => playerFinishPositions;
+
         public const int whineConeLimit = 3;
 
 #if UNITY_EDITOR
@@ -65,12 +68,40 @@ namespace OnlineBoardGames.CantStop
                 return;
             }
 
+            UpdateWhiteCones(player, data);
+            await Task.Delay(2000);
+            var g = player.UpdateConePosition(whiteConePositions, board);
+
+            foreach (var n in g)
+                PlayerFinishPositions.TryAdd(n, player);
+
+            await Task.Delay(2000);
+            turnIndex = (turnIndex + 1) % Players.Count();
+            SetTurn(Players[turnIndex] as CantStopPlayer);
+        }
+
+        private async void OnPlaced(CantStopPlayer player, PlayerPlayData data)
+        {
+            if (player != CurrentTurnPlayer)
+                return;
+
+            UpdateWhiteCones(player, data);
+            await Task.Delay(2000);
+            player.SetRoll(DiceData.Empty());
+        }
+
+        [Server]
+        void UpdateWhiteCones(CantStopPlayer player, PlayerPlayData data)
+        {
             RpcDiceSelect(data.DiceIndex1, data.DiceIndex2);
 
             bool single = 2 * (player.RolledDices[data.DiceIndex1] + player.RolledDices[data.DiceIndex2]) == player.RolledDices.Sum;
 
             if (whiteConePositions.TryGetValue(data.ColumnIndex1, out int c1))
-                whiteConePositions[data.ColumnIndex1] = c1 + (single ? 2 : 1);
+            {
+                if(c1 < board[data.ColumnIndex1] - 1)
+                    whiteConePositions[data.ColumnIndex1] = Mathf.Clamp(c1 + (single ? 2 : 1), 0, board[data.ColumnIndex1] - 1);
+            }
             else
             {
                 if (player.ConePositions.TryGetValue(data.ColumnIndex1, out c1))
@@ -82,56 +113,18 @@ namespace OnlineBoardGames.CantStop
             if (data.ColumnIndex2 != null)
             {
                 if (whiteConePositions.TryGetValue(data.ColumnIndex2.Value, out int cx))
-                    whiteConePositions[data.ColumnIndex2.Value] = cx + 1;
+                {
+                    if (cx < board[data.ColumnIndex2.Value] - 1)
+                        whiteConePositions[data.ColumnIndex2.Value] = c1 + 1;
+                }
                 else
                 {
                     if (player.ConePositions.TryGetValue(data.ColumnIndex2.Value, out cx))
-                        whiteConePositions.Add(data.ColumnIndex2.Value, cx + (single ? 2 : 1));
+                        whiteConePositions.Add(data.ColumnIndex2.Value, cx + 1);
                     else
-                        whiteConePositions.Add(data.ColumnIndex2.Value, single ? 1 : 0);
+                        whiteConePositions.Add(data.ColumnIndex2.Value, 0);
                 }
             }
-            await Task.Delay(2000);
-            player.UpdateConePosition(whiteConePositions);
-            await Task.Delay(2000);
-            turnIndex = (turnIndex + 1) % Players.Count();
-            SetTurn(Players[turnIndex] as CantStopPlayer);
-        }
-
-        private async void OnPlaced(CantStopPlayer player, PlayerPlayData data)
-        {
-            if (player != CurrentTurnPlayer)
-                return;
-
-            RpcDiceSelect(data.DiceIndex1, data.DiceIndex2);
-
-            bool single = 2 * (player.RolledDices[data.DiceIndex1] + player.RolledDices[data.DiceIndex2]) == player.RolledDices.Sum;
-
-            if (whiteConePositions.TryGetValue(data.ColumnIndex1, out int c1))
-                whiteConePositions[data.ColumnIndex1] = c1 + (single ? 2 : 1);
-            else
-            {
-                if(player.ConePositions.TryGetValue(data.ColumnIndex1, out c1))
-                    whiteConePositions.Add(data.ColumnIndex1, c1 + (single ? 2 : 1));
-                else
-                    whiteConePositions.Add(data.ColumnIndex1, single ? 1 : 0);
-            }
-
-            if (data.ColumnIndex2 != null)
-            {
-                if (whiteConePositions.TryGetValue(data.ColumnIndex2.Value, out int cx))
-                    whiteConePositions[data.ColumnIndex2.Value] = cx + 1;
-                else
-                {
-                    if (player.ConePositions.TryGetValue(data.ColumnIndex2.Value, out cx))
-                        whiteConePositions.Add(data.ColumnIndex2.Value, cx + (single ? 2 : 1));
-                    else
-                        whiteConePositions.Add(data.ColumnIndex2.Value, single ? 1 : 0);
-                }
-            }
-
-            await Task.Delay(2000);
-            player.SetRoll(DiceData.Empty());
         }
 
         private void OnRollRequested(CantStopPlayer player)

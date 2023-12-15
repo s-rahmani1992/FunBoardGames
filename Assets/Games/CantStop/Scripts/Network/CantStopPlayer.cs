@@ -6,19 +6,18 @@ namespace OnlineBoardGames.CantStop
 {
     public class CantStopPlayer : BoardGamePlayer
     {
-        [field: SyncVar] public int Score { get; private set; }
-
-        [field: SyncVar] public int FreeConeCount { get; private set; }
-
-        SyncDictionary<int, int> conePositions = new();
-
         [field: SyncVar( hook = nameof(OnTurnChanged))] 
         public bool IsTurn { get; private set; }
 
         [field: SyncVar(hook = nameof(OnDiceChanged))]
         public DiceData RolledDices { get; private set; } = DiceData.Empty();
 
+        [field: SyncVar(hook = nameof(OnFinishedConeChenged))]
+        public int FinishedConeCount { get; private set;}
+
         public PlayerColor PlayerColor => (PlayerColor)Index;
+
+        SyncDictionary<int, int> conePositions = new();
         public IDictionary<int, int> ConePositions => conePositions;
 
         private void OnDiceChanged(DiceData _, DiceData value)
@@ -26,10 +25,16 @@ namespace OnlineBoardGames.CantStop
             RollChanged?.Invoke(value);
         }
 
+        private void OnFinishedConeChenged(int _, int value)
+        {
+            FinishedConeChanged?.Invoke(value);
+        }
+
         public event Action TurnStart;
         public event Action TurnEnd;
         public event Action<DiceData> RollChanged;
         public event Action<CantStopPlayer, int, int> ConePositionChanged;
+        public event Action<int> FinishedConeChanged;
 
         #region Server Events
         public event Action<CantStopPlayer> RollRequested;
@@ -45,17 +50,24 @@ namespace OnlineBoardGames.CantStop
                 TurnEnd?.Invoke();
         }
 
-        public void UpdateConePosition(IDictionary<int, int> poses)
+        public IEnumerable<int> UpdateConePosition(IDictionary<int, int> poses, GameBoard board)
         {
-            foreach (var p in poses)
-                conePositions[p.Key] = p.Value; 
-        }
+            List<int> finishedColumns = new();
 
-        public override void OnStartServer()
-        {
-            base.OnStartServer();
-            FreeConeCount = 12;
-            Score = 0;
+            foreach (var p in poses)
+            {
+                int g = -1;
+                conePositions.TryGetValue(p.Key, out g);
+
+                if (g != p.Value && p.Value == board[p.Key] - 1)
+                    finishedColumns.Add(p.Key);
+
+                conePositions[p.Key] = p.Value;
+            }
+
+            FinishedConeCount += finishedColumns.Count;
+
+            return finishedColumns;
         }
 
         public override void OnStartClient()

@@ -20,6 +20,7 @@ namespace OnlineBoardGames.CantStop
 
         SortedDictionary<int, (int pos, int cone)> possibleMoves = new();
         CantStopPlayer localPlayer;
+        GameBoard board;
         IEnumerable<int> selectedNumbers;
 
         private void Awake()
@@ -58,8 +59,17 @@ namespace OnlineBoardGames.CantStop
 
             if(v1 == v2)
             {
+                if (roomManager.PlayerFinishPositions.ContainsKey(v1))
+                    return;
+
                 if (g.TryGetValue(v1, out int c))
-                    possibleMoves[v1] = (c + 2, 0);
+                {
+                    if (c == board[v1] - 1)
+                        return; 
+                    
+                    possibleMoves[v1] = (Mathf.Clamp(c + 2, 0, board[v1] - 1), 0);
+                }
+                    
                 else if(g.Count < CantStopRoomManager.whineConeLimit)
                 {
                     if(localPlayer.ConePositions.TryGetValue(v1, out int pos))
@@ -80,10 +90,19 @@ namespace OnlineBoardGames.CantStop
 
         (int pos, int cone)? GetPosibleMove(int columnNumber)
         {
+            if (roomManager.PlayerFinishPositions.ContainsKey(columnNumber))
+                return null;
+
             var g = roomManager.WhiteConePositions;
 
-            if (g.TryGetValue(columnNumber, out int whiteCoePos))
-                return (whiteCoePos + 1, 0);
+            if (g.TryGetValue(columnNumber, out int whiteConePos))
+            {
+                if (whiteConePos == board[columnNumber] - 1)
+                    return null;
+
+                return (whiteConePos + 1, 0);
+            }
+                
             else if (g.Count < CantStopRoomManager.whineConeLimit)
             {
                 if (localPlayer.ConePositions.TryGetValue(columnNumber, out int conePos))
@@ -220,6 +239,7 @@ namespace OnlineBoardGames.CantStop
         private void OnGameBegin()
         {
             boardController.Initialize(roomManager.Board);
+            board = roomManager.Board;
 
             foreach(var player in roomManager.PlayerList)
             {

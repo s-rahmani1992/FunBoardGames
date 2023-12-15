@@ -30,7 +30,7 @@ namespace OnlineBoardGames.CantStop
             nameText.color = (networkPlayer.hasAuthority ? Color.yellow : Color.cyan);
             nameText.text = networkPlayer.Name;
             coneIcon.color = playerColor;
-            scoreText.text = networkPlayer.Score.ToString();
+            scoreText.text = networkPlayer.FinishedConeCount.ToString();
             gameObject.SetActive(true);
         }
 
@@ -38,12 +38,19 @@ namespace OnlineBoardGames.CantStop
         {
             networkPlayer.TurnStart += OnTurnStart;
             networkPlayer.TurnEnd += OnTurnEnd;
+            networkPlayer.FinishedConeChanged += OnFinishedConeChanged;
+        }
+
+        private void OnFinishedConeChanged(int value)
+        {
+            scoreText.text = value.ToString();
         }
 
         void UnSubscribe()
         {
             networkPlayer.TurnStart -= OnTurnStart;
             networkPlayer.TurnEnd -= OnTurnEnd;
+            networkPlayer.FinishedConeChanged -= OnFinishedConeChanged;
         }
 
         private void OnTurnEnd() => turnLED.texture = offTex;
