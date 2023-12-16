@@ -20,6 +20,7 @@ namespace OnlineBoardGames
     {
         public string playerName;
         public Guid roomID = Guid.Empty;
+        public BoardGame gameType;
     }
 
     public class SimpleNameAuthenticator : NetworkAuthenticator

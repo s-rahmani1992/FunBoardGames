@@ -69,8 +69,8 @@ MonoBehaviour:
   - {fileID: 7372925938819324000, guid: ff4492a17b22aff45bbe8dce542e24a6, type: 3}
   - {fileID: 2771551184415302611, guid: 99f9f3425af0e3548a8c341e7e939d2a, type: 3}
   isEditorServer: 0
-  <OverrideGame>k__BackingField: 1
-  <GameType>k__BackingField: 1
+  <OverrideGame>k__BackingField: 0
+  <GameType>k__BackingField: 0
   <PlayerCount>k__BackingField: 2
 --- !u!114 &7475147692941367167
 MonoBehaviour:

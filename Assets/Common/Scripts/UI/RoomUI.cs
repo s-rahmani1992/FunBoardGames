@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -9,7 +7,8 @@ namespace OnlineBoardGames
     public class RoomUI : MonoBehaviour, IPoolable
     {
         public string ObjectTag { get; set; }
-        System.Guid id;
+        RoomData roomData;
+        BoardGame gameType;
         [SerializeField]
         Text nameTxt, numberTxt;
         [SerializeField]
@@ -20,6 +19,7 @@ namespace OnlineBoardGames
         {
             transform.parent = parameters[0] as Transform;
             RefreshUI(parameters[1] as RoomData);
+            gameType = (BoardGame)parameters[2];
             gameObject.SetActive(true);
         }
 
@@ -32,12 +32,12 @@ namespace OnlineBoardGames
         void RefreshUI(RoomData room){
             nameTxt.text = room.Name;
             numberTxt.text = room.PlayerCount.ToString();
-            id = room.Id;
+            roomData = room;
         }
 
         public void Join()
         {
-            roomContainer.SetParameters(id);
+            roomContainer.SetParameters(false, roomData, gameType);
             SceneManager.LoadScene("Room");
         }
     }

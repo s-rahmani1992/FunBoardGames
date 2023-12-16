@@ -21,10 +21,14 @@ namespace OnlineBoardGames
 
     public struct JoinMatchMessage : NetworkMessage 
     {
+        public BoardGame gameType;
         public Guid matchID;
     }
 
-    public struct LeaveRoomMessage : NetworkMessage { }
+    public struct LeaveRoomMessage : NetworkMessage 
+    {
+        public BoardGame gameType; 
+    }
 
     public struct NotifyJoinRoom : NetworkMessage
     {

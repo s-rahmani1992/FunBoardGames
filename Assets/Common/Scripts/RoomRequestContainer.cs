@@ -25,5 +25,13 @@ namespace OnlineBoardGames
             IsCreate = false;
             MatchId = id;
         }
+
+        public void SetParameters(bool isCreate, RoomData roomData, BoardGame gameType)
+        {
+            IsCreate = isCreate;
+            RoomName = roomData.Name;
+            MatchId = roomData.Id;
+            GameType = gameType;
+        }
     }
 }

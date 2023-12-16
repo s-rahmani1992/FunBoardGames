@@ -1,9 +1,7 @@
 using System.Collections.Generic;
-using UnityEngine;
 using Mirror;
 using System;
-using OnlineBoardGames.SET;
-
+using System.Collections.Concurrent;
 /*
 	Documentation: https://mirror-networking.gitbook.io/docs/guides/networkbehaviour
 	API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkBehaviour.html
@@ -15,15 +13,13 @@ namespace OnlineBoardGames
 {
     public class LobbyManager : NetworkBehaviour
     {
-        Dictionary<Guid, RoomManager> rooms = new();
+        Dictionary<BoardGame, ConcurrentDictionary<Guid, RoomManager>> rooms = new();
         public event Action<RoomManager, NetworkConnectionToClient> RoomRequested;
 
         [Server]
         Guid GenerateRoomID()
         {
             Guid newID = Guid.NewGuid();
-            while(rooms.ContainsKey(newID))
-                newID = Guid.NewGuid();
             return newID;
         }
 
@@ -39,6 +35,9 @@ namespace OnlineBoardGames
             NetworkServer.RegisterHandler<JoinMatchMessage>(OnJoinRoomRequest);
             NetworkServer.RegisterHandler<LeaveRoomMessage>(OnLeaveRoomRequest);
 
+            rooms.Add(BoardGame.SET, new());
+            rooms.Add(BoardGame.CantStop, new());
+
             if (GameNetworkManager.singleton.OverrideGame)
             {
                 GameNetworkManager m = GameNetworkManager.singleton;
@@ -46,7 +45,7 @@ namespace OnlineBoardGames
                 var TestRoom = Instantiate(m.spawnPrefabs[2 * (byte)m.GameType + 2]).GetComponent<RoomManager>();
                 TestRoom.SetName("Test");
                 TestRoom.GetComponent<NetworkMatch>().matchId = GameNetworkManager.TestGuid;
-                rooms.Add(GameNetworkManager.TestGuid, TestRoom);
+                rooms[m.GameType].TryAdd(GameNetworkManager.TestGuid, TestRoom);
                 NetworkServer.Spawn(TestRoom.gameObject);
             }
         }
@@ -57,13 +56,13 @@ namespace OnlineBoardGames
 
             if(data.roomID != Guid.Empty)
             {
-                RoomManager r = rooms[data.roomID];
+                RoomManager r = rooms[msg.gameType][data.roomID];
                 r.Remove(conn.identity.GetComponent<BoardGamePlayer>());
                 conn.Send(new SceneMessage { sceneName = "Menu" });
 
                 if(r.PlayerCount == 0)
                 {
-                    rooms.Remove(data.roomID);
+                    rooms[msg.gameType].TryRemove(data.roomID, out r);
                     NetworkServer.Destroy((r as NetworkBehaviour).gameObject);
                     (conn.authenticationData as AuthData).roomID = Guid.Empty;
                 }
@@ -72,9 +71,10 @@ namespace OnlineBoardGames
 
         void OnJoinRoomRequest(NetworkConnectionToClient conn, JoinMatchMessage msg)
         {
-            if (rooms.TryGetValue(msg.matchID, out RoomManager room))
+            if (rooms[msg.gameType].TryGetValue(msg.matchID, out RoomManager room))
             {
                 (conn.authenticationData as AuthData).roomID = msg.matchID;
+                (conn.authenticationData as AuthData).gameType = msg.gameType;
                 AddPlayerForMatch(conn, room);
             }
         }
@@ -83,7 +83,7 @@ namespace OnlineBoardGames
         {
             List<RoomData> roomList = new();
 
-            foreach(var room in rooms)
+            foreach(var room in rooms[msg.gameType])
             {
                 if (room.Value.IsAcceptingPlayer && room.Value.PlayerCount < 4)
                     roomList.Add(new RoomData(room.Value, room.Key));
@@ -109,7 +109,8 @@ namespace OnlineBoardGames
             room.SetName(msg.reqName);
             room.GetComponent<NetworkMatch>().matchId = newMatchID;
             (conn.authenticationData as AuthData).roomID = newMatchID;
-            rooms.Add(newMatchID, room);
+            (conn.authenticationData as AuthData).gameType = msg.gameType;
+            rooms[msg.gameType].TryAdd(newMatchID, room);
             NetworkServer.Spawn(room.gameObject);
             AddPlayerForMatch(conn, room);
         }

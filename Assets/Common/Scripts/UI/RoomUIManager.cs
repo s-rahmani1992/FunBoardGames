@@ -32,7 +32,7 @@ namespace OnlineBoardGames
             if (roomContainer.IsCreate)
                 Mirror.NetworkClient.Send(new CreateRoomMessage { reqName = roomContainer.RoomName, gameType = roomContainer.GameType });
             else
-                Mirror.NetworkClient.Send(new JoinMatchMessage { matchID = roomContainer.MatchId });
+                Mirror.NetworkClient.Send(new JoinMatchMessage { matchID = roomContainer.MatchId, gameType = roomContainer.GameType });
         }
 
         private void OnPlayerAdded(BoardGamePlayer player)
@@ -101,7 +101,7 @@ namespace OnlineBoardGames
 
         public void ReaveRoom()
         {
-            Mirror.NetworkClient.Send(new LeaveRoomMessage { });
+            Mirror.NetworkClient.Send(new LeaveRoomMessage { gameType = roomManager.GameType });
         }
 
         public void SendReady()
