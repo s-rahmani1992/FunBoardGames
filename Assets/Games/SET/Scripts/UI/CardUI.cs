@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,12 +6,13 @@ namespace OnlineBoardGames.SET
 {
     public class CardUI : MonoBehaviour, IPoolable
     {
-        public string ObjectTag { get; set; }
-        public CardData info { get; private set; }
-        Vector2Int position;
-        [SerializeField] LineMove move;
         [SerializeField] Image[] shapes;
         [SerializeField] Canvas canvas;
+
+        public string ObjectTag { get; set; }
+        public CardData info { get; private set; }
+
+        Vector2Int position;
         SETGameUIManager uiManager;
 
         static float[][] yPos = new float[][] { new float[] { 0 }, new float[] { -45f, 45f }, new float[] { -90f, 0, 90f } };
@@ -44,7 +44,10 @@ namespace OnlineBoardGames.SET
                 shapes[a].sprite = uiManager.cardShapes[3 * info.Shape + info.Shading];
                 shapes[a].gameObject.SetActive(true);
                 canvas.sortingOrder = 1;
-                move.MoveInLine(new Vector2(-320 + 320 * position.x, -270 - 220f * position.y), MoveMode.FixedTime, 0.2f, (b) => b.GetComponent<Canvas>().sortingOrder = 0, (float)parameters[2]);
+                transform.DOLocalMove(new Vector2(-320 + 320 * position.x, -270 - 220f * position.y), 0.2f).SetDelay((float)parameters[2]).OnComplete(() =>
+                {
+                    GetComponent<Canvas>().sortingOrder = 0;
+                });
             }
 
             MyUtils.DelayAction(() => { uiManager.UpdateCardMeter(); }, (float)parameters[2], uiManager);
@@ -70,11 +73,11 @@ namespace OnlineBoardGames.SET
 
         public void MoveBack()
         {
-            move.MoveInLine(new Vector2(-320 + 320 * position.x, -270 - 220f * position.y), MoveMode.FixedTime, 0.2f, 
-                (b) => { 
-                    b.GetComponent<Canvas>().sortingOrder = 0;
-                    b.GetComponent<Canvas>().sortingLayerName = "card";
-                });
+            transform.DOLocalMove(new Vector2(-320 + 320 * position.x, -270 - 220f * position.y), 0.2f).OnComplete(() =>
+            {
+                canvas.sortingOrder = 0;
+                canvas.sortingLayerName = "card";
+            });
         }
     }
 }

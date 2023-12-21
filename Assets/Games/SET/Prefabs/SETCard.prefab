@@ -28,6 +28,7 @@ RectTransform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3382058288306616683}
   m_RootOrder: 2
@@ -103,6 +104,7 @@ RectTransform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3382058288306616683}
   m_RootOrder: 0
@@ -165,7 +167,6 @@ GameObject:
   - component: {fileID: 5764611667099409430}
   - component: {fileID: 7439473870411423468}
   - component: {fileID: 3382058288306616681}
-  - component: {fileID: 3382058288306616680}
   m_Layer: 5
   m_Name: SETCard
   m_TagString: Untagged
@@ -183,6 +184,7 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3382058287951765641}
   - {fileID: 3382058288499799584}
@@ -339,24 +341,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9673530bdf24e448b0d6f8155443a6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  move: {fileID: 3382058288306616680}
   shapes:
   - {fileID: 3382058287951765646}
   - {fileID: 3382058288499799585}
   - {fileID: 3382058287802641924}
   canvas: {fileID: 3583008112701805044}
---- !u!114 &3382058288306616680
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3382058288306616682}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3a155829ea2c8d74c847d9b9c9bc04df, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &3382058288499799587
 GameObject:
   m_ObjectHideFlags: 0
@@ -385,6 +374,7 @@ RectTransform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3382058288306616683}
   m_RootOrder: 1

@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -54,12 +53,9 @@ namespace OnlineBoardGames.SET {
                 selectedCards[i].GetComponent<Canvas>().sortingOrder = 5;
                 selectedCards[i].GetComponent<Canvas>().sortingLayerName = "Dialog";
                 if (i != 2)
-                    selectedCards[i].GetComponent<LineMove>().MoveInLine(poses[i], MoveMode.FixedTime, 0.5f);
+                    selectedCards[i].transform.DOLocalMove(poses[i], 0.5f);
                 else
-                    selectedCards[i].GetComponent<LineMove>().MoveInLine(poses[i], MoveMode.FixedTime, 0.5f, (b) =>
-                    {
-                        resultMarks.gameObject.SetActive(true);
-                    });
+                    selectedCards[i].transform.DOLocalMove(poses[i], 0.5f).OnComplete(() => resultMarks.gameObject.SetActive(true));
             }
         }
 
