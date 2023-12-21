@@ -39,6 +39,20 @@ namespace OnlineBoardGames
         public event Action<RoomManager> JoinedRoom;
         public static new GameNetworkManager singleton { get; private set; }
 
+        public bool IsServer
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return isEditorServer;
+#elif UNITY_SERVER
+                return true;
+#else
+                return false;
+#endif
+            }
+        }
+
         /// <summary>
         /// Runs on both Server and Client
         /// Networking is NOT initialized when this fires

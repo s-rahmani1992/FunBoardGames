@@ -592,7 +592,7 @@ RectTransform:
   - {fileID: 860031931}
   - {fileID: 1043224354}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -829,7 +829,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1532437139
 GameObject:
@@ -911,78 +911,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1532437139}
   m_CullTransparentMesh: 1
---- !u!1001 &1977170789
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 7475147692941367160, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: m_Name
-      value: NetworkManager
-      objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367164, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: m_RootOrder
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367164, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367164, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367164, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367164, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367164, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367164, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367164, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367164, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367164, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367164, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7475147692941367165, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-      propertyPath: isEditorServer
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
---- !u!114 &1977170790 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7475147692941367167, guid: 6e3c5ed775223d34bbcac7abb624ffa3, type: 3}
-  m_PrefabInstance: {fileID: 1977170789}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 30579c307bbbc094a9f30cd9c854ff59, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &2062099705
 GameObject:
   m_ObjectHideFlags: 0
@@ -1013,7 +941,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2062099708
 MonoBehaviour:
@@ -1030,7 +958,6 @@ MonoBehaviour:
   nameField: {fileID: 860031932}
   loginBtn: {fileID: 302590671}
   logTxt: {fileID: 1043224355}
-  authenticator: {fileID: 1977170790}
 --- !u!1 &2075030984
 GameObject:
   m_ObjectHideFlags: 0

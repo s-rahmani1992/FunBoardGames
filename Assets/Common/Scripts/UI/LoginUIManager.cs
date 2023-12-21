@@ -9,10 +9,12 @@ namespace OnlineBoardGames
         [SerializeField] InputField nameField;
         [SerializeField] Button loginBtn;
         [SerializeField] Text logTxt;
-        [SerializeField] SimpleNameAuthenticator authenticator;
+
+        SimpleNameAuthenticator authenticator;
 
         private void Start()
         {
+            authenticator = GameNetworkManager.singleton.authenticator as SimpleNameAuthenticator;
             authenticator.LoginFailed += OnLoginFailed;
             authenticator.LoginSuccess += OnLoginSuccess;
         }

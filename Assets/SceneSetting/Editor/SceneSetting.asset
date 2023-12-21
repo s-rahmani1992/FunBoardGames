@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b18860c610971784fafefab589000e15, type: 3}
   m_Name: SceneSetting
   m_EditorClassIdentifier: 
-  awakeScene: {fileID: 102900000, guid: b307cd99bbcb7d54d962091a41c887a5, type: 3}
+  awakeScene: {fileID: 102900000, guid: d4583f0ee2442f84cb5ebcd378e6b896, type: 3}
