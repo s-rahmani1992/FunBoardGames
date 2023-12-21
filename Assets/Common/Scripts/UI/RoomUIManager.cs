@@ -1,3 +1,4 @@
+using DG.Tweening;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -63,9 +64,7 @@ namespace OnlineBoardGames
         private void OnAllPlayersReady()
         {
             logTxt.text = "Wait For Game to Load";
-            MyUtils.DelayAction(() => {
-                SceneManager.LoadScene(roomManager.GameScene);
-            }, 1, this);
+            DOVirtual.DelayedCall(1, () => SceneManager.LoadScene(roomManager.GameScene));
         }
 
         private void OnPlayerLeft(BoardGamePlayer player)

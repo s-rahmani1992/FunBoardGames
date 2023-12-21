@@ -50,7 +50,7 @@ namespace OnlineBoardGames.SET
                 });
             }
 
-            MyUtils.DelayAction(() => { uiManager.UpdateCardMeter(); }, (float)parameters[2], uiManager);
+            DOVirtual.DelayedCall((float)parameters[2], () => { uiManager.UpdateCardMeter(); });
             for (var a = info.CountIndex + 1; a < 3; a++)
                 shapes[a].gameObject.SetActive(false);
         }

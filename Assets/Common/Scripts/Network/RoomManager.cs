@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using UnityEngine;
 using Mirror;
 using System;
+using DG.Tweening;
 
 /*
 	Documentation: https://mirror-networking.gitbook.io/docs/guides/networkbehaviour
@@ -121,7 +121,7 @@ namespace OnlineBoardGames {
             if (gameReadyCount == PlayerCount)
             {
                 RPCSendGameReady();
-                MyUtils.DelayAction(BeginGame, 0.5f, this);
+                DOVirtual.DelayedCall(0.5f, BeginGame);
             }
         }
 

@@ -33,14 +33,5 @@ namespace OnlineBoardGames
                 else return TripleComparisonResult.ALL_DIFFERRENT;
             }
         }
-
-        public static void DelayAction(System.Action func, float delay, MonoBehaviour mono){
-            mono.StartCoroutine(DelayAct(func, delay));
-        }
-
-        static IEnumerator DelayAct(System.Action func, float delay){
-            yield return new WaitForSeconds(delay);
-            func?.Invoke();
-        }
     }
 }
