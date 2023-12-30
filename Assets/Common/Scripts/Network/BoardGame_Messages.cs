@@ -1,8 +1,20 @@
+using FishNet.Broadcast;
 using Mirror;
 using System;
 
 namespace OnlineBoardGames
 {
+    public struct AuthRequestMessage : IBroadcast
+    {
+        public string requestedName;
+    }
+
+    public struct AuthResponseMessage : IBroadcast
+    {
+        public byte resultCode;
+        public string message;
+    }
+
     public struct CreateRoomMessage : NetworkMessage
     {
         public string reqName;

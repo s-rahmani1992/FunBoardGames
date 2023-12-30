@@ -22,8 +22,8 @@ namespace OnlineBoardGames
         // Start is called before the first frame update
         void Start()
         {
-            networkManager = FindObjectOfType<GameNetworkManager>();
-            networkManager.RoomListReceived += OnRoomListReceived;
+            //networkManager = FindObjectOfType<GameNetworkManager>();
+            //networkManager.RoomListReceived += OnRoomListReceived;
             dropDown.AddOptions(new System.Collections.Generic.List<TMP_Dropdown.OptionData>
             {
                 new TMP_Dropdown.OptionData(BoardGame.SET.ToString()),
@@ -36,11 +36,11 @@ namespace OnlineBoardGames
                 new TMP_Dropdown.OptionData(BoardGame.CantStop.ToString()),
             });
             listDropDown.onValueChanged.AddListener((v) => selectedListGame = (BoardGame)v);
-            if (networkManager.OverrideGame)
-            {
-                networkManager.JoinedRoom += OnJoinedRoom;
-                NetworkClient.Send(new JoinMatchMessage { matchID = GameNetworkManager.TestGuid });
-            }
+            //if (networkManager.OverrideGame)
+            //{
+            //    networkManager.JoinedRoom += OnJoinedRoom;
+            //    NetworkClient.Send(new JoinMatchMessage { matchID = GameNetworkManager.TestGuid });
+            //}
         }
 
         private void OnJoinedRoom(RoomManager room)
@@ -69,7 +69,7 @@ namespace OnlineBoardGames
 
         private void OnDestroy()
         {
-            networkManager.RoomListReceived -= OnRoomListReceived;
+            //networkManager.RoomListReceived -= OnRoomListReceived;
         }
     }
 }

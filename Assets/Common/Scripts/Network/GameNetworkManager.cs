@@ -113,7 +113,6 @@ namespace OnlineBoardGames
         /// <param name="conn">Connection from client.</param>
         public override void OnServerDisconnect(NetworkConnectionToClient conn)
         {
-            (authenticator as SimpleNameAuthenticator).RemoveName((conn.authenticationData as AuthData).playerName);
             if ((conn.authenticationData as AuthData).roomID != Guid.Empty)
                 lobbyManager.OnLeaveRoomRequest(conn, new LeaveRoomMessage { });
             conn.Send(new SceneMessage { sceneName = "Login" });
