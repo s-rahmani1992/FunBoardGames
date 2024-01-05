@@ -1,14 +1,7 @@
 using UnityEngine.SceneManagement;
-using Mirror;
 using System;
-using OnlineBoardGames.SET;
-
-/*
-	Documentation: https://mirror-networking.gitbook.io/docs/guides/networkbehaviour
-	API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkBehaviour.html
-*/
-
-// NOTE: Do not put objects in DontDestroyOnLoad (DDOL) in Awake.  You can do that in Start instead.
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 
 namespace OnlineBoardGames
 {
@@ -24,34 +17,23 @@ namespace OnlineBoardGames
         [field: SyncVar]
         public string Name { get; private set; }
 
-        [field: SyncVar(hook = nameof(OnIndexChanged))]
+        [field: SyncVar(OnChange = nameof(OnIndexChanged))]
         public byte Index { get; private set; }
 
-        [field: SyncVar(hook = nameof(OnReadyChanged))]
+        [field: SyncVar(OnChange = nameof(OnReadyChanged))]
         public bool IsReady { get; private set; }
 
-        protected virtual void OnReadyChanged(bool oldVal, bool newVal)
+        protected virtual void OnReadyChanged(bool oldVal, bool newVal, bool _)
         {
             ReadyChanged?.Invoke(newVal);
         }
 
-        protected virtual void OnIndexChanged(byte oldVal, byte newVal) 
+        protected virtual void OnIndexChanged(byte oldVal, byte newVal, bool _) 
         {
             IndexChanged?.Invoke(oldVal, newVal);
         }
 
         #endregion
-
-        protected virtual void Awake()
-        {
-            DontDestroyOnLoad(gameObject);
-            SceneManager.sceneLoaded += OnSceneLoaded;
-        }
-
-        protected virtual void OnDestroy()
-        {
-            SceneManager.sceneLoaded -= OnSceneLoaded;
-        }
 
         #region Server Part
 
@@ -62,8 +44,8 @@ namespace OnlineBoardGames
         /// </summary>
         public override void OnStartServer()
         {
-            DebugStep.Log($"NetworkBehaviour<{connectionToClient.connectionId}>.OnstartServer()");
-            Name = (connectionToClient.authenticationData as AuthData).playerName;
+            DebugStep.Log($"NetworkBehaviour<{LocalConnection.ClientId}>.OnstartServer()");
+            Name = (Owner.CustomData as AuthData).playerName;
         }
 
         [Server]
@@ -72,14 +54,14 @@ namespace OnlineBoardGames
             Index = (byte)index;
         }
 
-        [Command]
+        [ServerRpc]
         public void CmdReady()
         {
             IsReady = true;
             ReadyChanged?.Invoke(true);
         }
 
-        [Command]
+        [ServerRpc]
         public void CmdGameReady()
         {
             GameReady?.Invoke();
@@ -90,15 +72,6 @@ namespace OnlineBoardGames
         #region Client Part
 
         /// <summary>
-        /// Called on every NetworkBehaviour when it is activated on a client.
-        /// <para>Objects on the host have this function called, as there is a local client on the host. The values of SyncVars on object are guaranteed to be initialized correctly with the latest state from the server when this function is called on the client.</para>
-        /// </summary>
-        public override void OnStartClient()
-        {
-            DebugStep.Log("BoardGamePlayer.OnStartClient()");
-        }
-
-        /// <summary>
         /// This is invoked on clients when the server has caused this object to be destroyed.
         /// <para>This can be used as a hook to invoke effects or do client specific cleanup.</para>
         /// </summary>
@@ -106,6 +79,7 @@ namespace OnlineBoardGames
         {
             LeftGame?.Invoke();
         }
+
         void OnSceneLoaded(Scene scene1, LoadSceneMode mode)
         {
             if (scene1.name == "Room")

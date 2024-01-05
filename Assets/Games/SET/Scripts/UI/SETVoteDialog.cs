@@ -24,7 +24,7 @@ namespace OnlineBoardGames.SET
             {
                 GetVoteUI(player.Index).SetPlayer(player);
 
-                if (player.hasAuthority)
+                if (player.IsOwner)
                 {
                     localPlayer = player;
                     OnLocalPlayerVoteChanged(VoteAnswer.None, localPlayer.VoteAnswer);

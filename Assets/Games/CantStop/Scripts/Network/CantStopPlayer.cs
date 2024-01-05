@@ -1,4 +1,5 @@
-using Mirror;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using System;
 using System.Collections.Generic;
 
@@ -6,26 +7,27 @@ namespace OnlineBoardGames.CantStop
 {
     public class CantStopPlayer : BoardGamePlayer
     {
-        [field: SyncVar( hook = nameof(OnTurnChanged))] 
+        [field: SyncVar( OnChange = nameof(OnTurnChanged))] 
         public bool IsTurn { get; private set; }
 
-        [field: SyncVar(hook = nameof(OnDiceChanged))]
+        [field: SyncVar(OnChange = nameof(OnDiceChanged))]
         public DiceData RolledDices { get; private set; } = DiceData.Empty();
 
-        [field: SyncVar(hook = nameof(OnFinishedConeChenged))]
+        [field: SyncVar(OnChange = nameof(OnFinishedConeChenged))]
         public int FinishedConeCount { get; private set;}
 
         public PlayerColor PlayerColor => (PlayerColor)Index;
 
-        SyncDictionary<int, int> conePositions = new();
+        [SyncObject]
+        readonly SyncDictionary<int, int> conePositions = new();
         public IDictionary<int, int> ConePositions => conePositions;
 
-        private void OnDiceChanged(DiceData _, DiceData value)
+        private void OnDiceChanged(DiceData _, DiceData value, bool __)
         {
             RollChanged?.Invoke(value);
         }
 
-        private void OnFinishedConeChenged(int _, int value)
+        private void OnFinishedConeChenged(int _, int value, bool __)
         {
             FinishedConeChanged?.Invoke(value);
         }
@@ -42,7 +44,7 @@ namespace OnlineBoardGames.CantStop
         public event Action<CantStopPlayer, PlayerPlayData> Played;
         #endregion
 
-        private void OnTurnChanged(bool _, bool newValue)
+        private void OnTurnChanged(bool _, bool newValue, bool __)
         {
             if (newValue)
                 TurnStart?.Invoke();
@@ -73,12 +75,12 @@ namespace OnlineBoardGames.CantStop
         public override void OnStartClient()
         {
             base.OnStartClient();
-            conePositions.Callback += ConePositions_Callback;
+            conePositions.OnChange += ConePositions_OnChange;;
         }
 
-        private void ConePositions_Callback(SyncIDictionary<int, int>.Operation op, int key, int item)
+        private void ConePositions_OnChange(SyncDictionaryOperation op, int key, int item, bool _)
         {
-            if (op == SyncIDictionary<int, int>.Operation.OP_ADD || op == SyncIDictionary<int, int>.Operation.OP_SET)
+            if (op == SyncDictionaryOperation.Add || op == SyncDictionaryOperation.Set)
             {
                 ConePositionChanged?.Invoke(this, key, item);
             }
@@ -90,13 +92,13 @@ namespace OnlineBoardGames.CantStop
         [Server]
         public void SetRoll(DiceData rollData) => RolledDices = rollData;
 
-        [Command]
+        [ServerRpc]
         public void CmdRoll() => RollRequested?.Invoke(this);
 
-        [Command]
+        [ServerRpc]
         public void CmdPlace(PlayerPlayData data) => Placed?.Invoke(this, data);
 
-        [Command]
+        [ServerRpc]
         public void CmdPlay(PlayerPlayData data) => Played?.Invoke(this, data);
     }
 }

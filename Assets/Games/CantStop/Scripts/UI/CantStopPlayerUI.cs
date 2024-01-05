@@ -27,7 +27,7 @@ namespace OnlineBoardGames.CantStop
 
         public void RefreshUI()
         {
-            nameText.color = (networkPlayer.hasAuthority ? Color.yellow : Color.cyan);
+            nameText.color = (networkPlayer.IsOwner ? Color.yellow : Color.cyan);
             nameText.text = networkPlayer.Name;
             coneIcon.color = playerColor;
             scoreText.text = networkPlayer.FinishedConeCount.ToString();

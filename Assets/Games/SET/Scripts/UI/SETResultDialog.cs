@@ -21,7 +21,7 @@ namespace OnlineBoardGames.SET
 
         public void OnMenuClicked()
         {
-            Mirror.NetworkClient.Send(new LeaveRoomMessage { gameType = BoardGame.SET });
+            //Mirror.NetworkClient.Send(new LeaveRoomMessage { gameType = BoardGame.SET });
         }
     }
 }

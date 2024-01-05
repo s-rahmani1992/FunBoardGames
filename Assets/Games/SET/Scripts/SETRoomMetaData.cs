@@ -1,8 +1,5 @@
-using Mirror;
+using FishNet.Serializing;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 
 namespace OnlineBoardGames.SET
 {
@@ -18,23 +15,23 @@ namespace OnlineBoardGames.SET
             RoundCount = roundCount;
         }
 
-        public SETRoomMetaData(NetworkReader reader)
+        public SETRoomMetaData(Reader reader)
         {
-            GuessTime = reader.ReadFloat();
+            GuessTime = reader.ReadSingle();
             RoundCount = reader.ReadByte();
         }
     }
 
     public static class SETRoomMetaDataSerializer
     {
-        public static SETRoomMetaData ReadSETRoomMetaData(this NetworkReader reader)
+        public static SETRoomMetaData ReadSETRoomMetaData(this Reader reader)
         {
             return new SETRoomMetaData(reader);
         }
 
-        public static void WriteSETRoomMetaData(this NetworkWriter writer, SETRoomMetaData cardData)
+        public static void WriteSETRoomMetaData(this Writer writer, SETRoomMetaData cardData)
         {
-            writer.WriteFloat(cardData.GuessTime);
+            writer.WriteSingle(cardData.GuessTime);
             writer.WriteByte((byte)cardData.RoundCount);
         }
     }

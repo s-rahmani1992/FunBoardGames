@@ -1,6 +1,4 @@
 using FishNet.Broadcast;
-using Mirror;
-using System;
 
 namespace OnlineBoardGames
 {
@@ -15,35 +13,8 @@ namespace OnlineBoardGames
         public string message;
     }
 
-    public struct CreateRoomMessage : NetworkMessage
+    public struct AuthSyncMessage : IBroadcast
     {
-        public string reqName;
-        public BoardGame gameType;
-    }
-
-    public struct GetRoomListMessage : NetworkMessage
-    {
-        public BoardGame gameType;
-    }
-
-    public struct RoomListResponse : NetworkMessage
-    {
-        public RoomData[] rooms;
-    }
-
-    public struct JoinMatchMessage : NetworkMessage 
-    {
-        public BoardGame gameType;
-        public Guid matchID;
-    }
-
-    public struct LeaveRoomMessage : NetworkMessage 
-    {
-        public BoardGame gameType; 
-    }
-
-    public struct NotifyJoinRoom : NetworkMessage
-    {
-        public RoomManager room;
+        public AuthData authData;
     }
 }

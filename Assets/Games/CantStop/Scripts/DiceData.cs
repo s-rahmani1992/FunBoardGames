@@ -1,3 +1,4 @@
+using FishNet.Serializing;
 using System;
 using System.Linq;
 using UnityEngine;
@@ -47,7 +48,7 @@ namespace OnlineBoardGames.CantStop
 
     public static class DiceDataSerializer
     {
-        public static DiceData ReadDiceData(this Mirror.NetworkReader reader)
+        public static DiceData ReadDiceData(this Reader reader)
         {
             Debug.Log($"Read DiceData");
             int[] values = new int[4];
@@ -63,7 +64,7 @@ namespace OnlineBoardGames.CantStop
             return new DiceData(values);
         }
 
-        public static void WriteCardData(this Mirror.NetworkWriter writer, DiceData diceData)
+        public static void WriteCardData(this Writer writer, DiceData diceData)
         {
             Debug.Log($"Write DiceData");
             writer.WriteByte((byte)((diceData[0]) | (diceData[1] << 4)));

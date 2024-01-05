@@ -1,10 +1,6 @@
-using Mirror;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using System;
-
-/*
-	Documentation: https://mirror-networking.gitbook.io/docs/guides/networkbehaviour
-	API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkBehaviour.html
-*/
 
 // NOTE: Do not put objects in DontDestroyOnLoad (DDOL) in Awake.  You can do that in Start instead.
 namespace OnlineBoardGames.SET
@@ -20,34 +16,34 @@ namespace OnlineBoardGames.SET
 
         #region Syncvars
 
-        [field: SyncVar( hook = nameof(PlayerWrongChanged))]
+        [field: SyncVar( OnChange = nameof(PlayerWrongChanged))]
         public byte WrongCount { get; private set; }
 
-        [field: SyncVar(hook = nameof(PlayerCorrectChanged))]
+        [field: SyncVar(OnChange = nameof(PlayerCorrectChanged))]
         public byte CorrectCount { get; private set; }
 
-        [field: SyncVar(hook = nameof(OnGuessChanged))]
+        [field: SyncVar(OnChange = nameof(OnGuessChanged))]
         public bool IsGuessing { get; private set; }
 
-        [field: SyncVar(hook = nameof(OnVoteChanged))]
+        [field: SyncVar(OnChange = nameof(OnVoteChanged))]
         public VoteAnswer VoteAnswer { get; private set; }
 
-        void PlayerCorrectChanged(byte oldVal, byte newVal)
+        void PlayerCorrectChanged(byte oldVal, byte newVal, bool _)
         {
             CorrectGuessChanged?.Invoke(oldVal, newVal);
         }
 
-        void PlayerWrongChanged(byte oldVal, byte newVal)
+        void PlayerWrongChanged(byte oldVal, byte newVal, bool _)
         {
             WrongGuessChanged?.Invoke(oldVal, newVal);
         }
 
-        void OnGuessChanged(bool _, bool newVal)
+        void OnGuessChanged(bool _, bool newVal, bool __)
         {
             GuessChanged?.Invoke(newVal);
         }
 
-        void OnVoteChanged(VoteAnswer oldVal, VoteAnswer newVal)
+        void OnVoteChanged(VoteAnswer oldVal, VoteAnswer newVal, bool _)
         {
             VoteChanged?.Invoke(oldVal, newVal);
         }

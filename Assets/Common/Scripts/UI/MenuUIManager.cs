@@ -1,7 +1,6 @@
-using Mirror;
+using FishNet.Managing.Client;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace OnlineBoardGames
@@ -9,21 +8,20 @@ namespace OnlineBoardGames
     public class MenuUIManager : MonoBehaviour
     {
         [SerializeField] InputField roomNameIn;
-        [SerializeField] ObjectPoolManager pool;
+        [SerializeField] RoomUI roomUI;
         [SerializeField] Transform content;
         [SerializeField] TMP_Dropdown dropDown;
         [SerializeField] TMP_Dropdown listDropDown;
-        [SerializeField] RoomRequestContainer roomContainer;
 
-        GameNetworkManager networkManager;
+        LobbyManager lobbyManager;
         BoardGame selectedCreateGame;
         BoardGame selectedListGame;
 
         // Start is called before the first frame update
         void Start()
         {
-            //networkManager = FindObjectOfType<GameNetworkManager>();
-            //networkManager.RoomListReceived += OnRoomListReceived;
+            lobbyManager = FindObjectOfType<LobbyManager>();
+            lobbyManager.RoomListReceived += OnRoomListReceived;
             dropDown.AddOptions(new System.Collections.Generic.List<TMP_Dropdown.OptionData>
             {
                 new TMP_Dropdown.OptionData(BoardGame.SET.ToString()),
@@ -43,33 +41,42 @@ namespace OnlineBoardGames
             //}
         }
 
-        private void OnJoinedRoom(RoomManager room)
-        {
-            SceneManager.LoadScene(room.GameScene);
-        }
-
         private void OnRoomListReceived(RoomData[] list)
         {
-            while (content.childCount > 0)
-                pool.Push2List(content.GetChild(0).gameObject);
+            foreach (Transform t in content)
+                Destroy(t.gameObject);
             foreach (var r in list)
-                pool.PullFromList(0, content, r, selectedListGame);
+            {
+                var room = Instantiate(roomUI, content);
+                room.Initialize(r);
+                room.JoinClicked += OnJoinClicked;
+            }
+        }
+
+        private void OnJoinClicked(RoomUI r)
+        {
+            DialogManager.Instance.SpawnDialog<RoomDialog>(DialogShowOptions.OverAll, (dialog) =>
+            {
+                (dialog as RoomDialog).Initialize(lobbyManager, r.roomData.GameType, r.roomData.Name, r.roomData.Id);
+            });
         }
 
         public void SendCreateRoom()
         {
-            roomContainer.SetParameters(true, roomNameIn.text, selectedCreateGame);
-            SceneManager.LoadScene("Room");
+            DialogManager.Instance.SpawnDialog<RoomDialog>(DialogShowOptions.OverAll, (dialog) =>
+            {
+                (dialog as RoomDialog).Initialize(lobbyManager, selectedCreateGame, roomNameIn.text);
+            });
         }
 
         public void SendRoomListRequest()
         {
-            NetworkClient.Send(new GetRoomListMessage { gameType = selectedListGame });
+            lobbyManager.CmdGetRoomList(selectedListGame);
         }
 
         private void OnDestroy()
         {
-            //networkManager.RoomListReceived -= OnRoomListReceived;
+            lobbyManager.RoomListReceived -= OnRoomListReceived;
         }
     }
 }

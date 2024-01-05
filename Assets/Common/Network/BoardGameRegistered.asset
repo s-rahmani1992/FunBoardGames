@@ -9,6 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6dc222f3497f5a0448ccba75560aea5e, type: 3}
-  m_Name: RoomRequestContainer
+  m_Script: {fileID: 11500000, guid: 4489d77032a81ef42b0067acf2737d4d, type: 3}
+  m_Name: BoardGameRegistered
   m_EditorClassIdentifier: 
+  _prefabs:
+  - {fileID: 2084411639000496073, guid: 78fe0a83d7e68034e8f2c1ae92328747, type: 3}

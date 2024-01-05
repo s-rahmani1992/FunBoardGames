@@ -1,16 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Mirror;
 using System;
 using System.Linq;
-
-/*
-	Documentation: https://mirror-networking.gitbook.io/docs/guides/networkbehaviour
-	API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkBehaviour.html
-*/
-
-// NOTE: Do not put objects in DontDestroyOnLoad (DDOL) in Awake.  You can do that in Start instead.
+using FishNet.Object.Synchronizing;
+using FishNet.Object;
+using FishNet.Connection;
 
 namespace OnlineBoardGames.SET 
 {
@@ -22,7 +17,7 @@ namespace OnlineBoardGames.SET
         public event Action<SETPlayer, CardData[], byte> PlayerGuessReceived;
         public event Action<SETPlayer> PlayerStartedVote;
 
-        public bool CanSelect { get => (State == SETGameState.Guess) && (GuessingPlayer != null) && (GuessingPlayer.hasAuthority); }
+        public bool CanSelect { get => (State == SETGameState.Guess) && (GuessingPlayer != null) && (GuessingPlayer.IsOwner); }
         public const int endCursor = 81;
 
         byte[] deck;
@@ -35,30 +30,30 @@ namespace OnlineBoardGames.SET
         
         #region Syncvars
 
-        [field: SyncVar(hook = nameof(GameStateChanged))]
+        [field: SyncVar(OnChange = nameof(GameStateChanged))]
         public SETGameState State { get; private set; } = SETGameState.Normal;
 
         [field: SyncVar]
         public SETRoomMetaData MetaData { get; private set; }
 
-        [field: SyncVar(hook = nameof(PlayerStartGuess))]
+        [field: SyncVar(OnChange = nameof(PlayerStartGuess))]
         public SETPlayer GuessingPlayer { get; private set; }
 
-        [field: SyncVar(hook = nameof(OnPlayerStartVote))]
+        [field: SyncVar(OnChange = nameof(OnPlayerStartVote))]
         public SETPlayer VoteStarter { get; private set; }
 
-        void GameStateChanged(SETGameState oldVal, SETGameState newVal)
+        void GameStateChanged(SETGameState oldVal, SETGameState newVal, bool _)
         {
             StateChanged?.Invoke(oldVal, newVal);
         }
 
-        void PlayerStartGuess(SETPlayer _, SETPlayer newPlayer)
+        void PlayerStartGuess(SETPlayer _, SETPlayer newPlayer, bool __)
         {
             if (newPlayer != null)
                 GuessBegin?.Invoke(newPlayer);
         }
 
-        void OnPlayerStartVote(SETPlayer _, SETPlayer newPlayer)
+        void OnPlayerStartVote(SETPlayer _, SETPlayer newPlayer, bool ___)
         {
             if (newPlayer != null)
                 PlayerStartedVote?.Invoke(newPlayer);
@@ -85,7 +80,7 @@ namespace OnlineBoardGames.SET
                 placedCards.Insert(i, null);
         }
 
-        [Command(requiresAuthority = false)]
+        [ServerRpc(RequireOwnership = false)]
         internal void CmdAttemptGuess(SETPlayer player)
         {
             if (GuessingPlayer == null && State == SETGameState.Normal && guessProcess == null)
@@ -97,7 +92,7 @@ namespace OnlineBoardGames.SET
             }
         }
 
-        [Command(requiresAuthority = false)]
+        [ServerRpc(RequireOwnership = false)]
         internal void CmdRequestMoreCards(SETPlayer player)
         {
             if (State == SETGameState.Normal && cursor < 81)
@@ -109,13 +104,13 @@ namespace OnlineBoardGames.SET
             }
         }
 
-        [Command(requiresAuthority = false)]
-        internal void CmdHintRequest(NetworkIdentity identity)
+        [ServerRpc(RequireOwnership = false)]
+        internal void CmdHintRequest(NetworkObject identity)
         {
-            TargetGetHint(identity.connectionToClient, hintCards.ToArray());
+            TargetGetHint(identity.LocalConnection, hintCards.ToArray());
         }
 
-        [Command(requiresAuthority = false)]
+        [ServerRpc(RequireOwnership = false)]
         internal void CmdGuessCards(SETPlayer player, CardData[] cards)
         {
             if (State == SETGameState.Guess && GuessingPlayer == player && ValidateGuess(cards[0], cards[1], cards[2]))
@@ -127,7 +122,7 @@ namespace OnlineBoardGames.SET
             }
         }
 
-        [Command(requiresAuthority = false)]
+        [ServerRpc(RequireOwnership = false)]
         internal void CmdSendVote(SETPlayer player, bool isYes)
         {
             if (State == SETGameState.CardVote && player.VoteAnswer == VoteAnswer.None)
@@ -366,19 +361,19 @@ namespace OnlineBoardGames.SET
         #endregion
 
         #region Client Part
-        [ClientRpc]
+        [ObserversRpc]
         private void RPCPlaceCards(CardData[] cards, byte[] cardPoses)
         {
             NewCardsReceived?.Invoke(cards, cardPoses.Select(x => (int)x).ToArray());
         }
 
-        [ClientRpc]
+        [ObserversRpc]
         void RPCCheat(string cheat) 
         {
             Debug.LogError("Cheat Detected!- " + cheat);
         }
 
-        [ClientRpc]
+        [ObserversRpc]
         void RPCPopResult(SETPlayer guessPlayer, CardData[] cards, byte result)
         {
             PlayerGuessReceived?.Invoke(guessPlayer, cards, result);

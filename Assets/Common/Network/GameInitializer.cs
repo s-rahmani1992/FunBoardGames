@@ -1,5 +1,4 @@
 using FishNet.Managing;
-using OnlineBoardGames;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -8,6 +7,7 @@ namespace OnlineBoardGames
     public class GameInitializer : MonoBehaviour
     {
         [SerializeField] NetworkManager gameNetworkManager;
+        [SerializeField] GamePrefabs prefabs;
 
 #if UNITY_EDITOR
         [Header("Editor Only")]
@@ -16,6 +16,7 @@ namespace OnlineBoardGames
 
         void Start()
         {
+            prefabs.Register(gameNetworkManager.SpawnablePrefabs);
             gameNetworkManager.ServerManager.SetStartOnHeadless(true);
 
 #if !UNITY_EDITOR && !UNITY_SERVER

@@ -35,8 +35,7 @@ namespace OnlineBoardGames
 
         public static Guid TestGuid = new(10, 10, 10, new byte[]{1,2,3,4,5,6,7,8});
 
-        public event Action<RoomData[]> RoomListReceived;
-        public event Action<RoomManager> JoinedRoom;
+        
         public static new GameNetworkManager singleton { get; private set; }
 
         public bool IsServer
@@ -79,8 +78,6 @@ namespace OnlineBoardGames
         {
             DebugStep.Log("NetworkManager.OnStartServer()");
             var lobby = Instantiate(spawnPrefabs[0]);
-            lobbyManager = lobby.GetComponent<LobbyManager>();
-            lobbyManager.RoomRequested += OnRoomRequested;
             NetworkServer.Spawn(lobby);
             NetworkServer.Spawn(Instantiate(spawnPrefabs[1]));
         }
@@ -106,24 +103,6 @@ namespace OnlineBoardGames
             base.OnServerReady(conn);
         }
 
-        /// <summary>
-        /// Called on the server when a client disconnects.
-        /// <para>This is called on the Server when a Client disconnects from the Server. Use an override to decide what should happen when a disconnection is detected.</para>
-        /// </summary>
-        /// <param name="conn">Connection from client.</param>
-        public override void OnServerDisconnect(NetworkConnectionToClient conn)
-        {
-            if ((conn.authenticationData as AuthData).roomID != Guid.Empty)
-                lobbyManager.OnLeaveRoomRequest(conn, new LeaveRoomMessage { });
-            conn.Send(new SceneMessage { sceneName = "Login" });
-            base.OnServerDisconnect(conn);
-        }
-
-        void OnRoomRequested(RoomManager room, NetworkConnectionToClient conn)
-        {
-            conn.Send(new NotifyJoinRoom { room = room });
-        }
-
         #endregion
 
         #region Client Part
@@ -133,8 +112,8 @@ namespace OnlineBoardGames
         /// </summary>
         public override void OnStartClient()
         {
-            NetworkClient.RegisterHandler<RoomListResponse>(OnGetRoomList);
-            NetworkClient.RegisterHandler<NotifyJoinRoom>(OnRoomClientCreated);
+            //NetworkClient.RegisterHandler<RoomListResponse>(OnGetRoomList);
+            //NetworkClient.RegisterHandler<NotifyJoinRoom>(OnRoomClientCreated);
         }
         
         /// <summary>
@@ -145,16 +124,6 @@ namespace OnlineBoardGames
         {
             if (SceneManager.GetActiveScene().name != "Login") SceneManager.LoadScene("Login");
             base.OnClientDisconnect();
-        }
-
-        void OnRoomClientCreated(NotifyJoinRoom roomMsg)
-        {
-            JoinedRoom?.Invoke(roomMsg.room);
-        }
-
-        void OnGetRoomList(RoomListResponse rList)
-        {
-            RoomListReceived?.Invoke(rList.rooms);
         }
 
         #endregion

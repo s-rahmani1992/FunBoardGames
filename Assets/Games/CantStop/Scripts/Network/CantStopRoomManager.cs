@@ -1,4 +1,5 @@
-using Mirror;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,16 +12,18 @@ namespace OnlineBoardGames.CantStop
     {
         public override BoardGame GameType => BoardGame.CantStop;
 
-        [field: SyncVar(hook = nameof(OnTurnStarted))] 
+        [field: SyncVar(OnChange = nameof(OnTurnStarted))] 
         public CantStopPlayer CurrentTurnPlayer { get; private set; }
 
         [field: SyncVar]
         public GameBoard Board { get; private set; }
 
-        SyncDictionary<int, int> whiteConePositions = new();
+        [SyncObject]
+        readonly SyncDictionary<int, int> whiteConePositions = new();
         public IDictionary<int, int> WhiteConePositions => whiteConePositions;
 
-        SyncDictionary<int, CantStopPlayer> playerFinishPositions = new();
+        [SyncObject]
+        readonly SyncDictionary<int, CantStopPlayer> playerFinishPositions = new();
         public IDictionary<int, CantStopPlayer> PlayerFinishPositions => playerFinishPositions;
 
         public const int whineConeLimit = 3;
@@ -29,7 +32,7 @@ namespace OnlineBoardGames.CantStop
         [SerializeField] GameBoard board;
 #endif
 
-        private void OnTurnStarted(CantStopPlayer _, CantStopPlayer player)
+        private void OnTurnStarted(CantStopPlayer _, CantStopPlayer player, bool __)
         {
             TurnStarted?.Invoke(player);
         }
@@ -45,7 +48,7 @@ namespace OnlineBoardGames.CantStop
 
         protected override void BeginGame() 
         {
-            SetTurn(Players[turnIndex] as CantStopPlayer);
+            SetTurn(Players.ElementAt(turnIndex) as CantStopPlayer);
 
             foreach(var player in PlayerList)
             {
@@ -64,7 +67,7 @@ namespace OnlineBoardGames.CantStop
             {
                 await Task.Delay(2000);
                 turnIndex = (turnIndex + 1) % Players.Count();
-                SetTurn(Players[turnIndex] as CantStopPlayer);
+                SetTurn(Players.ElementAt(turnIndex) as CantStopPlayer);
                 return;
             }
 
@@ -77,7 +80,7 @@ namespace OnlineBoardGames.CantStop
 
             await Task.Delay(2000);
             turnIndex = (turnIndex + 1) % Players.Count();
-            SetTurn(Players[turnIndex] as CantStopPlayer);
+            SetTurn(Players.ElementAt(turnIndex) as CantStopPlayer);
         }
 
         private async void OnPlaced(CantStopPlayer player, PlayerPlayData data)
@@ -147,7 +150,7 @@ namespace OnlineBoardGames.CantStop
             player.SetRoll(DiceData.Empty());
         }
 
-        [ClientRpc(includeOwner = false)]
+        [ObserversRpc(ExcludeOwner = true)]
         void RpcDiceSelect(int index1, int index2)
         {
             DiceSelected?.Invoke(index1, index2);
@@ -169,12 +172,12 @@ namespace OnlineBoardGames.CantStop
         public override void OnStartClient()
         {
             base.OnStartClient();
-            whiteConePositions.Callback += OnWhiteConePositions_Callback;
+            whiteConePositions.OnChange += WhiteConePositions_OnChange;
         }
 
-        private void OnWhiteConePositions_Callback(SyncIDictionary<int, int>.Operation op, int key, int item)
+        private void WhiteConePositions_OnChange(SyncDictionaryOperation op, int key, int item, bool asServer)
         {
-            if(op == SyncIDictionary<int, int>.Operation.OP_ADD || op == SyncIDictionary<int, int>.Operation.OP_SET)
+            if (op == SyncDictionaryOperation.Add || op == SyncDictionaryOperation.Set)
             {
                 WhiteConeMoved?.Invoke(key, item);
             }

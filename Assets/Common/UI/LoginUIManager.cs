@@ -1,3 +1,4 @@
+using DG.Tweening;
 using FishNet.Managing;
 using System.Linq;
 using UnityEngine;
@@ -19,6 +20,12 @@ namespace OnlineBoardGames.UI
             networkManager = NetworkManager.Instances.ElementAt(0);
             networkManager.ClientManager.OnClientConnectionState += OnClientConnectionState;
             networkManager.ClientManager.RegisterBroadcast<AuthResponseMessage>(OnAuthResponseMessage);
+            networkManager.ClientManager.RegisterBroadcast<AuthSyncMessage>(OnAuthSynced);
+        }
+
+        private void OnAuthSynced(AuthSyncMessage message)
+        {
+            networkManager.ClientManager.Connection.CustomData = message.authData;
         }
 
         void OnAuthResponseMessage(AuthResponseMessage msg)
@@ -41,7 +48,7 @@ namespace OnlineBoardGames.UI
 
         private void OnLoginSuccess()
         {
-            SceneManager.LoadScene("Menu");
+            DOVirtual.DelayedCall(0.5f, () => SceneManager.LoadScene("Menu"));
         }
 
         private void OnLoginFailed(string str)
@@ -74,6 +81,7 @@ namespace OnlineBoardGames.UI
         {
             networkManager.ClientManager.OnClientConnectionState -= OnClientConnectionState;
             networkManager.ClientManager.UnregisterBroadcast<AuthResponseMessage>(OnAuthResponseMessage);
+            networkManager.ClientManager.UnregisterBroadcast<AuthSyncMessage>(OnAuthSynced);
         }
     }
 }

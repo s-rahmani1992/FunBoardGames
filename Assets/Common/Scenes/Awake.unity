@@ -133,6 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 537702398}
   - component: {fileID: 537702397}
+  - component: {fileID: 537702399}
   m_Layer: 0
   m_Name: Initializer
   m_TagString: Untagged
@@ -153,6 +154,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameNetworkManager: {fileID: 1232202753}
+  prefabs: {fileID: 11400000, guid: 7bff38020a344ad45b10a002fbeb15b9, type: 2}
   isEditorServer: 0
 --- !u!4 &537702398
 Transform:
@@ -169,6 +171,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &537702399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 537702396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6974b680f44b394e89e1beaec0fce88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serverManager: {fileID: 1232202758}
+  lobbyManager: {fileID: 7796784944000490816, guid: 78fe0a83d7e68034e8f2c1ae92328747, type: 3}
 --- !u!1 &1232202752
 GameObject:
   m_ObjectHideFlags: 0
@@ -183,6 +199,7 @@ GameObject:
   - component: {fileID: 1232202755}
   - component: {fileID: 1232202757}
   - component: {fileID: 1232202758}
+  - component: {fileID: 1232202761}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -208,7 +225,7 @@ MonoBehaviour:
   _objectPool: {fileID: 0}
   _persistence: 0
   _logging: {fileID: 0}
-  _spawnablePrefabs: {fileID: 11400000, guid: a91916d92230e4048b19397976b77d84, type: 2}
+  _spawnablePrefabs: {fileID: 11400000, guid: eaeb40b475ef4a3498c0ffc6e3d033c1, type: 2}
 --- !u!4 &1232202754
 Transform:
   m_ObjectHideFlags: 0
@@ -300,3 +317,20 @@ MonoBehaviour:
   _shareIds: 0
   _startOnHeadless: 1
   _limitClientMTU: 1
+--- !u!114 &1232202761
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1232202752}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d331f979d46e8e4a9fc90070c596d44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _enableNetworkLod: 0
+  _levelOfDetailDistances: []
+  _updateHostVisibility: 0
+  _defaultConditions:
+  - {fileID: 11400000, guid: efcd7f0dfd341ed4e8671079e91e0544, type: 2}

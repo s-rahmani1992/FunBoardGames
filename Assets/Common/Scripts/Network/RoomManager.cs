@@ -1,43 +1,43 @@
 using System.Collections.Generic;
-using Mirror;
 using System;
 using DG.Tweening;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
+using System.Linq;
 
-/*
-	Documentation: https://mirror-networking.gitbook.io/docs/guides/networkbehaviour
-	API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkBehaviour.html
-*/
-
-// NOTE: Do not put objects in DontDestroyOnLoad (DDOL) in Awake.  You can do that in Start instead.
-namespace OnlineBoardGames {
+namespace OnlineBoardGames 
+{
     public abstract class RoomManager : NetworkBehaviour
     {
-        public List<BoardGamePlayer> Players { get; private set; } = new();
+        [field: SyncObject]
+        readonly SyncList<BoardGamePlayer> players = new();
+
+        public SyncList<BoardGamePlayer> Players => players;
+
         public bool IsAcceptingPlayer { get; private set; }
         public BoardGamePlayer LocalPlayer { get; private set; }
         
-        public event Action<BoardGamePlayer> PlayerAdded;
         public event Action<BoardGamePlayer> PlayerJoined;
-        public event Action<BoardGamePlayer> PlayerLeft;
+        public event Action Leave;
         public event Action AllPlayersReady;
         public event Action GameBegin;
 
-        public byte PlayerCount => GameNetworkManager.singleton.OverrideGame ? (byte)GameNetworkManager.singleton.PlayerCount : (byte)Players.Count;
+        public byte PlayerCount => (byte)Players.Count();
+
+        //public byte PlayerCount => GameNetworkManager.singleton.OverrideGame ? (byte)GameNetworkManager.singleton.PlayerCount : (byte)Players.Count();
         public virtual BoardGame GameType { get; }
 
         int readyCount;
         int gameReadyCount;
 
-        [Scene]
+        [Mirror.Scene]
         public string GameScene;
 
         [field: SyncVar]
         public string Name { get; private set; }
 
-        protected virtual void Start()
-        {
-            DontDestroyOnLoad(gameObject);
-        }
+        [field: SyncVar]
+        public int Id { get; private set; }
 
         #region Server Part
 
@@ -51,19 +51,10 @@ namespace OnlineBoardGames {
             IsAcceptingPlayer = true;
         }
 
-        /// <summary>
-        /// Called on every NetworkBehaviour when it is activated on a client.
-        /// <para>Objects on the host have this function called, as there is a local client on the host. The values of SyncVars on object are guaranteed to be initialized correctly with the latest state from the server when this function is called on the client.</para>
-        /// </summary>
-        public override void OnStartClient()
-        {
-            DebugStep.Log("NetworkRoomManager.OnStartClient()");
-        }
-
         [Server]
         public void AddPlayer(BoardGamePlayer player)
         {
-            Players.Add(player);
+            players.Add(player);
 
             player.ReadyChanged += (ready) =>
             {
@@ -77,18 +68,18 @@ namespace OnlineBoardGames {
                 CheckAllGameReady();
             };
 
-            RPCPlayerJoin(player.netIdentity);
+            RPCPlayerJoin(player.GetComponent<NetworkObject>());
 
-            for (int i = 0; i < Players.Count; i++)
-                Players[i].SetIndex(i + 1);
+            for (int i = 0; i < players.Count; i++)
+                players[i].SetIndex(i + 1);
 
-            UpdatePlayers(Players.ToArray());
+            //UpdatePlayers(Players.ToList());
         }
 
         [Server]
         public void Remove(BoardGamePlayer player, bool canRefreshIndices = true)
         {
-            if (Players.Remove(player))
+            if (players.Remove(player))
             {
                 if (player.IsReady)
                     readyCount--;
@@ -98,10 +89,10 @@ namespace OnlineBoardGames {
                 if (canRefreshIndices)
                 {
                     for (int i = 0; i < PlayerCount; i++)
-                        Players[i].SetIndex(i + 1);
+                        players[i].SetIndex(i + 1);
                 }
 
-                NetworkServer.RemovePlayerForConnection(player.connectionToClient, true);
+                NetworkManager.ServerManager.Despawn(player.gameObject);
             }
         }
 
@@ -125,49 +116,46 @@ namespace OnlineBoardGames {
             }
         }
 
-        [Server]
-        public void SetName(string name)
+        public void SetParams(int id, string name)
         {
+            Id = id;
             Name = name;
         }
 
         protected abstract void BeginGame();
 
-        [ClientRpc]
+        public override void OnStopClient()
+        {
+            Leave?.Invoke();
+        }
+
+        [ObserversRpc]
         protected void RPCSendGameReady() => GameBegin?.Invoke();
 
         #endregion
 
         #region Client Part
 
-        [ClientRpc]
-        protected void UpdatePlayers(BoardGamePlayer[] players)
+        [ObserversRpc]
+        protected void UpdatePlayers(List<BoardGamePlayer> players)
         {
             foreach(var player in players)
             {
-                if (Players.Contains(player))
+                if (players.Contains(player))
                     continue;
-
-                Players.Add(player);
-                player.LeftGame += () => 
-                {
-                    PlayerLeft?.Invoke(player);
-                    Players.Remove(player);
-                };
-                PlayerAdded?.Invoke(player);
             }
         }
 
-        [ClientRpc]
+        [ObserversRpc]
         protected virtual void RPCAllPlayersReady()
         {
             AllPlayersReady?.Invoke();
         }
 
-        [ClientRpc]
-        protected virtual void RPCPlayerJoin(NetworkIdentity identity)
+        [ObserversRpc]
+        protected virtual void RPCPlayerJoin(NetworkObject identity)
         {
-            if (identity.hasAuthority)
+            if (identity.IsOwner)
                 LocalPlayer = identity.GetComponent<BoardGamePlayer>();
 
             PlayerJoined?.Invoke(identity.GetComponent<BoardGamePlayer>());

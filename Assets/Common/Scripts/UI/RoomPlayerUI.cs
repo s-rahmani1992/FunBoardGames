@@ -18,6 +18,7 @@ namespace OnlineBoardGames
         void RefreshUI(string name, bool ready)
         {
             playerTxt.text = name;
+            playerTxt.color = player.IsOwner ? Color.yellow : Color.cyan;
             readyLED.texture = (ready ? ledOn : ledOff);
         }
 

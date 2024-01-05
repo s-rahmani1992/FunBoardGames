@@ -16,7 +16,7 @@ namespace OnlineBoardGames.SET
         SETPlayer networkPlayer;
 
         public void RefreshUI(){
-            playerTxt.color = (networkPlayer.hasAuthority ? Color.yellow : Color.cyan);
+            playerTxt.color = (networkPlayer.IsOwner ? Color.yellow : Color.cyan);
             playerTxt.text = networkPlayer.Name;
             correctTxt.text = networkPlayer.CorrectCount.ToString();
             wrongTxt.text = networkPlayer.WrongCount.ToString();

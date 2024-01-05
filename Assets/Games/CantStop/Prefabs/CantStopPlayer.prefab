@@ -9,9 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1204640142472923344}
-  - component: {fileID: 3177965125178045850}
+  - component: {fileID: 1560902133382759583}
   - component: {fileID: 3973681437347517642}
-  - component: {fileID: 4971767421486613696}
+  - component: {fileID: 515193597419161476}
   m_Layer: 0
   m_Name: CantStopPlayer
   m_TagString: Untagged
@@ -34,7 +34,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3177965125178045850
+--- !u!114 &1560902133382759583
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -43,14 +43,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 2771551184415302611}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sceneId: 0
-  serverOnly: 0
-  visible: 0
-  m_AssetId: 
-  hasSpawned: 0
+  <IsNested>k__BackingField: 0
+  <ComponentIndex>k__BackingField: 0
+  <PredictedSpawn>k__BackingField: {fileID: 0}
+  _networkBehaviours:
+  - {fileID: 3973681437347517642}
+  <ParentNetworkObject>k__BackingField: {fileID: 0}
+  <ChildNetworkObjects>k__BackingField: []
+  SerializedTransformProperties:
+    Position: {x: 0, y: 0.2427783, z: 90}
+    Rotation: {x: 0, y: 0, z: 0, w: 1}
+    LocalScale: {x: 1, y: 1, z: 1}
+  _isNetworked: 1
+  _isGlobal: 1
+  _initializeOrder: 0
+  _defaultDespawnType: 0
+  NetworkObserver: {fileID: 0}
+  <PrefabId>k__BackingField: 0
+  <SpawnableCollectionId>k__BackingField: 0
+  _scenePathHash: 0
+  <SceneId>k__BackingField: 0
+  <AssetPathHash>k__BackingField: 0
 --- !u!114 &3973681437347517642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -63,9 +79,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18043f0e5ff80c64d9966571a530fb1c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  syncMode: 0
-  syncInterval: 0.1
---- !u!114 &4971767421486613696
+  _componentIndexCache: 0
+  _addedNetworkObject: {fileID: 1560902133382759583}
+  _networkObjectCache: {fileID: 1560902133382759583}
+  <Name>k__BackingField: 
+  <Index>k__BackingField: 0
+  <IsReady>k__BackingField: 0
+  <IsTurn>k__BackingField: 0
+  <FinishedConeCount>k__BackingField: 0
+--- !u!114 &515193597419161476
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -74,8 +96,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 2771551184415302611}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d17e718851449a6879986e45c458fb7, type: 3}
+  m_Script: {fileID: 11500000, guid: c71fd7f855ec523429999fc4e14a1928, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  syncMode: 0
-  syncInterval: 0.1
+  _overrideType: 1
+  _updateHostVisibility: 0
+  _observerConditions:
+  - {fileID: 11400000, guid: efcd7f0dfd341ed4e8671079e91e0544, type: 2}

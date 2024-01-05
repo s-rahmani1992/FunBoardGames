@@ -1,4 +1,4 @@
-using Mirror;
+using FishNet.Serializing;
 using System;
 using UnityEngine;
 
@@ -23,7 +23,7 @@ namespace OnlineBoardGames.CantStop
 
     public static class PlayerDiceDataSerializer
     {
-        public static PlayerPlayData ReadDiceData(this NetworkReader reader)
+        public static PlayerPlayData ReadDiceData(this Reader reader)
         {
             Debug.Log($"Read PlayerDiceData");
             int diceValue1 = reader.ReadByte();
@@ -33,11 +33,12 @@ namespace OnlineBoardGames.CantStop
 
             int diceValue2 = reader.ReadByte();
             int columnIndex1 = reader.ReadByte();
-            int? columnIndex2 = reader.ReadByteNullable();
+            int h = reader.ReadByte();
+            int? columnIndex2 = (h == 255 ? null : h);
             return new PlayerPlayData(diceValue1, diceValue2, columnIndex1, columnIndex2);
         }
 
-        public static void WriteCardData(this NetworkWriter writer, PlayerPlayData playerDiceData)
+        public static void WriteCardData(this Writer writer, PlayerPlayData playerDiceData)
         {
             Debug.Log($"Write PlayerDiceData");
 
@@ -50,7 +51,7 @@ namespace OnlineBoardGames.CantStop
             writer.WriteByte((byte)playerDiceData.DiceIndex1);
             writer.WriteByte((byte)playerDiceData.DiceIndex2);
             writer.WriteByte((byte)playerDiceData.ColumnIndex1);
-            writer.WriteByteNullable((byte?)playerDiceData.ColumnIndex2);
+            writer.WriteByte(playerDiceData.ColumnIndex2 == null ? (byte)255 : (byte)(playerDiceData.ColumnIndex2.Value));
         }
     }
 }

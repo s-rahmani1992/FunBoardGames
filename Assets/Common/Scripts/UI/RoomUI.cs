@@ -1,44 +1,28 @@
+using System;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace OnlineBoardGames
 {
-    public class RoomUI : MonoBehaviour, IPoolable
+    public class RoomUI : MonoBehaviour
     {
-        public string ObjectTag { get; set; }
-        RoomData roomData;
-        BoardGame gameType;
-        [SerializeField]
-        Text nameTxt, numberTxt;
-        [SerializeField]
-        Button joinBtn;
-        [SerializeField] RoomRequestContainer roomContainer;
+        [SerializeField] Text nameTxt, numberTxt;
+        [SerializeField] Button joinBtn;
 
-        public void OnPull(params object[] parameters)
+        public event Action<RoomUI> JoinClicked;
+
+        public RoomData roomData { get; private set; }
+
+        public void Initialize(RoomData roomData)
         {
-            transform.parent = parameters[0] as Transform;
-            RefreshUI(parameters[1] as RoomData);
-            gameType = (BoardGame)parameters[2];
-            gameObject.SetActive(true);
-        }
-
-        public void OnPush(params object[] parameters)
-        {
-            transform.parent = null;
-            gameObject.SetActive(false);
-        }
-
-        void RefreshUI(RoomData room){
-            nameTxt.text = room.Name;
-            numberTxt.text = room.PlayerCount.ToString();
-            roomData = room;
+            this.roomData = roomData;
+            nameTxt.text = roomData.Name;
+            numberTxt.text = roomData.PlayerCount.ToString();
         }
 
         public void Join()
         {
-            roomContainer.SetParameters(false, roomData, gameType);
-            SceneManager.LoadScene("Room");
+            JoinClicked?.Invoke(this);
         }
     }
 }

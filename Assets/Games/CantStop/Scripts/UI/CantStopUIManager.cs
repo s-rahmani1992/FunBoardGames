@@ -211,7 +211,7 @@ namespace OnlineBoardGames.CantStop
 
         private void OnTurnStarted(CantStopPlayer player)
         {
-            rollButton.interactable = player.hasAuthority;
+            rollButton.interactable = player.IsOwner;
             placeButton.interactable = false;
             playButton.interactable = false;
             diceController.Reset();

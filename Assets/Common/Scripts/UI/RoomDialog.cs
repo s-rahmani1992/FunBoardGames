@@ -1,4 +1,5 @@
 using DG.Tweening;
+using FishNet.Object.Synchronizing;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -6,34 +7,53 @@ using UnityEngine.UI;
 
 namespace OnlineBoardGames
 {
-    public class RoomUIManager : MonoBehaviour
+    public class RoomDialog : BaseDialog
     {
-        public static RoomUIManager Instance { get; private set; }
-
         [SerializeField] RectTransform playersPanel;
         [SerializeField] RoomPlayerUI roomPlyerUI;
         [SerializeField] Button readyBtn;
         [SerializeField] Button leaveBtn;
         [SerializeField] Text roomTxt;
         [SerializeField] Text logTxt;
-        [SerializeField] RoomRequestContainer roomContainer;
 
         RoomManager roomManager;
         Coroutine toast;
-        
-        void Awake()
+        LobbyManager lobbyManager;
+        string roomName;
+        BoardGame gameType;
+        int? roomId;
+
+        public void Initialize(LobbyManager lobbyManager, BoardGame gameType, string roomName, int? roomId = null)
         {
-            Instance = this;
+            this.lobbyManager = lobbyManager;
+            this.gameType = gameType;
+            this.roomId = roomId;
+            this.roomName = roomName;
+        }
+
+        public override void Show()
+        {
+            base.Show(); 
+            lobbyManager = FindObjectOfType<LobbyManager>();
+            lobbyManager.JoinedRoom += OnRoomGenerated;
+
+            if (roomId == null)
+                lobbyManager.CmdCreateRoom(gameType, roomName);
+            else
+                lobbyManager.CmdJoinRoom(gameType, roomId.Value);
+        }
+
+        public override void Close()
+        {
+            base.Close();
+            roomManager.Players.OnChange += OnChange;
         }
 
         private void Start()
         {
-            GameNetworkManager.singleton.JoinedRoom += OnRoomGenerated;
+            
 
-            if (roomContainer.IsCreate)
-                Mirror.NetworkClient.Send(new CreateRoomMessage { reqName = roomContainer.RoomName, gameType = roomContainer.GameType });
-            else
-                Mirror.NetworkClient.Send(new JoinMatchMessage { matchID = roomContainer.MatchId, gameType = roomContainer.GameType });
+            
         }
 
         private void OnPlayerAdded(BoardGamePlayer player)
@@ -41,8 +61,16 @@ namespace OnlineBoardGames
             RoomPlayerUI UIPlayer = Instantiate(roomPlyerUI, playersPanel);
             UIPlayer.SetPlayer(player);
 
-            if(player.hasAuthority)
+            if (player.IsOwner)
+            {
                 player.ReadyChanged += OnReadyChanged;
+                player.LeftGame += OnPlayerLeftGame;
+            }
+        }
+
+        private void OnPlayerLeftGame()
+        {
+            
         }
 
         private void OnReadyChanged(bool ready)
@@ -54,11 +82,25 @@ namespace OnlineBoardGames
         private void OnRoomGenerated(RoomManager room)
         {
             roomManager = room;
-            roomManager.PlayerAdded += OnPlayerAdded;
-            roomManager.PlayerJoined += OnPlayerJoined;
-            roomManager.PlayerLeft += OnPlayerLeft;
-            roomManager.AllPlayersReady += OnAllPlayersReady;
             roomTxt.text = room.Name;
+
+            foreach (var p in roomManager.Players)
+                OnPlayerAdded(p);
+
+            roomManager.Players.OnChange += OnChange;
+            roomManager.PlayerJoined += OnPlayerJoined;
+            roomManager.Leave += Close;
+            //roomManager.PlayerLeft += OnPlayerLeft;
+            roomManager.AllPlayersReady += OnAllPlayersReady;
+        }
+
+        private void OnChange(SyncListOperation op, int index, BoardGamePlayer oldItem, BoardGamePlayer newItem, bool asServer)
+        {
+            if(op == SyncListOperation.Add)
+            {
+                OnPlayerAdded(newItem);
+                return;
+            }
         }
 
         private void OnAllPlayersReady()
@@ -69,38 +111,38 @@ namespace OnlineBoardGames
 
         private void OnPlayerLeft(BoardGamePlayer player)
         {
-            if(!player.hasAuthority)
+            if (!player.IsOwner)
                 Log($"{player.Name} Left the room");
         }
 
         private void OnPlayerJoined(BoardGamePlayer player)
         {
-            Log($"{(player.hasAuthority ? "you" : player.Name)} Joined the room");
+            Log($"{(player.IsOwner ? "you" : player.Name)} Joined the room");
         }
 
         private void OnDestroy()
         {
-            GameNetworkManager.singleton.JoinedRoom -= OnRoomGenerated;
+            lobbyManager.JoinedRoom -= OnRoomGenerated;
 
-            if(roomManager != null)
+            if (roomManager != null)
             {
-                roomManager.PlayerAdded -= OnPlayerAdded;
-                roomManager.PlayerJoined -= OnPlayerJoined; 
-                roomManager.PlayerLeft -= OnPlayerLeft;
+                roomManager.Leave += Close;
+                roomManager.Players.OnChange -= OnChange;
+                roomManager.PlayerJoined -= OnPlayerJoined;
+                //roomManager.PlayerLeft -= OnPlayerLeft;
                 roomManager.AllPlayersReady -= OnAllPlayersReady;
             }
-            
-            Instance = null;
         }
 
-        public RoomPlayerUI GetUI(int number){
-            if (number < 1) return null; 
+        public RoomPlayerUI GetUI(int number)
+        {
+            if (number < 1) return null;
             return playersPanel.GetChild(number - 1).GetComponent<RoomPlayerUI>();
         }
 
         public void ReaveRoom()
         {
-            Mirror.NetworkClient.Send(new LeaveRoomMessage { gameType = roomManager.GameType });
+            lobbyManager.CmdLeaveRoom(roomManager.GameType);
         }
 
         public void SendReady()

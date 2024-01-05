@@ -9,9 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7615549808303092197}
-  - component: {fileID: 3950297832245487888}
-  - component: {fileID: 6275771391138555240}
+  - component: {fileID: 4941997199922071095}
   - component: {fileID: 8121658752139351664}
+  - component: {fileID: 4256154336957454667}
   m_Layer: 0
   m_Name: SETRoomManager
   m_TagString: Untagged
@@ -34,7 +34,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3950297832245487888
+--- !u!114 &4941997199922071095
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -43,28 +43,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 7781958062978115182}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sceneId: 0
-  serverOnly: 0
-  visible: 0
-  m_AssetId: 3b2cf858f9e19e84fb6229118ff1fdb2
-  hasSpawned: 0
---- !u!114 &6275771391138555240
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7781958062978115182}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d17e718851449a6879986e45c458fb7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  syncMode: 0
-  syncInterval: 0.1
+  <IsNested>k__BackingField: 0
+  <ComponentIndex>k__BackingField: 0
+  <PredictedSpawn>k__BackingField: {fileID: 0}
+  _networkBehaviours:
+  - {fileID: 8121658752139351664}
+  <ParentNetworkObject>k__BackingField: {fileID: 0}
+  <ChildNetworkObjects>k__BackingField: []
+  SerializedTransformProperties:
+    Position: {x: 42.734573, y: 1180.6425, z: -335.35425}
+    Rotation: {x: 0, y: 0, z: 0, w: 1}
+    LocalScale: {x: 1, y: 1, z: 1}
+  _isNetworked: 1
+  _isGlobal: 0
+  _initializeOrder: 0
+  _defaultDespawnType: 0
+  NetworkObserver: {fileID: 0}
+  <PrefabId>k__BackingField: 0
+  <SpawnableCollectionId>k__BackingField: 0
+  _scenePathHash: 0
+  <SceneId>k__BackingField: 0
+  <AssetPathHash>k__BackingField: 0
 --- !u!114 &8121658752139351664
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -77,6 +79,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e17e012c52c52a447a13b6c121bd5a49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  syncMode: 0
-  syncInterval: 0.1
+  _componentIndexCache: 0
+  _addedNetworkObject: {fileID: 4941997199922071095}
+  _networkObjectCache: {fileID: 4941997199922071095}
   GameScene: Assets/Games/SET/Scenes/Game.unity
+  <Name>k__BackingField: 
+  <Id>k__BackingField: 0
+  <State>k__BackingField: 1
+  <GuessingPlayer>k__BackingField: {fileID: 0}
+  <VoteStarter>k__BackingField: {fileID: 0}
+--- !u!114 &4256154336957454667
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7781958062978115182}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c71fd7f855ec523429999fc4e14a1928, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _overrideType: 2
+  _updateHostVisibility: 0
+  _observerConditions: []

@@ -1,118 +1,133 @@
 using System.Collections.Generic;
-using Mirror;
 using System;
 using System.Collections.Concurrent;
-/*
-	Documentation: https://mirror-networking.gitbook.io/docs/guides/networkbehaviour
-	API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkBehaviour.html
-*/
-
-// NOTE: Do not put objects in DontDestroyOnLoad (DDOL) in Awake.  You can do that in Start instead.
+using FishNet.Object;
+using FishNet.Connection;
+using FishNet.Managing.Server;
+using UnityEngine;
+using FishNet.Component.Observing;
+using System.Threading;
 
 namespace OnlineBoardGames
 {
     public class LobbyManager : NetworkBehaviour
     {
-        Dictionary<BoardGame, ConcurrentDictionary<Guid, RoomManager>> rooms = new();
-        public event Action<RoomManager, NetworkConnectionToClient> RoomRequested;
+        ServerManager serverManager;
+        Dictionary<BoardGame, ConcurrentDictionary<int, RoomManager>> rooms = new();
+        [SerializeField] MatchCondition matchCondition;
+        [SerializeField] GamePrefabs prefabs;
+        
+        int lastId = 1;
+        public event Action<RoomData[]> RoomListReceived; 
+        public event Action<RoomManager> JoinedRoom;
 
         [Server]
-        Guid GenerateRoomID()
+        int GenerateRoomID()
         {
-            Guid newID = Guid.NewGuid();
+            int newID = lastId;
+            Interlocked.Increment(ref lastId);
             return newID;
         }
 
-        /// <summary>
-        /// This is invoked for NetworkBehaviour objects when they become active on the server.
-        /// <para>This could be triggered by NetworkServer.Listen() for objects in the scene, or by NetworkServer.Spawn() for objects that are dynamically created.</para>
-        /// <para>This will be called for objects on a "host" as well as for object on a dedicated server.</para>
-        /// </summary>
         public override void OnStartServer() 
         {
-            NetworkServer.RegisterHandler<CreateRoomMessage>(OnCreateRoomRequest);
-            NetworkServer.RegisterHandler<GetRoomListMessage>(OnRoomListRequest);
-            NetworkServer.RegisterHandler<JoinMatchMessage>(OnJoinRoomRequest);
-            NetworkServer.RegisterHandler<LeaveRoomMessage>(OnLeaveRoomRequest);
-
+            serverManager = NetworkManager.ServerManager;
             rooms.Add(BoardGame.SET, new());
             rooms.Add(BoardGame.CantStop, new());
 
-            if (GameNetworkManager.singleton.OverrideGame)
-            {
-                GameNetworkManager m = GameNetworkManager.singleton;
-                var newMatchID = GenerateRoomID();
-                var TestRoom = Instantiate(m.spawnPrefabs[2 * (byte)m.GameType + 2]).GetComponent<RoomManager>();
-                TestRoom.SetName("Test");
-                TestRoom.GetComponent<NetworkMatch>().matchId = GameNetworkManager.TestGuid;
-                rooms[m.GameType].TryAdd(GameNetworkManager.TestGuid, TestRoom);
-                NetworkServer.Spawn(TestRoom.gameObject);
-            }
+            //if (GameNetworkManager.singleton.OverrideGame)
+            //{
+            //    GameNetworkManager m = GameNetworkManager.singleton;
+            //    var newMatchID = GenerateRoomID();
+            //    var TestRoom = Instantiate(m.spawnPrefabs[2 * (byte)m.GameType + 2]).GetComponent<RoomManager>();
+            //    TestRoom.SetName("Test");
+            //    TestRoom.GetComponent<NetworkMatch>().matchId = GameNetworkManager.TestGuid;
+            //    rooms[m.GameType].TryAdd(GameNetworkManager.TestGuid, TestRoom);
+            //    NetworkServer.Spawn(TestRoom.gameObject);
+            //}
         }
 
-        public void OnLeaveRoomRequest(NetworkConnectionToClient conn, LeaveRoomMessage msg)
+        [ServerRpc(RequireOwnership = false)]
+        public void CmdCreateRoom(BoardGame gameType, string name, NetworkConnection conn = null)
         {
-            var data = conn.authenticationData as AuthData;
-
-            if(data.roomID != Guid.Empty)
-            {
-                RoomManager r = rooms[msg.gameType][data.roomID];
-                r.Remove(conn.identity.GetComponent<BoardGamePlayer>());
-                conn.Send(new SceneMessage { sceneName = "Menu" });
-
-                if(r.PlayerCount == 0)
-                {
-                    rooms[msg.gameType].TryRemove(data.roomID, out r);
-                    NetworkServer.Destroy((r as NetworkBehaviour).gameObject);
-                    (conn.authenticationData as AuthData).roomID = Guid.Empty;
-                }
-            }
+            var newMatchID = GenerateRoomID();
+            (conn.CustomData as AuthData).roomID = newMatchID;
+            (conn.CustomData as AuthData).gameType = gameType;
+            var room = Instantiate(prefabs[gameType].room.GetComponent<RoomManager>());
+            room.SetParams(newMatchID, name);
+            MatchCondition.AddToMatch(newMatchID, conn);
+            MatchCondition.AddToMatch(newMatchID, room.GetComponent<NetworkObject>());
+            rooms[gameType].TryAdd(newMatchID, room);
+            serverManager.Spawn(room.gameObject);
+            AddPlayerForMatch(conn, room);
         }
 
-        void OnJoinRoomRequest(NetworkConnectionToClient conn, JoinMatchMessage msg)
+        [ServerRpc(RequireOwnership = false)]
+        public void CmdJoinRoom(BoardGame gameType, int matchId, NetworkConnection conn = null)
         {
-            if (rooms[msg.gameType].TryGetValue(msg.matchID, out RoomManager room))
+            if (rooms[gameType].TryGetValue(matchId, out RoomManager room))
             {
-                (conn.authenticationData as AuthData).roomID = msg.matchID;
-                (conn.authenticationData as AuthData).gameType = msg.gameType;
+                (conn.CustomData as AuthData).roomID = matchId;
+                (conn.CustomData as AuthData).gameType = gameType;
+                MatchCondition.AddToMatch(room.Id, conn);
                 AddPlayerForMatch(conn, room);
             }
         }
 
-        void OnRoomListRequest(NetworkConnectionToClient conn, GetRoomListMessage msg)
+        [ServerRpc(RequireOwnership = false)]
+        public void CmdLeaveRoom(BoardGame gameType, NetworkConnection conn = null)
+        {
+            var data = conn.CustomData as AuthData;
+
+            if(data.roomID != -1)
+            {
+                RoomManager r = rooms[gameType][data.roomID];
+                r.Remove(conn.FirstObject.GetComponent<BoardGamePlayer>());
+
+                if(r.PlayerCount == 0)
+                {
+                    rooms[gameType].TryRemove(data.roomID, out r);
+                    serverManager.Despawn((r as MonoBehaviour).gameObject);
+                    (conn.CustomData as AuthData).roomID = -1;
+                }
+            }
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void CmdGetRoomList(BoardGame gameType, NetworkConnection conn = null)
         {
             List<RoomData> roomList = new();
 
-            foreach(var room in rooms[msg.gameType])
+            foreach(var room in rooms[gameType])
             {
                 if (room.Value.IsAcceptingPlayer && room.Value.PlayerCount < 4)
                     roomList.Add(new RoomData(room.Value, room.Key));
             }
 
-            conn.Send(new RoomListResponse { rooms = roomList.ToArray() });
+            RpcSendRoomList(conn, roomList.ToArray());
         }
 
-        void AddPlayerForMatch(NetworkConnectionToClient conn, RoomManager room)
+        [Server]
+        void AddPlayerForMatch(NetworkConnection conn, RoomManager room)
         {
-            NetworkMatch match = room.GetComponent<NetworkMatch>();
-            var player = Instantiate(GameNetworkManager.singleton.spawnPrefabs[2 * (byte)room.GameType + 3]).GetComponent<BoardGamePlayer>();
-            player.GetComponent<NetworkMatch>().matchId = match.matchId;
-            NetworkServer.AddPlayerForConnection(conn, player.gameObject);
-            RoomRequested?.Invoke(room, conn);
+            var player = Instantiate(prefabs[room.GameType].player);
+            MatchCondition.AddToMatch(room.Id, conn);
+            conn.Broadcast(new AuthSyncMessage { authData = conn.CustomData as AuthData });
+            serverManager.Spawn(player.NetworkObject, conn);
             room.AddPlayer(player);
+            RpcSendRoom(conn, room);
         }
 
-        void OnCreateRoomRequest(NetworkConnectionToClient conn, CreateRoomMessage msg)
+        [TargetRpc]
+        void RpcSendRoomList(NetworkConnection _, RoomData[] rooms)
         {
-            var newMatchID = GenerateRoomID();
-            var room = Instantiate(GameNetworkManager.singleton.spawnPrefabs[2 * (byte)msg.gameType + 2]).GetComponent<RoomManager>();
-            room.SetName(msg.reqName);
-            room.GetComponent<NetworkMatch>().matchId = newMatchID;
-            (conn.authenticationData as AuthData).roomID = newMatchID;
-            (conn.authenticationData as AuthData).gameType = msg.gameType;
-            rooms[msg.gameType].TryAdd(newMatchID, room);
-            NetworkServer.Spawn(room.gameObject);
-            AddPlayerForMatch(conn, room);
+            RoomListReceived?.Invoke(rooms);
+        }
+
+        [TargetRpc]
+        void RpcSendRoom(NetworkConnection _, RoomManager roomManager)
+        {
+            JoinedRoom?.Invoke(roomManager);
         }
     }
 }

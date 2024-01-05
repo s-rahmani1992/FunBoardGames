@@ -3,14 +3,13 @@ using System.Collections.Concurrent;
 using FishNet.Authenticating;
 using FishNet.Connection;
 using FishNet.Managing;
-using FishNet.Object;
 
 namespace OnlineBoardGames
 {
     public class AuthData
     {
         public string playerName;
-        public Guid roomID = Guid.Empty;
+        public int roomID = -1;
         public BoardGame gameType;
     }
 
@@ -20,7 +19,6 @@ namespace OnlineBoardGames
 
         readonly ConcurrentDictionary<string, NetworkConnection> playerNames = new();
 
-        [Server]
         public override void InitializeOnce(NetworkManager networkManager)
         {
             base.InitializeOnce(networkManager);
@@ -28,7 +26,6 @@ namespace OnlineBoardGames
             networkManager.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
         }
 
-        [Server]
         void OnRemoteConnectionState(NetworkConnection conn, FishNet.Transporting.RemoteConnectionStateArgs e)
         {
             if(e.ConnectionState == FishNet.Transporting.RemoteConnectionState.Stopped)
@@ -38,7 +35,6 @@ namespace OnlineBoardGames
             }
         }
 
-        [Server]
         void OnAuthRequestMessage(NetworkConnection conn, AuthRequestMessage msg)
         {
             AuthResponseMessage authResponseMessage = new();
@@ -51,7 +47,7 @@ namespace OnlineBoardGames
             }
             else if (playerNames.TryAdd(msg.requestedName, conn))
             {
-                conn.CustomData = new AuthData {playerName = msg.requestedName, roomID = Guid.Empty };
+                conn.CustomData = new AuthData {playerName = msg.requestedName, roomID = -1 };
                 authResponseMessage.resultCode = 0;
                 authResponseMessage.message = "Authentication Success";
                 authenticated = true;
