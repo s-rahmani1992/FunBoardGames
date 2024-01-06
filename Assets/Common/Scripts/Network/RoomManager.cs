@@ -142,6 +142,9 @@ namespace OnlineBoardGames
         {
             if (op == SyncListOperation.Add)
             {
+                if (newItem.IsOwner)
+                    LocalPlayer = newItem;
+
                 PlayerJoined?.Invoke(newItem);
                 return;
             }

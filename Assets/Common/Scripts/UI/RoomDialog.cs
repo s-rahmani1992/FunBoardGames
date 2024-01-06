@@ -47,28 +47,16 @@ namespace OnlineBoardGames
             base.Close();
         }
 
-        private void Start()
-        {
-            
-
-            
-        }
-
         private void OnPlayerAdded(BoardGamePlayer player)
         {
             RoomPlayerUI UIPlayer = Instantiate(roomPlyerUI, playersPanel);
             UIPlayer.SetPlayer(player);
+            DontDestroyOnLoad(player.gameObject);
 
             if (player.IsOwner)
             {
                 player.ReadyChanged += OnReadyChanged;
-                player.LeftGame += OnPlayerLeftGame;
             }
-        }
-
-        private void OnPlayerLeftGame()
-        {
-            
         }
 
         private void OnReadyChanged(bool ready)
@@ -80,6 +68,7 @@ namespace OnlineBoardGames
         private void OnRoomGenerated(RoomManager room)
         {
             roomManager = room;
+            DontDestroyOnLoad(roomManager.gameObject);
             roomTxt.text = room.Name;
 
             foreach (var p in roomManager.Players)

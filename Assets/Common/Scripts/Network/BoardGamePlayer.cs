@@ -58,7 +58,6 @@ namespace OnlineBoardGames
         public void CmdReady()
         {
             IsReady = true;
-            ReadyChanged?.Invoke(true);
         }
 
         [ServerRpc]
