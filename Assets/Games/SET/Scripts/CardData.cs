@@ -1,11 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using System;
+using FishNet.Serializing;
+using FishNet.Object;
 
 namespace OnlineBoardGames.SET
 {
-    [System.Serializable]
+    [Serializable]
     public class CardData
     {
         public byte Color { get; private set; }
@@ -42,7 +42,7 @@ namespace OnlineBoardGames.SET
             RawByte = (byte)((Color) | (Shape << 2) | (CountIndex << 4) | (Shading << 6));
         }
 
-        [Mirror.Server]
+        [Server]
         public static bool isValid(byte cardByte)
         {
             byte mask = 3;
@@ -79,7 +79,7 @@ namespace OnlineBoardGames.SET
             return RawByte;
         }
 
-        [Mirror.Server]
+        [Server]
         public static byte CheckSET(CardData card1, CardData card2, CardData card3)
         {
             byte result = 0;
@@ -125,9 +125,8 @@ namespace OnlineBoardGames.SET
 
     public static class CardDataSerializer
     {
-        public static CardData ReadCardData(this Mirror.NetworkReader reader)
+        public static CardData ReadCardData(this Reader reader)
         {
-            Debug.Log($"Read CardData");
             byte data = reader.ReadByte();
             byte mask = 3;
             byte color = (byte)(data & mask);
@@ -140,9 +139,8 @@ namespace OnlineBoardGames.SET
             return new CardData(color, shape, countIndex, shading);
         }
 
-        public static void WriteCardData(this Mirror.NetworkWriter writer, CardData cardData)
+        public static void WriteCardData(this Writer writer, CardData cardData)
         {
-            Debug.Log($"Write CardData");
             writer.WriteByte((byte)((cardData.Color) | (cardData.Shape << 2) | (cardData.CountIndex << 4) | (cardData.Shading << 6)));
         }
     }

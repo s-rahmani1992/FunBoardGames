@@ -105,9 +105,9 @@ namespace OnlineBoardGames.SET
         }
 
         [ServerRpc(RequireOwnership = false)]
-        internal void CmdHintRequest(NetworkObject identity)
+        internal void CmdHintRequest(NetworkConnection conn = null)
         {
-            TargetGetHint(identity.LocalConnection, hintCards.ToArray());
+            TargetGetHint(conn, hintCards.ToArray());
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -198,12 +198,12 @@ namespace OnlineBoardGames.SET
             for (int i = 0; i < 12; i++)
             {
                 temp[i] = (byte)i;
-                placedCards[i] = BoardGameCardDataHolder.Instance.GetCard(deck[i]);
+                placedCards[i] = SetGameDataManager.GetCard(deck[i]);
             }
 
             UpdateHintCards();
             State = SETGameState.Destribute;
-            RPCPlaceCards(deck.ToList().GetRange(cursor, 12).Select(c => BoardGameCardDataHolder.Instance.GetCard(c)).ToArray(), temp);
+            RPCPlaceCards(deck.ToList().GetRange(cursor, 12).Select(c => SetGameDataManager.GetCard(c)).ToArray(), temp);
             cursor = 12;
             yield return new WaitForSeconds(2.5f);
             State = SETGameState.Normal;
@@ -247,7 +247,7 @@ namespace OnlineBoardGames.SET
                         if (placedCards[i] == null)
                         {
                             places2Add[place] = (byte)i;
-                            placedCards[i] = BoardGameCardDataHolder.Instance.GetCard(deck[cursor + place]);
+                            placedCards[i] = SetGameDataManager.GetCard(deck[cursor + place]);
                             place++;
 
                             if (place == 3)
@@ -257,7 +257,7 @@ namespace OnlineBoardGames.SET
 
                     UpdateHintCards();
                     State = SETGameState.Destribute;
-                    RPCPlaceCards(deck.ToList().GetRange(cursor, 3).Select(c => BoardGameCardDataHolder.Instance.GetCard(c)).ToArray(), places2Add);
+                    RPCPlaceCards(deck.ToList().GetRange(cursor, 3).Select(c => SetGameDataManager.GetCard(c)).ToArray(), places2Add);
                     cursor += 3;
                     yield return new WaitForSeconds(0.7f);
 
@@ -313,7 +313,7 @@ namespace OnlineBoardGames.SET
                         if (placedCards[i] == null)
                         {
                             placed2Add[place] = (byte)i;
-                            placedCards[i] = BoardGameCardDataHolder.Instance.GetCard(deck[cursor + place]);
+                            placedCards[i] = SetGameDataManager.GetCard(deck[cursor + place]);
                             place++;
 
                             if (place == 3)
@@ -324,7 +324,7 @@ namespace OnlineBoardGames.SET
                     UpdateHintCards();
                     placedCardCount += 3;
                     State = SETGameState.Destribute;
-                    RPCPlaceCards(deck.ToList().GetRange(cursor, 3).Select(c => BoardGameCardDataHolder.Instance.GetCard(c)).ToArray(), placed2Add);
+                    RPCPlaceCards(deck.ToList().GetRange(cursor, 3).Select(c => SetGameDataManager.GetCard(c)).ToArray(), placed2Add);
                     cursor += 3;
                     foreach (var p in Players)
                         (p as SETPlayer).SetVote(VoteAnswer.None);

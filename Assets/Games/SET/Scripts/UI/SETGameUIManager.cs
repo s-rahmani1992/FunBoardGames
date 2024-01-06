@@ -234,7 +234,7 @@ namespace OnlineBoardGames.SET
 
         public void SendHint()
         {
-            sessionManager.CmdHintRequest(sessionManager.NetworkObject);
+            sessionManager.CmdHintRequest();
         }
 
         public void RemoveSelected()
