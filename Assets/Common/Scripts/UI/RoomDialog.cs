@@ -1,5 +1,4 @@
 using DG.Tweening;
-using FishNet.Object.Synchronizing;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -46,7 +45,6 @@ namespace OnlineBoardGames
         public override void Close()
         {
             base.Close();
-            roomManager.Players.OnChange += OnChange;
         }
 
         private void Start()
@@ -87,20 +85,10 @@ namespace OnlineBoardGames
             foreach (var p in roomManager.Players)
                 OnPlayerAdded(p);
 
-            roomManager.Players.OnChange += OnChange;
             roomManager.PlayerJoined += OnPlayerJoined;
+            roomManager.PlayerLeft += OnPlayerLeft;
             roomManager.Leave += Close;
-            //roomManager.PlayerLeft += OnPlayerLeft;
             roomManager.AllPlayersReady += OnAllPlayersReady;
-        }
-
-        private void OnChange(SyncListOperation op, int index, BoardGamePlayer oldItem, BoardGamePlayer newItem, bool asServer)
-        {
-            if(op == SyncListOperation.Add)
-            {
-                OnPlayerAdded(newItem);
-                return;
-            }
         }
 
         private void OnAllPlayersReady()
@@ -117,6 +105,7 @@ namespace OnlineBoardGames
 
         private void OnPlayerJoined(BoardGamePlayer player)
         {
+            OnPlayerAdded(player);
             Log($"{(player.IsOwner ? "you" : player.Name)} Joined the room");
         }
 
@@ -126,10 +115,9 @@ namespace OnlineBoardGames
 
             if (roomManager != null)
             {
-                roomManager.Leave += Close;
-                roomManager.Players.OnChange -= OnChange;
+                roomManager.Leave -= Close;
                 roomManager.PlayerJoined -= OnPlayerJoined;
-                //roomManager.PlayerLeft -= OnPlayerLeft;
+                roomManager.PlayerLeft -= OnPlayerLeft;
                 roomManager.AllPlayersReady -= OnAllPlayersReady;
             }
         }
@@ -142,7 +130,7 @@ namespace OnlineBoardGames
 
         public void ReaveRoom()
         {
-            lobbyManager.CmdLeaveRoom(roomManager.GameType);
+            lobbyManager.CmdLeaveRoom();
         }
 
         public void SendReady()

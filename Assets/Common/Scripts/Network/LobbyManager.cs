@@ -75,19 +75,20 @@ namespace OnlineBoardGames
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void CmdLeaveRoom(BoardGame gameType, NetworkConnection conn = null)
+        public void CmdLeaveRoom(NetworkConnection conn = null)
         {
             var data = conn.CustomData as AuthData;
 
             if(data.roomID != -1)
             {
-                RoomManager r = rooms[gameType][data.roomID];
+                RoomManager r = rooms[data.gameType][data.roomID];
                 r.Remove(conn.FirstObject.GetComponent<BoardGamePlayer>());
+                MatchCondition.RemoveFromMatch(r.Id, conn);
 
                 if(r.PlayerCount == 0)
                 {
-                    rooms[gameType].TryRemove(data.roomID, out r);
-                    serverManager.Despawn((r as MonoBehaviour).gameObject);
+                    rooms[data.gameType].TryRemove(data.roomID, out r);
+                    serverManager.Despawn(r.NetworkObject);
                     (conn.CustomData as AuthData).roomID = -1;
                 }
             }

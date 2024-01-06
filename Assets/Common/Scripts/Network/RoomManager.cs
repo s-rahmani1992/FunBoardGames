@@ -12,12 +12,13 @@ namespace OnlineBoardGames
         [field: SyncObject]
         readonly SyncList<BoardGamePlayer> players = new();
 
-        public SyncList<BoardGamePlayer> Players => players;
+        public IEnumerable<BoardGamePlayer> Players => players;
 
         public bool IsAcceptingPlayer { get; private set; }
         public BoardGamePlayer LocalPlayer { get; private set; }
         
         public event Action<BoardGamePlayer> PlayerJoined;
+        public event Action<BoardGamePlayer> PlayerLeft;
         public event Action Leave;
         public event Action AllPlayersReady;
         public event Action GameBegin;
@@ -68,12 +69,8 @@ namespace OnlineBoardGames
                 CheckAllGameReady();
             };
 
-            RPCPlayerJoin(player.GetComponent<NetworkObject>());
-
             for (int i = 0; i < players.Count; i++)
                 players[i].SetIndex(i + 1);
-
-            //UpdatePlayers(Players.ToList());
         }
 
         [Server]
@@ -136,6 +133,26 @@ namespace OnlineBoardGames
 
         #region Client Part
 
+        public override void OnStartClient()
+        {
+            players.OnChange += OnPlayersChange;
+        }
+
+        private void OnPlayersChange(SyncListOperation op, int index, BoardGamePlayer oldItem, BoardGamePlayer newItem, bool asServer)
+        {
+            if (op == SyncListOperation.Add)
+            {
+                PlayerJoined?.Invoke(newItem);
+                return;
+            }
+
+            if (op == SyncListOperation.RemoveAt)
+            {
+                PlayerLeft?.Invoke(oldItem);
+                return;
+            }
+        }
+
         [ObserversRpc]
         protected void UpdatePlayers(List<BoardGamePlayer> players)
         {
@@ -150,15 +167,6 @@ namespace OnlineBoardGames
         protected virtual void RPCAllPlayersReady()
         {
             AllPlayersReady?.Invoke();
-        }
-
-        [ObserversRpc]
-        protected virtual void RPCPlayerJoin(NetworkObject identity)
-        {
-            if (identity.IsOwner)
-                LocalPlayer = identity.GetComponent<BoardGamePlayer>();
-
-            PlayerJoined?.Invoke(identity.GetComponent<BoardGamePlayer>());
         }
 
         #endregion
