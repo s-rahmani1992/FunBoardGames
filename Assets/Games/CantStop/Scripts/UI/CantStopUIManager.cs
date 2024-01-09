@@ -29,7 +29,6 @@ namespace OnlineBoardGames.CantStop
             placeButton.interactable = false;
             playButton.interactable = false;
             roomManager = FindObjectOfType<CantStopRoomManager>();
-            roomManager.LocalPlayer.CmdGameReady();
             localPlayer = roomManager.LocalPlayer as CantStopPlayer;
             diceController.Block(!roomManager.IsYourTurn);
             diceController.PairSelected += (v1, v2) =>
@@ -50,6 +49,7 @@ namespace OnlineBoardGames.CantStop
             };
 
             Subscribe();
+            roomManager.LocalPlayer.CmdGameReady();
         }
 
         void CheckMove(int v1, int v2)

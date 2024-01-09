@@ -160,10 +160,7 @@ namespace OnlineBoardGames.CantStop
         {
             base.OnStartServer();
 #if UNITY_EDITOR
-            if (GameNetworkManager.singleton.OverrideGame)
-                Board = board;
-            else
-                Board = BoardGameCardDataHolder.Instance.Board;
+            Board = board;
 #else
             Board = BoardGameCardDataHolder.Instance.Board;
 #endif

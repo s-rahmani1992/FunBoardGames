@@ -1,4 +1,4 @@
-using Mirror;
+using FishNet.Serializing;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,9 +20,9 @@ namespace OnlineBoardGames.CantStop
 
     public static class GameBoardExtention
     {
-        public static GameBoard ReadGameBoard(this NetworkReader reader)
+        public static GameBoard ReadGameBoard(this Reader reader)
         {
-            int length = reader.ReadInt();
+            int length = reader.ReadInt32();
 
             if (length == -1)
                 return null;
@@ -31,8 +31,8 @@ namespace OnlineBoardGames.CantStop
 
             for(int i = 0; i < length; i++)
             {
-                int k = reader.ReadInt();
-                int v = reader.ReadInt();
+                int k = reader.ReadInt32();
+                int v = reader.ReadInt32();
                 read.Add(k, v);
             }
 
@@ -41,20 +41,20 @@ namespace OnlineBoardGames.CantStop
             return board;
         }
 
-        public static void WriteGameBoard(this NetworkWriter writer, GameBoard board)
+        public static void WriteGameBoard(this Writer writer, GameBoard board)
         {
             if (board == null)
             {
-                writer.WriteInt(-1);
+                writer.WriteInt32(-1);
                 return;
             }
 
-            writer.WriteInt(board.ColumnCount);
+            writer.WriteInt32(board.ColumnCount);
 
             foreach(var pair in board.GetEnumerator())
             {
-                writer.WriteInt(pair.Key);
-                writer.WriteInt(pair.Value);
+                writer.WriteInt32(pair.Key);
+                writer.WriteInt32(pair.Value);
             }
         }
     }
