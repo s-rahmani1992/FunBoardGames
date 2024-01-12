@@ -34,7 +34,7 @@ namespace OnlineBoardGames
         int readyCount;
         int gameReadyCount;
 
-        [Mirror.Scene]
+        [Scene]
         public string GameScene;
 
         [field: SyncVar]
