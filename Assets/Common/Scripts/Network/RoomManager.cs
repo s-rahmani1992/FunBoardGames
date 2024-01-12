@@ -23,9 +23,12 @@ namespace OnlineBoardGames
         public event Action AllPlayersReady;
         public event Action GameBegin;
 
+#if UNITY_EDITOR
+        public byte PlayerCount => DirectGameContainer.Instance.IsDirectGameActive ? (byte)DirectGameContainer.Instance.PlayerCount : (byte)Players.Count();
+#else
         public byte PlayerCount => (byte)Players.Count();
+#endif
 
-        //public byte PlayerCount => GameNetworkManager.singleton.OverrideGame ? (byte)GameNetworkManager.singleton.PlayerCount : (byte)Players.Count();
         public virtual BoardGame GameType { get; }
 
         int readyCount;
@@ -42,11 +45,6 @@ namespace OnlineBoardGames
 
         #region Server Part
 
-        /// <summary>
-        /// This is invoked for NetworkBehaviour objects when they become active on the server.
-        /// <para>This could be triggered by NetworkServer.Listen() for objects in the scene, or by NetworkServer.Spawn() for objects that are dynamically created.</para>
-        /// <para>This will be called for objects on a "host" as well as for object on a dedicated server.</para>
-        /// </summary>
         public override void OnStartServer()
         {
             IsAcceptingPlayer = true;

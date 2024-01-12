@@ -7,19 +7,23 @@ using FishNet.Managing.Server;
 using UnityEngine;
 using FishNet.Component.Observing;
 using System.Threading;
+using FishNet.Transporting;
 
 namespace OnlineBoardGames
 {
     public class LobbyManager : NetworkBehaviour
     {
-        ServerManager serverManager;
-        Dictionary<BoardGame, ConcurrentDictionary<int, RoomManager>> rooms = new();
         [SerializeField] MatchCondition matchCondition;
         [SerializeField] GamePrefabs prefabs;
-        
-        int lastId = 1;
-        public event Action<RoomData[]> RoomListReceived; 
+
+        public event Action<RoomData[]> RoomListReceived;
         public event Action<RoomManager> JoinedRoom;
+
+        ServerManager serverManager;
+        Dictionary<BoardGame, ConcurrentDictionary<int, RoomManager>> rooms = new();
+        int lastId = 1;
+
+        #region Server Part
 
         [Server]
         int GenerateRoomID()
@@ -34,17 +38,24 @@ namespace OnlineBoardGames
             serverManager = NetworkManager.ServerManager;
             rooms.Add(BoardGame.SET, new());
             rooms.Add(BoardGame.CantStop, new());
+            serverManager.OnRemoteConnectionState += OnClientConnectionStateChanged;
+            var directGameContainer = DirectGameContainer.Instance;
 
-            //if (GameNetworkManager.singleton.OverrideGame)
-            //{
-            //    GameNetworkManager m = GameNetworkManager.singleton;
-            //    var newMatchID = GenerateRoomID();
-            //    var TestRoom = Instantiate(m.spawnPrefabs[2 * (byte)m.GameType + 2]).GetComponent<RoomManager>();
-            //    TestRoom.SetName("Test");
-            //    TestRoom.GetComponent<NetworkMatch>().matchId = GameNetworkManager.TestGuid;
-            //    rooms[m.GameType].TryAdd(GameNetworkManager.TestGuid, TestRoom);
-            //    NetworkServer.Spawn(TestRoom.gameObject);
-            //}
+            if (directGameContainer.IsDirectGameActive)
+            {
+                var TestRoom = Instantiate(prefabs[directGameContainer.Game].room.GetComponent<RoomManager>());
+                MatchCondition.AddToMatch(directGameContainer.TestRoomId, TestRoom.NetworkObject);
+                rooms[directGameContainer.Game].TryAdd(directGameContainer.TestRoomId, TestRoom);
+                serverManager.Spawn(TestRoom.gameObject);
+            }
+        }
+
+        private void OnClientConnectionStateChanged(NetworkConnection conn, RemoteConnectionStateArgs e)
+        {
+            if(e.ConnectionState == RemoteConnectionState.Stopped)
+            {
+                CmdLeaveRoom(conn);
+            }
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -119,6 +130,10 @@ namespace OnlineBoardGames
             RpcSendRoom(conn, room);
         }
 
+        #endregion
+
+        #region
+
         [TargetRpc]
         void RpcSendRoomList(NetworkConnection _, RoomData[] rooms)
         {
@@ -130,5 +145,7 @@ namespace OnlineBoardGames
         {
             JoinedRoom?.Invoke(roomManager);
         }
+
+        #endregion
     }
 }
