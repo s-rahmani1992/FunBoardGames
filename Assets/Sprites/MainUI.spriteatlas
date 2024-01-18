@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: MainUI
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings: []
+    packingSettings:
+      serializedVersion: 2
+      padding: 2
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 0
+      enableTightPacking: 0
+      enableAlphaDilation: 1
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 2800000, guid: 80c95e69547b18b4cb749854f4501bb5, type: 3}
+    - {fileID: 2800000, guid: 98ce4598509cbdf449a5986b1a5420ec, type: 3}
+    - {fileID: 2800000, guid: 063fc465a77b67640b2911e70dc99321, type: 3}
+    - {fileID: 2800000, guid: d0661dd220acd7c4abb96bc2a176194a, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: d0661dd220acd7c4abb96bc2a176194a, type: 3}
+  - {fileID: 21300000, guid: 063fc465a77b67640b2911e70dc99321, type: 3}
+  - {fileID: 21300000, guid: 98ce4598509cbdf449a5986b1a5420ec, type: 3}
+  - {fileID: 21300000, guid: 80c95e69547b18b4cb749854f4501bb5, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - white-panel1
+  - panel-2
+  - Loading-icon
+  - button-green
+  m_RenderDataMap: {}
+  m_Tag: New Sprite Atlas
+  m_IsVariant: 0

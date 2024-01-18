@@ -155,6 +155,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameNetworkManager: {fileID: 1232202753}
   prefabs: {fileID: 11400000, guid: 7bff38020a344ad45b10a002fbeb15b9, type: 2}
+  directGameContainer: {fileID: 11400000, guid: d39da5299488ffa40a983e1fd88427d1, type: 2}
   isEditorServer: 0
 --- !u!4 &537702398
 Transform:
@@ -185,6 +186,51 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   serverManager: {fileID: 1232202758}
   lobbyManager: {fileID: 7796784944000490816, guid: 78fe0a83d7e68034e8f2c1ae92328747, type: 3}
+--- !u!1 &1203143260
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1203143262}
+  - component: {fileID: 1203143261}
+  m_Layer: 0
+  m_Name: ClientDataManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1203143261
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1203143260}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aeda2c611dca3504d8464518545616ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  networkClientManager: {fileID: 1232202762}
+--- !u!4 &1203143262
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1203143260}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 492.17654, y: 719.54895, z: 5.5917716}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1232202752
 GameObject:
   m_ObjectHideFlags: 0
@@ -200,6 +246,7 @@ GameObject:
   - component: {fileID: 1232202757}
   - component: {fileID: 1232202758}
   - component: {fileID: 1232202761}
+  - component: {fileID: 1232202762}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -334,3 +381,19 @@ MonoBehaviour:
   _updateHostVisibility: 0
   _defaultConditions:
   - {fileID: 11400000, guid: efcd7f0dfd341ed4e8671079e91e0544, type: 2}
+--- !u!114 &1232202762
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1232202752}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aca43cf6f20e77c4f8fcc078fd85081f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _remoteServerTimeout: 2
+  _remoteServerTimeoutDuration: 60
+  _changeFrameRate: 1
+  _frameRate: 500

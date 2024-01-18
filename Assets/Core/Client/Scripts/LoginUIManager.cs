@@ -1,34 +1,47 @@
 using DG.Tweening;
-using FishNet.Managing;
+using TMPro;
 using System.Linq;
+
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace OnlineBoardGames.UI
+using FishNet.Managing;
+using FishNet.Managing.Client;
+using FishNet.Transporting;
+
+namespace OnlineBoardGames.Client
 {
     public class LoginUIManager : MonoBehaviour
     {
-        [SerializeField] InputField nameField;
-        [SerializeField] Button loginBtn;
-        [SerializeField] Text logTxt;
+        [SerializeField] TMP_InputField nameField;
+        [SerializeField] Button loginButton;
+        [SerializeField] TMP_Text messageLogText;
+        [SerializeField] GameObject waitObject;
 
-        NetworkManager networkManager;
+        ClientManager clientManager;
 
         private void Start()
         {
-            networkManager = NetworkManager.Instances.ElementAt(0);
-            networkManager.ClientManager.OnClientConnectionState += OnClientConnectionState;
-            networkManager.ClientManager.RegisterBroadcast<AuthResponseMessage>(OnAuthResponseMessage);
-            networkManager.ClientManager.RegisterBroadcast<AuthSyncMessage>(OnAuthSynced);
+            clientManager = NetworkManager.Instances.ElementAt(0).ClientManager;
+            clientManager.OnClientConnectionState += OnClientConnectionState;
+            clientManager.RegisterBroadcast<AuthResponseMessage>(OnAuthResponseMessage);
+            loginButton.onClick.AddListener(StartLogin);
+            nameField.onValueChanged.AddListener(OnNameFieldChanged);
+            OnNameFieldChanged(nameField.text);
+            SetLoginProcess(false);
+
+            if (ClientDataManager.CheckDisconnectFlag())
+                LogMessage("Disconnected");
         }
 
-        private void OnAuthSynced(AuthSyncMessage message)
+        private void OnDestroy()
         {
-            networkManager.ClientManager.Connection.CustomData = message.authData;
+            clientManager.OnClientConnectionState -= OnClientConnectionState;
+            clientManager.UnregisterBroadcast<AuthResponseMessage>(OnAuthResponseMessage);
         }
 
-        void OnAuthResponseMessage(AuthResponseMessage msg)
+        private void OnAuthResponseMessage(AuthResponseMessage msg)
         {
             if (msg.resultCode != 0)
                 OnLoginFailed(msg.message);
@@ -36,12 +49,23 @@ namespace OnlineBoardGames.UI
                 OnLoginSuccess();
         }
 
-        private void OnClientConnectionState(FishNet.Transporting.ClientConnectionStateArgs e)
+        private void SetLoginProcess(bool isProcess)
         {
-            DebugStep.Log($"Client Connection->{e.ConnectionState}");
-            if (e.ConnectionState == FishNet.Transporting.LocalConnectionState.Started)
+            loginButton.gameObject.SetActive(!isProcess);
+            nameField.interactable = !isProcess;
+            waitObject.SetActive(isProcess);
+        }
+
+        private void OnClientConnectionState(ClientConnectionStateArgs e)
+        {
+            if (e.ConnectionState == LocalConnectionState.Started)
             {
-                networkManager.ClientManager.Broadcast(new AuthRequestMessage { requestedName = nameField.text });
+                clientManager.Broadcast(new AuthRequestMessage { requestedName = nameField.text });
+                return;
+            }
+            if (e.ConnectionState == LocalConnectionState.Stopped)
+            {
+                OnLoginFailed("Connection Failed");
                 return;
             }
         }
@@ -51,37 +75,29 @@ namespace OnlineBoardGames.UI
             DOVirtual.DelayedCall(0.5f, () => SceneManager.LoadScene("Menu"));
         }
 
-        private void OnLoginFailed(string str)
+        private void OnLoginFailed(string errorMessage)
         {
-            logTxt.color = Color.red;
-            logTxt.text = str;
+            LogMessage(errorMessage);
             nameField.text = "";
-            loginBtn.interactable = true;
+            SetLoginProcess(false);
         }
 
-        private void OnLoginStarted()
+        private void OnNameFieldChanged(string text)
         {
-            logTxt.color = Color.yellow;
-            logTxt.text = "Logging In";
-            loginBtn.interactable = false;
+            loginButton.interactable = text.Length > 2;
         }
 
-        public void UpdateBtn()
+        private void StartLogin()
         {
-            loginBtn.interactable = nameField.text.Length > 2;
+            clientManager.StartConnection();
+            SetLoginProcess(true);
         }
 
-        public void AtemptLogin()
+        private void LogMessage(string message, float duration = 3)
         {
-            networkManager.ClientManager.StartConnection();
-            OnLoginStarted();
-        }
-
-        private void OnDestroy()
-        {
-            networkManager.ClientManager.OnClientConnectionState -= OnClientConnectionState;
-            networkManager.ClientManager.UnregisterBroadcast<AuthResponseMessage>(OnAuthResponseMessage);
-            networkManager.ClientManager.UnregisterBroadcast<AuthSyncMessage>(OnAuthSynced);
+            messageLogText.text = message;
+            nameField.text = "";
+            DOVirtual.DelayedCall(duration, () => messageLogText.text = "");
         }
     }
 }
