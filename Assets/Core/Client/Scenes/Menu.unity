@@ -226,7 +226,7 @@ GameObject:
   - component: {fileID: 223646719}
   - component: {fileID: 223646721}
   m_Layer: 0
-  m_Name: UIManager
+  m_Name: MenuUIManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -249,6 +249,7 @@ MonoBehaviour:
   content: {fileID: 786924135}
   dropDown: {fileID: 414496117}
   listDropDown: {fileID: 310036643}
+  roomDialog: {fileID: 1808611103296327797, guid: c4608d90244b1ca428081a6efd97fdbd, type: 3}
 --- !u!4 &223646720
 Transform:
   m_ObjectHideFlags: 0
@@ -1126,7 +1127,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 5911023598691558993, guid: 637d2c7ec88f1b743a9cb4103c514fe2, type: 3}
       propertyPath: m_Name
-      value: Canvas (1)
+      value: DialogManager
       objectReference: {fileID: 0}
     - target: {fileID: 5911023598691558996, guid: 637d2c7ec88f1b743a9cb4103c514fe2, type: 3}
       propertyPath: m_UiScaleMode

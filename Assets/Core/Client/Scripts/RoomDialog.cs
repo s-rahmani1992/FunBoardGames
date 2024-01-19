@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace OnlineBoardGames
 {
-    public class RoomDialog : BaseDialog
+    public class RoomDialog : BaseDialog, IDataDialog<(LobbyManager lobbyManager, BoardGame gameType, string roomName, int? roomId)>
     {
         [SerializeField] RectTransform playersPanel;
         [SerializeField] RoomPlayerUI roomPlyerUI;
@@ -21,14 +21,6 @@ namespace OnlineBoardGames
         string roomName;
         BoardGame gameType;
         int? roomId;
-
-        public void Initialize(LobbyManager lobbyManager, BoardGame gameType, string roomName, int? roomId = null)
-        {
-            this.lobbyManager = lobbyManager;
-            this.gameType = gameType;
-            this.roomId = roomId;
-            this.roomName = roomName;
-        }
 
         public override void Show()
         {
@@ -145,6 +137,14 @@ namespace OnlineBoardGames
             yield return new WaitForSeconds(3);
             logTxt.text = currentTxt;
             toast = null;
+        }
+
+        public void Initialize((LobbyManager lobbyManager, BoardGame gameType, string roomName, int? roomId) data)
+        {
+            lobbyManager = data.lobbyManager;
+            gameType = data.gameType;
+            roomId = data.roomId;
+            roomName = data.roomName;
         }
     }
 }

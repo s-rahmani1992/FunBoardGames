@@ -1,4 +1,3 @@
-using FishNet.Managing.Client;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,6 +11,7 @@ namespace OnlineBoardGames
         [SerializeField] Transform content;
         [SerializeField] TMP_Dropdown dropDown;
         [SerializeField] TMP_Dropdown listDropDown;
+        [SerializeField] RoomDialog roomDialog;
 
         LobbyManager lobbyManager;
         BoardGame selectedCreateGame;
@@ -34,11 +34,6 @@ namespace OnlineBoardGames
                 new TMP_Dropdown.OptionData(BoardGame.CantStop.ToString()),
             });
             listDropDown.onValueChanged.AddListener((v) => selectedListGame = (BoardGame)v);
-            //if (networkManager.OverrideGame)
-            //{
-            //    networkManager.JoinedRoom += OnJoinedRoom;
-            //    NetworkClient.Send(new JoinMatchMessage { matchID = GameNetworkManager.TestGuid });
-            //}
         }
 
         private void OnRoomListReceived(RoomData[] list)
@@ -55,18 +50,13 @@ namespace OnlineBoardGames
 
         private void OnJoinClicked(RoomUI r)
         {
-            DialogManager.Instance.SpawnDialog<RoomDialog>(DialogShowOptions.OverAll, (dialog) =>
-            {
-                (dialog as RoomDialog).Initialize(lobbyManager, r.roomData.GameType, r.roomData.Name, r.roomData.Id);
-            });
+            DialogManager.Instance.ShowDialog(roomDialog, DialogShowOptions.OverAll, (lobbyManager, r.roomData.GameType, r.roomData.Name, (int?)(r.roomData.Id)));
         }
 
         public void SendCreateRoom()
         {
-            DialogManager.Instance.SpawnDialog<RoomDialog>(DialogShowOptions.OverAll, (dialog) =>
-            {
-                (dialog as RoomDialog).Initialize(lobbyManager, selectedCreateGame, roomNameIn.text);
-            });
+            int? g = null;
+            DialogManager.Instance.ShowDialog(roomDialog, DialogShowOptions.OverAll, (lobbyManager, selectedCreateGame, roomNameIn.text, g));
         }
 
         public void SendRoomListRequest()

@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace OnlineBoardGames
 {
@@ -13,7 +15,7 @@ namespace OnlineBoardGames
 
     public class DialogManager : MonoBehaviour
     {
-        [SerializeField] UnityEngine.UI.GraphicRaycaster raycaster;
+        [SerializeField] GraphicRaycaster raycaster;
         [SerializeField] BaseDialog[] allDialog;
 
         List<BaseDialog> opendialogs = new();
@@ -42,6 +44,19 @@ namespace OnlineBoardGames
             CloseAllDialogs();
         }
 
+        public void ShowDialog<TDialog>(TDialog dialog, DialogShowOptions showOption) where TDialog : BaseDialog
+        {
+            var createdDialog = Instantiate(dialog, transform);
+            ArrangeDialog(createdDialog, showOption);
+        }
+
+        public void ShowDialog<TDialog, TData>(TDialog dialog, DialogShowOptions showOption, TData data) where TDialog : BaseDialog, IDataDialog<TData>
+        {
+            var createdDialog = Instantiate(dialog, transform);
+            createdDialog.Initialize(data);
+            ArrangeDialog(createdDialog, showOption);
+        }
+
         public T SpawnDialog<T>(DialogShowOptions option, System.Action<BaseDialog> onSpawn = null) where T : BaseDialog
         {
             T dialog = null;
@@ -56,7 +71,12 @@ namespace OnlineBoardGames
 
             if (dialog == null) return dialog;
             dialog.OnSpawned = onSpawn;
+            ArrangeDialog(dialog, option);
+            return dialog;
+        }
 
+        void ArrangeDialog(BaseDialog dialog, DialogShowOptions option)
+        {
             if (option == DialogShowOptions.OverAll)
             {
                 if (opendialogs.Count == 0)
@@ -81,7 +101,6 @@ namespace OnlineBoardGames
                 }
             }
             dialog.canvas.sortingOrder = opendialogs.Count;
-            return dialog;
         }
 
         public void CloseDialog(BaseDialog dialog)
