@@ -32,8 +32,12 @@ SpriteAtlas:
     secondaryTextureSettings: {}
     variantMultiplier: 1
     packables:
+    - {fileID: 2800000, guid: ca57712949154d24bb3a925122939dfc, type: 3}
     - {fileID: 2800000, guid: 80c95e69547b18b4cb749854f4501bb5, type: 3}
+    - {fileID: 2800000, guid: 28b131dfcb86b584fa547b3be5d248ea, type: 3}
+    - {fileID: 2800000, guid: e42b42e11bbd3e0449c096d6ee95076b, type: 3}
     - {fileID: 2800000, guid: 98ce4598509cbdf449a5986b1a5420ec, type: 3}
+    - {fileID: 2800000, guid: 54828dc6f9970794caccfaf4f9b424ce, type: 3}
     - {fileID: 2800000, guid: 063fc465a77b67640b2911e70dc99321, type: 3}
     - {fileID: 2800000, guid: d0661dd220acd7c4abb96bc2a176194a, type: 3}
     bindAsDefault: 1
@@ -41,15 +45,23 @@ SpriteAtlas:
     cachedData: {fileID: 0}
   m_MasterAtlas: {fileID: 0}
   m_PackedSprites:
+  - {fileID: 21300000, guid: e42b42e11bbd3e0449c096d6ee95076b, type: 3}
   - {fileID: 21300000, guid: d0661dd220acd7c4abb96bc2a176194a, type: 3}
   - {fileID: 21300000, guid: 063fc465a77b67640b2911e70dc99321, type: 3}
+  - {fileID: 21300000, guid: 54828dc6f9970794caccfaf4f9b424ce, type: 3}
   - {fileID: 21300000, guid: 98ce4598509cbdf449a5986b1a5420ec, type: 3}
+  - {fileID: 21300000, guid: ca57712949154d24bb3a925122939dfc, type: 3}
   - {fileID: 21300000, guid: 80c95e69547b18b4cb749854f4501bb5, type: 3}
+  - {fileID: 21300000, guid: 28b131dfcb86b584fa547b3be5d248ea, type: 3}
   m_PackedSpriteNamesToIndex:
+  - button-purple
   - white-panel1
   - panel-2
+  - panel-1
   - Loading-icon
+  - button-1
   - button-green
+  - button-orange
   m_RenderDataMap: {}
-  m_Tag: New Sprite Atlas
+  m_Tag: MainUI
   m_IsVariant: 0

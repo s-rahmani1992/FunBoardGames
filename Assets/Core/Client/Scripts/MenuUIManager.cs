@@ -1,39 +1,29 @@
+using FishNet.Managing;
+using FishNet.Managing.Client;
+using System.Linq;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
-namespace OnlineBoardGames
+namespace OnlineBoardGames.Client
 {
     public class MenuUIManager : MonoBehaviour
     {
-        [SerializeField] InputField roomNameIn;
+        [SerializeField] TMP_Text playerNameText;
         [SerializeField] RoomUI roomUI;
         [SerializeField] Transform content;
-        [SerializeField] TMP_Dropdown dropDown;
-        [SerializeField] TMP_Dropdown listDropDown;
         [SerializeField] RoomDialog roomDialog;
 
         LobbyManager lobbyManager;
-        BoardGame selectedCreateGame;
         BoardGame selectedListGame;
+        ClientManager clientManager;
 
         // Start is called before the first frame update
         void Start()
         {
             lobbyManager = FindObjectOfType<LobbyManager>();
             lobbyManager.RoomListReceived += OnRoomListReceived;
-            dropDown.AddOptions(new System.Collections.Generic.List<TMP_Dropdown.OptionData>
-            {
-                new TMP_Dropdown.OptionData(BoardGame.SET.ToString()),
-                new TMP_Dropdown.OptionData(BoardGame.CantStop.ToString()),
-            });
-            dropDown.onValueChanged.AddListener((v) => selectedCreateGame = (BoardGame)v);
-            listDropDown.AddOptions(new System.Collections.Generic.List<TMP_Dropdown.OptionData>
-            {
-                new TMP_Dropdown.OptionData(BoardGame.SET.ToString()),
-                new TMP_Dropdown.OptionData(BoardGame.CantStop.ToString()),
-            });
-            listDropDown.onValueChanged.AddListener((v) => selectedListGame = (BoardGame)v);
+            clientManager = NetworkManager.Instances.ElementAt(0).ClientManager;
+            playerNameText.text = (clientManager.Connection.CustomData as AuthData).playerName;
         }
 
         private void OnRoomListReceived(RoomData[] list)
@@ -51,12 +41,6 @@ namespace OnlineBoardGames
         private void OnJoinClicked(RoomUI r)
         {
             DialogManager.Instance.ShowDialog(roomDialog, DialogShowOptions.OverAll, (lobbyManager, r.roomData.GameType, r.roomData.Name, (int?)(r.roomData.Id)));
-        }
-
-        public void SendCreateRoom()
-        {
-            int? g = null;
-            DialogManager.Instance.ShowDialog(roomDialog, DialogShowOptions.OverAll, (lobbyManager, selectedCreateGame, roomNameIn.text, g));
         }
 
         public void SendRoomListRequest()

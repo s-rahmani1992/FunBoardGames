@@ -60,6 +60,9 @@ namespace OnlineBoardGames
 
             conn.Broadcast(authResponseMessage, false);
             OnAuthenticationResult?.Invoke(conn, authenticated);
+
+            if(authenticated)
+                conn.Broadcast(new AuthSyncMessage { authData = conn.CustomData as AuthData }, false);
         }
     }
 }
