@@ -142,7 +142,7 @@ namespace OnlineBoardGames
 
         IEnumerator CloseAsync(BaseDialog dialog)
         {
-            dialog.Close();
+            dialog.OnClose();
             yield return new WaitForSeconds(dialog.closeTime);
             Destroy(dialog.gameObject);
             RefreshDialogs();
@@ -157,8 +157,9 @@ namespace OnlineBoardGames
 
         IEnumerator CloseShowAsync(BaseDialog oldDialog, BaseDialog newDialog)
         {
-            oldDialog.Close();
+            oldDialog.OnClose();
             yield return new WaitForSeconds(oldDialog.closeTime);
+            Destroy(oldDialog.gameObject);
             newDialog.Show();
             yield return new WaitForSeconds(newDialog.showTime);
             RefreshDialogs();

@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -33,8 +31,12 @@ namespace OnlineBoardGames
 
         public virtual void Close()
         {
-            if (DialogAnimator != null) DialogAnimator.SetTrigger("close");
             DialogManager.Instance.CloseDialog(this);
+        }
+
+        public virtual void OnClose() 
+        {
+            if (DialogAnimator != null) DialogAnimator.SetTrigger("close");
         }
     }
 }
