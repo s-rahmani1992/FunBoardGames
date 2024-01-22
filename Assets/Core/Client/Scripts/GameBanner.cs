@@ -14,6 +14,7 @@ namespace OnlineBoardGames.Client
         [SerializeField] Button joinRandomButton;
         [SerializeField] TMP_InputField roomNameField;
         [SerializeField] RoomDialog roomDialog;
+        [SerializeField] RoomListDialog roomListDialog;
 
         LobbyManager lobbyManager;
 
@@ -40,7 +41,7 @@ namespace OnlineBoardGames.Client
 
         private void OnJoinListClicked()
         {
-            throw new NotImplementedException();
+            DialogManager.Instance.ShowDialog(roomListDialog, DialogShowOptions.OverAll, gameType);
         }
 
         private void OnCreateClicked()

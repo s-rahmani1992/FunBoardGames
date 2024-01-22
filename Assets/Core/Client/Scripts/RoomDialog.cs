@@ -1,10 +1,11 @@
 using DG.Tweening;
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace OnlineBoardGames
+namespace OnlineBoardGames.Client
 {
     public class RoomDialog : BaseDialog, IDataDialog<(LobbyManager lobbyManager, BoardGame gameType, string roomName, int? roomId)>
     {
@@ -12,8 +13,10 @@ namespace OnlineBoardGames
         [SerializeField] RoomPlayerUI roomPlyerUI;
         [SerializeField] Button readyBtn;
         [SerializeField] Button leaveBtn;
-        [SerializeField] Text roomTxt;
-        [SerializeField] Text logTxt;
+        [SerializeField] TMP_Text gameTxt;
+        [SerializeField] TMP_Text roomTxt;
+        [SerializeField] TMP_Text logTxt;
+        [SerializeField] GameObject waitingObject;
 
         RoomManager roomManager;
         Coroutine toast;
@@ -24,9 +27,13 @@ namespace OnlineBoardGames
 
         public override void Show()
         {
-            base.Show(); 
+            base.Show();
+            gameTxt.text = gameType.ToString();
             lobbyManager = FindObjectOfType<LobbyManager>();
             lobbyManager.JoinedRoom += OnRoomGenerated;
+            readyBtn.onClick.AddListener(OnReadyClicked);
+            leaveBtn.onClick.AddListener(OnLeaveClicked);
+            waitingObject.SetActive(true);
 
             if (roomId == null)
                 lobbyManager.CmdCreateRoom(gameType, roomName);
@@ -34,9 +41,19 @@ namespace OnlineBoardGames
                 lobbyManager.CmdJoinRoom(gameType, roomId.Value);
         }
 
-        public override void Close()
+        public override void OnClose()
         {
-            base.Close();
+            lobbyManager.JoinedRoom -= OnRoomGenerated;
+
+            if (roomManager != null)
+            {
+                roomManager.Leave -= Close;
+                roomManager.PlayerJoined -= OnPlayerJoined;
+                roomManager.PlayerLeft -= OnPlayerLeft;
+                roomManager.AllPlayersReady -= OnAllPlayersReady;
+            }
+
+            base.OnClose();
         }
 
         private void OnPlayerAdded(BoardGamePlayer player)
@@ -62,6 +79,7 @@ namespace OnlineBoardGames
             roomManager = room;
             DontDestroyOnLoad(roomManager.gameObject);
             roomTxt.text = room.Name;
+            waitingObject.SetActive(false);
 
             foreach (var p in roomManager.Players)
                 OnPlayerAdded(p);
@@ -90,31 +108,19 @@ namespace OnlineBoardGames
             Log($"{(player.IsOwner ? "you" : player.Name)} Joined the room");
         }
 
-        private void OnDestroy()
-        {
-            lobbyManager.JoinedRoom -= OnRoomGenerated;
-
-            if (roomManager != null)
-            {
-                roomManager.Leave -= Close;
-                roomManager.PlayerJoined -= OnPlayerJoined;
-                roomManager.PlayerLeft -= OnPlayerLeft;
-                roomManager.AllPlayersReady -= OnAllPlayersReady;
-            }
-        }
-
         public RoomPlayerUI GetUI(int number)
         {
             if (number < 1) return null;
             return playersPanel.GetChild(number - 1).GetComponent<RoomPlayerUI>();
         }
 
-        public void ReaveRoom()
+        void OnLeaveClicked()
         {
+            waitingObject.SetActive(true);
             lobbyManager.CmdLeaveRoom();
         }
 
-        public void SendReady()
+        void OnReadyClicked()
         {
             roomManager.LocalPlayer.CmdReady();
         }

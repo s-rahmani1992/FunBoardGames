@@ -143,7 +143,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Create
+  m_text: Game Type
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ae8e96a325c267f47bb0c353c48c7ba1, type: 2}
   m_sharedMaterial: {fileID: -1719405759251356643, guid: ae8e96a325c267f47bb0c353c48c7ba1, type: 2}
@@ -271,6 +271,7 @@ MonoBehaviour:
   joinRandomButton: {fileID: 4966818023696466642}
   roomNameField: {fileID: 2871761412448257600}
   roomDialog: {fileID: 1808611103296327797, guid: c4608d90244b1ca428081a6efd97fdbd, type: 3}
+  roomListDialog: {fileID: 879605294067387099, guid: 16dd8212a9c523345a278e79500648af, type: 3}
 --- !u!1 &3786500813267671711
 GameObject:
   m_ObjectHideFlags: 0
@@ -853,7 +854,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8808527151278746660, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8808527151278746663, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: m_Pivot.x
@@ -925,7 +926,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8808527151278746663, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 163
+      value: 63.458
       objectReference: {fileID: 0}
     - target: {fileID: 8808527151278746663, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -992,6 +993,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 3786500813283618909}
     m_Modifications:
+    - target: {fileID: 1393531652056081227, guid: cc7447935e848dd4d938c3b6dbefa33e, type: 3}
+      propertyPath: m_text
+      value: Enter room Name..
+      objectReference: {fileID: 0}
     - target: {fileID: 1393531652056081227, guid: cc7447935e848dd4d938c3b6dbefa33e, type: 3}
       propertyPath: m_fontSize
       value: 26.05

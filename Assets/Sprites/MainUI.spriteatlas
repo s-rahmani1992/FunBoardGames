@@ -40,13 +40,19 @@ SpriteAtlas:
     - {fileID: 2800000, guid: 54828dc6f9970794caccfaf4f9b424ce, type: 3}
     - {fileID: 2800000, guid: 063fc465a77b67640b2911e70dc99321, type: 3}
     - {fileID: 2800000, guid: d0661dd220acd7c4abb96bc2a176194a, type: 3}
+    - {fileID: 2800000, guid: fff053b404a56634982ba92962bd8aca, type: 3}
+    - {fileID: 2800000, guid: ed8dc344e6d4c1d4fab8683d9e6ed6d9, type: 3}
+    - {fileID: 2800000, guid: 34706d42502b9b74fa4480e6516c6aa3, type: 3}
     bindAsDefault: 1
     isAtlasV2: 0
     cachedData: {fileID: 0}
   m_MasterAtlas: {fileID: 0}
   m_PackedSprites:
   - {fileID: 21300000, guid: e42b42e11bbd3e0449c096d6ee95076b, type: 3}
+  - {fileID: 21300000, guid: 34706d42502b9b74fa4480e6516c6aa3, type: 3}
   - {fileID: 21300000, guid: d0661dd220acd7c4abb96bc2a176194a, type: 3}
+  - {fileID: 21300000, guid: ed8dc344e6d4c1d4fab8683d9e6ed6d9, type: 3}
+  - {fileID: 21300000, guid: fff053b404a56634982ba92962bd8aca, type: 3}
   - {fileID: 21300000, guid: 063fc465a77b67640b2911e70dc99321, type: 3}
   - {fileID: 21300000, guid: 54828dc6f9970794caccfaf4f9b424ce, type: 3}
   - {fileID: 21300000, guid: 98ce4598509cbdf449a5986b1a5420ec, type: 3}
@@ -55,7 +61,10 @@ SpriteAtlas:
   - {fileID: 21300000, guid: 28b131dfcb86b584fa547b3be5d248ea, type: 3}
   m_PackedSpriteNamesToIndex:
   - button-purple
+  - title-bg
   - white-panel1
+  - item-bg
+  - close
   - panel-2
   - panel-1
   - Loading-icon
