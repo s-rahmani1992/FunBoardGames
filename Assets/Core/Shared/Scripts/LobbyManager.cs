@@ -1,13 +1,15 @@
-using System.Collections.Generic;
 using System;
+using System.Threading;
+using System.Collections.Generic;
 using System.Collections.Concurrent;
+
 using FishNet.Object;
+using FishNet.Transporting;
 using FishNet.Connection;
 using FishNet.Managing.Server;
-using UnityEngine;
 using FishNet.Component.Observing;
-using System.Threading;
-using FishNet.Transporting;
+
+using UnityEngine;
 
 namespace OnlineBoardGames
 {
@@ -54,7 +56,7 @@ namespace OnlineBoardGames
         {
             if(e.ConnectionState == RemoteConnectionState.Stopped)
             {
-                CmdLeaveRoom(conn);
+                LeavePlayer(conn);
             }
         }
 
@@ -88,21 +90,7 @@ namespace OnlineBoardGames
         [ServerRpc(RequireOwnership = false)]
         public void CmdLeaveRoom(NetworkConnection conn = null)
         {
-            var data = conn.CustomData as AuthData;
-
-            if(data.roomID != -1)
-            {
-                RoomManager r = rooms[data.gameType][data.roomID];
-                r.Remove(conn.FirstObject.GetComponent<BoardGamePlayer>());
-                MatchCondition.RemoveFromMatch(r.Id, conn);
-
-                if(r.PlayerCount == 0)
-                {
-                    rooms[data.gameType].TryRemove(data.roomID, out r);
-                    serverManager.Despawn(r.NetworkObject);
-                    (conn.CustomData as AuthData).roomID = -1;
-                }
-            }
+            LeavePlayer(conn);
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -130,9 +118,29 @@ namespace OnlineBoardGames
             RpcSendRoom(conn, room);
         }
 
+        [Server]
+        void LeavePlayer(NetworkConnection conn)
+        {
+            var data = conn.CustomData as AuthData;
+
+            if (data.roomID != -1)
+            {
+                RoomManager r = rooms[data.gameType][data.roomID];
+                r.Remove(conn.FirstObject.GetComponent<BoardGamePlayer>());
+                MatchCondition.RemoveFromMatch(r.Id, conn);
+
+                if (r.PlayerCount == 0)
+                {
+                    rooms[data.gameType].TryRemove(data.roomID, out r);
+                    serverManager.Despawn(r.NetworkObject);
+                    (conn.CustomData as AuthData).roomID = -1;
+                }
+            }
+        }
+
         #endregion
 
-        #region
+        #region Client
 
         [TargetRpc]
         void RpcSendRoomList(NetworkConnection _, RoomData[] rooms)

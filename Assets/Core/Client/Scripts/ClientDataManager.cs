@@ -49,7 +49,10 @@ namespace OnlineBoardGames.Client
                 disconnectFlag = true;
 
                 if (SceneManager.GetActiveScene().name != "Login")
+                {
+                    DialogManager.Instance.CloseAllDialogs();
                     SceneManager.LoadScene("Login");
+                }
             }
         }
 

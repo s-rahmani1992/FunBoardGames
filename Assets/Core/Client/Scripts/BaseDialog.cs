@@ -31,7 +31,8 @@ namespace OnlineBoardGames
 
         public virtual void Close()
         {
-            DialogManager.Instance.CloseDialog(this);
+            if(DialogManager.Instance != null)
+                DialogManager.Instance.CloseDialog(this);
         }
 
         public virtual void OnClose() 
