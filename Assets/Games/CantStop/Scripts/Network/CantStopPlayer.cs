@@ -3,7 +3,7 @@ using FishNet.Object.Synchronizing;
 using System;
 using System.Collections.Generic;
 
-namespace OnlineBoardGames.CantStop
+namespace FunBoardGames.CantStop
 {
     public class CantStopPlayer : BoardGamePlayer
     {

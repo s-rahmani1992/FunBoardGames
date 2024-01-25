@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace OnlineBoardGames
+namespace FunBoardGames
 {
     public enum DialogShowOptions
     {

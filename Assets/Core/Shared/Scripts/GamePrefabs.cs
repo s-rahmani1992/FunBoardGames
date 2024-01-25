@@ -3,7 +3,7 @@ using RotaryHeart.Lib.SerializableDictionary;
 using System;
 using UnityEngine;
 
-namespace OnlineBoardGames 
+namespace FunBoardGames 
 {
     [CreateAssetMenu]
     public class GamePrefabs : ScriptableObject

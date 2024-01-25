@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace OnlineBoardGames.CantStop
+namespace FunBoardGames.CantStop
 {
     public class BoardCell : MonoBehaviour
     {

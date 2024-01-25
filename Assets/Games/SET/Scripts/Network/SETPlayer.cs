@@ -3,7 +3,7 @@ using FishNet.Object.Synchronizing;
 using System;
 
 // NOTE: Do not put objects in DontDestroyOnLoad (DDOL) in Awake.  You can do that in Start instead.
-namespace OnlineBoardGames.SET
+namespace FunBoardGames.SET
 {
     public class SETPlayer : BoardGamePlayer
     {

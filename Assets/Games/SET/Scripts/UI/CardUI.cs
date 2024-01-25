@@ -2,7 +2,7 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace OnlineBoardGames.SET
+namespace FunBoardGames.SET
 {
     public class CardUI : MonoBehaviour, IPoolable
     {

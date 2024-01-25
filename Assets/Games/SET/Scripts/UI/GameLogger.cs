@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace OnlineBoardGames.SET{
+namespace FunBoardGames.SET{
     public class GameLogger : MonoBehaviour
     {
         [SerializeField] Text statTxt;

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace OnlineBoardGames.CantStop
+namespace FunBoardGames.CantStop
 {
     public class CantStopPlayerUI : MonoBehaviour
     {

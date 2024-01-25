@@ -4,7 +4,7 @@ using FishNet.Transporting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace OnlineBoardGames.Client
+namespace FunBoardGames.Client
 {
     public class ClientDataManager : MonoBehaviour
     {

@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-namespace OnlineBoardGames.CantStop
+namespace FunBoardGames.CantStop
 {
     [Serializable]
     public class DiceData

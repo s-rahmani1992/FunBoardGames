@@ -1,4 +1,4 @@
-namespace OnlineBoardGames.CantStop
+namespace FunBoardGames.CantStop
 {
     [System.Serializable]
     public enum PlayerColor

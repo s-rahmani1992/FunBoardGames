@@ -4,7 +4,7 @@ using FishNet.Authenticating;
 using FishNet.Connection;
 using FishNet.Managing;
 
-namespace OnlineBoardGames
+namespace FunBoardGames
 {
     public class AuthData
     {

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace OnlineBoardGames
+namespace FunBoardGames
 {
     [RequireComponent(typeof(GraphicRaycaster))]
     public class BaseDialog : MonoBehaviour

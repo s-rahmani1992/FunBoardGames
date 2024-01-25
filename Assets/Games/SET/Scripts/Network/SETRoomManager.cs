@@ -7,7 +7,7 @@ using FishNet.Object.Synchronizing;
 using FishNet.Object;
 using FishNet.Connection;
 
-namespace OnlineBoardGames.SET 
+namespace FunBoardGames.SET 
 {
     public class SETRoomManager : RoomManager
     {

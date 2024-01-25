@@ -1,6 +1,6 @@
 using System;
 
-namespace OnlineBoardGames.SET
+namespace FunBoardGames.SET
 {
     [Serializable]
     public enum SETGameState : byte

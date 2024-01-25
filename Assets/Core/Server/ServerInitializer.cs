@@ -2,7 +2,7 @@ using FishNet.Managing.Server;
 using FishNet.Transporting;
 using UnityEngine;
 
-namespace OnlineBoardGames
+namespace FunBoardGames
 {
     public class ServerInitializer : MonoBehaviour
     {

@@ -1,6 +1,6 @@
 using FishNet.Broadcast;
 
-namespace OnlineBoardGames
+namespace FunBoardGames
 {
     public struct AuthRequestMessage : IBroadcast
     {

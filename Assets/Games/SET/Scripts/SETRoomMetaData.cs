@@ -1,7 +1,7 @@
 using FishNet.Serializing;
 using System;
 
-namespace OnlineBoardGames.SET
+namespace FunBoardGames.SET
 {
     [Serializable]
     public class SETRoomMetaData

@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace OnlineBoardGames
+namespace FunBoardGames
 {
     public class RoomUI : MonoBehaviour
     {

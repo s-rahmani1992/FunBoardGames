@@ -1,4 +1,4 @@
-using OnlineBoardGames.SET;
+using FunBoardGames.SET;
 using UnityEngine;
 using UnityEngine.UI;
 

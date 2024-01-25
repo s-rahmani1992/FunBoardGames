@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace OnlineBoardGames.CantStop
+namespace FunBoardGames.CantStop
 {
     [CreateAssetMenu]
     public class CantStopAssetManager : ScriptableObject

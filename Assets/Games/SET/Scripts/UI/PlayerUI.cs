@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
-namespace OnlineBoardGames.SET
+namespace FunBoardGames.SET
 {
     public class PlayerUI : MonoBehaviour
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace OnlineBoardGames
+namespace FunBoardGames
 {
     public interface IPoolable
     {

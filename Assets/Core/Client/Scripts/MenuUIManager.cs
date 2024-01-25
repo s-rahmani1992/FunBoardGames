@@ -4,7 +4,7 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 
-namespace OnlineBoardGames.Client
+namespace FunBoardGames.Client
 {
     public class MenuUIManager : MonoBehaviour
     {

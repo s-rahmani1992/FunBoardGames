@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace OnlineBoardGames.Client
+namespace FunBoardGames.Client
 {
     public class RoomListDialog : BaseDialog, IDataDialog<BoardGame>
     {

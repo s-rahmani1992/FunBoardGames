@@ -1,7 +1,7 @@
 using FishNet.Serializing;
 using System;
 
-namespace OnlineBoardGames
+namespace FunBoardGames
 {
     [Serializable]
     public class RoomData

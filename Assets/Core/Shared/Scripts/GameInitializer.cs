@@ -2,7 +2,7 @@ using FishNet.Managing;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace OnlineBoardGames
+namespace FunBoardGames
 {
     public class GameInitializer : MonoBehaviour
     {

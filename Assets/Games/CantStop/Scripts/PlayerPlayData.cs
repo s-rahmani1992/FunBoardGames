@@ -2,7 +2,7 @@ using FishNet.Serializing;
 using System;
 using UnityEngine;
 
-namespace OnlineBoardGames.CantStop
+namespace FunBoardGames.CantStop
 {
     [Serializable]
     public class PlayerPlayData

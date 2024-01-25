@@ -5,7 +5,7 @@ using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using System.Linq;
 
-namespace OnlineBoardGames 
+namespace FunBoardGames 
 {
     public abstract class RoomManager : NetworkBehaviour
     {

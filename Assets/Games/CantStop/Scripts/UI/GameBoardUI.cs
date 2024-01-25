@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace OnlineBoardGames.CantStop
+namespace FunBoardGames.CantStop
 {
     public class GameBoardUI : MonoBehaviour
     {

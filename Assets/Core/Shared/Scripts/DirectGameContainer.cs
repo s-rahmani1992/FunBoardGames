@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace OnlineBoardGames
+namespace FunBoardGames
 {
     [CreateAssetMenu]
     public class DirectGameContainer : ScriptableObject

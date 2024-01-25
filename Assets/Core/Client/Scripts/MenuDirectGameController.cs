@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace OnlineBoardGames
+namespace FunBoardGames
 {
     public class MenuDirectGameController : MonoBehaviour
     {

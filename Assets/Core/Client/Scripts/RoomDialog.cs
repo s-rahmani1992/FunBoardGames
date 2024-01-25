@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace OnlineBoardGames.Client
+namespace FunBoardGames.Client
 {
     public class RoomDialog : BaseDialog, IDataDialog<(LobbyManager lobbyManager, BoardGame gameType, string roomName, int? roomId)>
     {

@@ -11,7 +11,7 @@ using FishNet.Component.Observing;
 
 using UnityEngine;
 
-namespace OnlineBoardGames
+namespace FunBoardGames
 {
     public class LobbyManager : NetworkBehaviour
     {

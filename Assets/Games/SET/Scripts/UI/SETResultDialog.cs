@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace OnlineBoardGames.SET
+namespace FunBoardGames.SET
 {
     public class SETResultDialog : BaseDialog
     {

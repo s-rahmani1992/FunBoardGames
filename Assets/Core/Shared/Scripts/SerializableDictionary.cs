@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEngine;
 
 
-namespace OnlineBoardGames
+namespace FunBoardGames
 {
     [Serializable]
     public class SerializableDictionary<TKey, TValue>

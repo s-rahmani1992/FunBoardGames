@@ -3,7 +3,7 @@ using System;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 
-namespace OnlineBoardGames
+namespace FunBoardGames
 {
     public class BoardGamePlayer : NetworkBehaviour
     {

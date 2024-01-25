@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace OnlineBoardGames.SET {
+namespace FunBoardGames.SET {
     public class SETPlayerUIResult : MonoBehaviour
     {
         [SerializeField] Text rankText;

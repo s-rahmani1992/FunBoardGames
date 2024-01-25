@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace OnlineBoardGames.SET
+namespace FunBoardGames.SET
 {
     public class SETVoteDialog : BaseDialog
     {

@@ -3,7 +3,7 @@ using System;
 using FishNet.Serializing;
 using FishNet.Object;
 
-namespace OnlineBoardGames.SET
+namespace FunBoardGames.SET
 {
     [Serializable]
     public class CardData

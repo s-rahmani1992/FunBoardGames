@@ -10,7 +10,7 @@ using FishNet.Managing;
 using FishNet.Managing.Client;
 using FishNet.Transporting;
 
-namespace OnlineBoardGames.Client
+namespace FunBoardGames.Client
 {
     public class LoginUIManager : MonoBehaviour
     {
