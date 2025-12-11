@@ -94,7 +94,7 @@ namespace FishNet.Example.Prediction.Rigidbodies
         public void SetVelocity(Vector3 value)
         {
             Rigidbody rb = GetComponent<Rigidbody>();
-            rb.velocity = value;
+            rb.linearVelocity = value;
         }
 
         /// <summary>

@@ -29,7 +29,7 @@ class SceneDropdown : EditorToolbarDropdown
             menu.contentContainer.Add(button);
         }
 
-        menu.DropDown(parent.worldBound, parent);
+        menu.DropDown(parent.worldBound, parent, DropdownMenuSizeMode.Auto);
     }
 }
 
