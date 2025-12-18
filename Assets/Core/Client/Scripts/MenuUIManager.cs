@@ -1,6 +1,3 @@
-using FishNet.Managing;
-using FishNet.Managing.Client;
-using System.Linq;
 using TMPro;
 using UnityEngine;
 
@@ -8,15 +5,13 @@ namespace FunBoardGames.Client
 {
     public class MenuUIManager : MonoBehaviour
     {
+        [SerializeField] UserProfile userProfile;
         [SerializeField] TMP_Text playerNameText;
-
-        ClientManager clientManager;
 
         // Start is called before the first frame update
         void Start()
         {
-            clientManager = NetworkManager.Instances.ElementAt(0).ClientManager;
-            playerNameText.text = (clientManager.Connection.CustomData as AuthData).playerName;
+            playerNameText.text = userProfile.PlayerName;
         }
     }
 }

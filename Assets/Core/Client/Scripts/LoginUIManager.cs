@@ -1,14 +1,11 @@
 using DG.Tweening;
 using TMPro;
-using System.Linq;
 
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-using FishNet.Managing;
-using FishNet.Managing.Client;
-using FishNet.Transporting;
+using FunBoardGames.Network;
 
 namespace FunBoardGames.Client
 {
@@ -18,33 +15,30 @@ namespace FunBoardGames.Client
         [SerializeField] Button loginButton;
         [SerializeField] TMP_Text messageLogText;
         [SerializeField] GameObject waitObject;
+        [SerializeField] UserProfile userProfile;
 
-        ClientManager clientManager;
+        IAuthHandler authHandler;
 
         private void Start()
         {
-            clientManager = NetworkManager.Instances.ElementAt(0).ClientManager;
-            clientManager.OnClientConnectionState += OnClientConnectionState;
-            clientManager.RegisterBroadcast<AuthResponseMessage>(OnAuthResponseMessage);
+            authHandler = NetworkSingleton.NetworkManager.AuthHandler;
+            userProfile.Register(authHandler);
+            authHandler.OnAuthReceived += OnAuthResponseMessage;
             loginButton.onClick.AddListener(StartLogin);
             nameField.onValueChanged.AddListener(OnNameFieldChanged);
             OnNameFieldChanged(nameField.text);
             SetLoginProcess(false);
-
-            if (ClientDataManager.CheckDisconnectFlag())
-                LogMessage("Disconnected");
         }
 
         private void OnDestroy()
         {
-            clientManager.OnClientConnectionState -= OnClientConnectionState;
-            clientManager.UnregisterBroadcast<AuthResponseMessage>(OnAuthResponseMessage);
+            authHandler.OnAuthReceived -= OnAuthResponseMessage;
         }
 
-        private void OnAuthResponseMessage(AuthResponseMessage msg)
+        private void OnAuthResponseMessage(Network.LoginResponseMsg msg)
         {
-            if (msg.resultCode != 0)
-                OnLoginFailed(msg.message);
+            if (msg.Success == false)
+                OnLoginFailed(msg.ErrorMessage);
             else
                 OnLoginSuccess();
         }
@@ -54,20 +48,6 @@ namespace FunBoardGames.Client
             loginButton.gameObject.SetActive(!isProcess);
             nameField.interactable = !isProcess;
             waitObject.SetActive(isProcess);
-        }
-
-        private void OnClientConnectionState(ClientConnectionStateArgs e)
-        {
-            if (e.ConnectionState == LocalConnectionState.Started)
-            {
-                clientManager.Broadcast(new AuthRequestMessage { requestedName = nameField.text });
-                return;
-            }
-            if (e.ConnectionState == LocalConnectionState.Stopped)
-            {
-                OnLoginFailed("Connection Failed");
-                return;
-            }
         }
 
         private void OnLoginSuccess()
@@ -89,8 +69,11 @@ namespace FunBoardGames.Client
 
         private void StartLogin()
         {
-            clientManager.StartConnection();
             SetLoginProcess(true);
+            authHandler.Authenticate(new LoginRequestMsg()
+            {
+                PlayerName = nameField.text
+            });
         }
 
         private void LogMessage(string message, float duration = 3)
