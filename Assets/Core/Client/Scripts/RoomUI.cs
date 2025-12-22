@@ -1,3 +1,4 @@
+using FunBoardGames.Network;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,9 +12,9 @@ namespace FunBoardGames
 
         public event Action<RoomUI> JoinClicked;
 
-        public RoomData roomData { get; private set; }
+        public RoomInfo roomData { get; private set; }
 
-        public void Initialize(RoomData roomData)
+        public void Initialize(RoomInfo roomData)
         {
             this.roomData = roomData;
             nameTxt.text = roomData.Name;

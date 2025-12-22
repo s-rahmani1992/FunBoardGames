@@ -1,11 +1,14 @@
 
+using System;
+
 namespace FunBoardGames.Network
 {
-    public interface INetworkManager
+    public interface INetworkManager : IDisposable
     {
-        event System.Action OnInitialized;
-        void Initialize();
-
         IAuthHandler AuthHandler { get; }
+        ILobbyHandler LobbyHandler { get; }
+
+        event Action OnInitialized;
+        void Initialize();
     }
 }

@@ -1,5 +1,7 @@
 using DG.Tweening;
+using FunBoardGames.Network;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -7,7 +9,7 @@ using UnityEngine.UI;
 
 namespace FunBoardGames.Client
 {
-    public class RoomDialog : BaseDialog, IDataDialog<(LobbyManager lobbyManager, BoardGame gameType, string roomName, int? roomId)>
+    public class RoomDialog : BaseDialog, IDataDialog<(ILobbyHandler lobbyManager, BoardGame gameType, string roomName, int? roomId)>
     {
         [SerializeField] RectTransform playersPanel;
         [SerializeField] RoomPlayerUI roomPlyerUI;
@@ -17,10 +19,11 @@ namespace FunBoardGames.Client
         [SerializeField] TMP_Text roomTxt;
         [SerializeField] TMP_Text logTxt;
         [SerializeField] GameObject waitingObject;
+        [SerializeField] SceneAssetMap sceneMap;
 
-        RoomManager roomManager;
         Coroutine toast;
-        LobbyManager lobbyManager;
+        ILobbyHandler lobbyManager;
+        IGameHandler gameHandler;
         string roomName;
         BoardGame gameType;
         int? roomId;
@@ -29,42 +32,53 @@ namespace FunBoardGames.Client
         {
             base.Show();
             gameTxt.text = gameType.ToString();
-            lobbyManager = FindObjectOfType<LobbyManager>();
-            lobbyManager.JoinedRoom += OnRoomGenerated;
+            lobbyManager.JoinedGame += OnRoomGenerated;
             readyBtn.onClick.AddListener(OnReadyClicked);
             leaveBtn.onClick.AddListener(OnLeaveClicked);
             waitingObject.SetActive(true);
 
             if (roomId == null)
-                lobbyManager.CmdCreateRoom(gameType, roomName);
+                lobbyManager.CreateRoom(gameType, roomName);
             else
-                lobbyManager.CmdJoinRoom(gameType, roomId.Value);
+                lobbyManager.JoinRoom(gameType, roomId.GetValueOrDefault());
+        }
+
+        private void OnRoomGenerated(IGameHandler handler, IEnumerable<IBoardGamePlayer> players)
+        {
+            gameHandler = handler;
+            roomTxt.text = roomName;
+            waitingObject.SetActive(false);
+
+            foreach (var p in players)
+                OnPlayerAdded(p);
+
+            gameHandler.PlayerJoined += OnPlayerJoined;
+            gameHandler.PlayerLeft += OnPlayerLeft;
+            gameHandler.AllPlayersReady += OnAllPlayersReady;
         }
 
         public override void OnClose()
         {
-            lobbyManager.JoinedRoom -= OnRoomGenerated;
+            lobbyManager.JoinedGame -= OnRoomGenerated;
 
-            if (roomManager != null)
+            if (gameHandler != null)
             {
-                roomManager.Leave -= Close;
-                roomManager.PlayerJoined -= OnPlayerJoined;
-                roomManager.PlayerLeft -= OnPlayerLeft;
-                roomManager.AllPlayersReady -= OnAllPlayersReady;
+                gameHandler.PlayerJoined -= OnPlayerJoined;
+                gameHandler.PlayerLeft -= OnPlayerLeft;
+                gameHandler.AllPlayersReady -= OnAllPlayersReady;
             }
 
             base.OnClose();
         }
 
-        private void OnPlayerAdded(BoardGamePlayer player)
+        private void OnPlayerAdded(IBoardGamePlayer player)
         {
             RoomPlayerUI UIPlayer = Instantiate(roomPlyerUI, playersPanel);
             UIPlayer.SetPlayer(player);
-            DontDestroyOnLoad(player.gameObject);
 
-            if (player.IsOwner)
+            if (player.IsMe)
             {
-                player.ReadyChanged += OnReadyChanged;
+                player.ReadyStatusChanged += OnReadyChanged;
             }
         }
 
@@ -74,38 +88,24 @@ namespace FunBoardGames.Client
             leaveBtn.interactable = !ready;
         }
 
-        private void OnRoomGenerated(RoomManager room)
-        {
-            roomManager = room;
-            DontDestroyOnLoad(roomManager.gameObject);
-            roomTxt.text = room.Name;
-            waitingObject.SetActive(false);
-
-            foreach (var p in roomManager.Players)
-                OnPlayerAdded(p);
-
-            roomManager.PlayerJoined += OnPlayerJoined;
-            roomManager.PlayerLeft += OnPlayerLeft;
-            roomManager.Leave += Close;
-            roomManager.AllPlayersReady += OnAllPlayersReady;
-        }
-
         private void OnAllPlayersReady()
         {
             logTxt.text = "Wait For Game to Load";
-            DOVirtual.DelayedCall(1, () => SceneManager.LoadScene(roomManager.GameScene));
+            DOVirtual.DelayedCall(1, () => SceneManager.LoadScene(sceneMap.GetScene(gameType)));
         }
 
-        private void OnPlayerLeft(BoardGamePlayer player)
+        private void OnPlayerLeft(IBoardGamePlayer player)
         {
-            if (!player.IsOwner)
+            if (!player.IsMe)
                 Log($"{player.Name} Left the room");
+            else
+                Close();
         }
 
-        private void OnPlayerJoined(BoardGamePlayer player)
+        private void OnPlayerJoined(IBoardGamePlayer player)
         {
             OnPlayerAdded(player);
-            Log($"{(player.IsOwner ? "you" : player.Name)} Joined the room");
+            Log($"{(player.IsMe ? "you" : player.Name)} Joined the room");
         }
 
         public RoomPlayerUI GetUI(int number)
@@ -117,12 +117,12 @@ namespace FunBoardGames.Client
         void OnLeaveClicked()
         {
             waitingObject.SetActive(true);
-            lobbyManager.CmdLeaveRoom();
+            gameHandler.LeaveGame();
         }
 
         void OnReadyClicked()
         {
-            roomManager.LocalPlayer.CmdReady();
+            gameHandler.ReadyUp();
         }
 
         void Log(string str)
@@ -145,7 +145,7 @@ namespace FunBoardGames.Client
             toast = null;
         }
 
-        public void Initialize((LobbyManager lobbyManager, BoardGame gameType, string roomName, int? roomId) data)
+        public void Initialize((ILobbyHandler lobbyManager, BoardGame gameType, string roomName, int? roomId) data)
         {
             lobbyManager = data.lobbyManager;
             gameType = data.gameType;

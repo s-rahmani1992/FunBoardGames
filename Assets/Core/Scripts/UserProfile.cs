@@ -1,13 +1,14 @@
 using FunBoardGames.Network;
-using System;
 using UnityEngine;
 
 namespace FunBoardGames
 {
-    [CreateAssetMenu(fileName = "UserProfile", menuName = "Scriptable Objects/UserProfile")]
     public class UserProfile : ScriptableObject
     {
         IAuthHandler _authHandler;
+        public string PlayerName { get; private set; }
+
+        public static string ConnectionId { get; private set; }
         
         public void Register(IAuthHandler authHandler)
         {
@@ -18,6 +19,7 @@ namespace FunBoardGames
         private void OnAuthReceived(LoginResponseMsg msg)
         {
             PlayerName = msg.PlayerName;
+            ConnectionId = msg.ConnectionId;
         }
 
         private void OnDisable()
@@ -27,7 +29,5 @@ namespace FunBoardGames
                 _authHandler.OnAuthReceived -= OnAuthReceived;
             }
         }
-
-        public string PlayerName { get; private set; }
     }
 }

@@ -1,14 +1,32 @@
 
+using UnityEngine;
+
 namespace FunBoardGames.Network
 {
-    public static class NetworkSingleton
+    public class NetworkSingleton : MonoBehaviour
     {
+        static NetworkSingleton instance;
+        INetworkManager _networkManager;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void CreateSingleton()
+        {
+            GameObject gameObject = new GameObject("NetWorkSingleton-DDOL");
+            DontDestroyOnLoad(gameObject);
+            instance = gameObject.AddComponent<NetworkSingleton>();
+        }
+
         public static void SetNetworkManager(INetworkManager networkManager)
         {
-            NetworkManager = networkManager;
+            instance._networkManager = networkManager;
             networkManager.Initialize();
         }
 
-        public static INetworkManager NetworkManager { get; private set; }
+        private void OnDestroy()
+        {
+            instance._networkManager.Dispose();
+        }
+
+        public static INetworkManager NetworkManager => instance._networkManager;
     }
 }

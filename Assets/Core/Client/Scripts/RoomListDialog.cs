@@ -1,10 +1,12 @@
+using FunBoardGames.Network;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace FunBoardGames.Client
 {
-    public class RoomListDialog : BaseDialog, IDataDialog<BoardGame>
+    public class RoomListDialog : BaseDialog, IDataDialog<(BoardGame gameType, ILobbyHandler lobbyHandler)>
     {
         [SerializeField] TMP_Text gameTxt;
         [SerializeField] RoomUI roomPrefab;
@@ -14,32 +16,32 @@ namespace FunBoardGames.Client
         [SerializeField] Button closeButon;
         [SerializeField] GameObject waitingObject;
 
-        BoardGame game;
-        LobbyManager lobby;
+        BoardGame gameType;
+        ILobbyHandler lobbyHandler;
 
-        public void Initialize(BoardGame game)
+        public void Initialize((BoardGame gameType, ILobbyHandler lobbyHandler) roomData)
         {
-            this.game = game;
-            gameTxt.text = game.ToString();
-            lobby = FindObjectOfType<LobbyManager>();
+            gameType = roomData.gameType;
+            gameTxt.text = gameType.ToString();
+            lobbyHandler = roomData.lobbyHandler;
             refreshButon.onClick.AddListener(SendRoomListRequest);
         }
 
         public override void Show()
         {
             base.Show();
-            lobby.RoomListReceived += OnRoomListReceived;
+            lobbyHandler.RoomListReceived += OnRoomListReceived;
             closeButon.onClick.AddListener(Close);
             SendRoomListRequest();
         }
 
         public override void OnClose()
         {
-            lobby.RoomListReceived -= OnRoomListReceived;
+            lobbyHandler.RoomListReceived -= OnRoomListReceived;
             base.OnClose();
         }
 
-        private void OnRoomListReceived(RoomData[] list)
+        private void OnRoomListReceived(IEnumerable<RoomInfo> list)
         {
             foreach (Transform t in roomContent)
                 Destroy(t.gameObject);
@@ -55,13 +57,13 @@ namespace FunBoardGames.Client
 
         private void OnJoinClicked(RoomUI room)
         {
-            DialogManager.Instance.ShowDialog(roomDialog, DialogShowOptions.Replace, (lobby, room.roomData.GameType, room.roomData.Name, (int?)(room.roomData.Id)));
+            DialogManager.Instance.ShowDialog(roomDialog, DialogShowOptions.Replace, (lobbyHandler, room.roomData.GameType, room.roomData.Name, (int?)(room.roomData.Id)));
         }
 
         private void SendRoomListRequest()
         {
             waitingObject.SetActive(true);
-            lobby.CmdGetRoomList(game);
+            lobbyHandler.GetRoomList(gameType);
         }
     } 
 }

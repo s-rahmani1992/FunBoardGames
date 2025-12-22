@@ -1,3 +1,4 @@
+using FunBoardGames.Network;
 using System;
 using TMPro;
 using UnityEngine;
@@ -16,11 +17,11 @@ namespace FunBoardGames.Client
         [SerializeField] RoomDialog roomDialog;
         [SerializeField] RoomListDialog roomListDialog;
 
-        LobbyManager lobbyManager;
+        ILobbyHandler lobbyHandler;
 
         private void Start()
         {
-            lobbyManager = FindObjectOfType<LobbyManager>();
+            lobbyHandler = NetworkSingleton.NetworkManager.LobbyHandler;
             titleText.text = gameType.ToString();
             createButton.onClick.AddListener(OnCreateClicked);
             joinListButton.onClick.AddListener(OnJoinListClicked);
@@ -41,12 +42,12 @@ namespace FunBoardGames.Client
 
         private void OnJoinListClicked()
         {
-            DialogManager.Instance.ShowDialog(roomListDialog, DialogShowOptions.OverAll, gameType);
+            DialogManager.Instance.ShowDialog(roomListDialog, DialogShowOptions.OverAll, (gameType, lobbyHandler));
         }
 
         private void OnCreateClicked()
         {
-            DialogManager.Instance.ShowDialog(roomDialog, DialogShowOptions.OverAll, (lobbyManager, gameType, roomNameField.text, (int?)null));
+            DialogManager.Instance.ShowDialog(roomDialog, DialogShowOptions.OverAll, (lobbyHandler, gameType, roomNameField.text, (int?)null));
         }
     } 
 }

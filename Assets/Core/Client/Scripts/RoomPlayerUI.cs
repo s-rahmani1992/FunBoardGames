@@ -1,3 +1,4 @@
+using FunBoardGames.Network;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,12 +14,12 @@ namespace FunBoardGames
         [SerializeField]
         Texture2D ledOn, ledOff;
 
-        BoardGamePlayer player;
+        IBoardGamePlayer player;
 
         void RefreshUI(string name, bool ready)
         {
             playerTxt.text = name;
-            playerTxt.color = player.IsOwner ? Color.yellow : Color.cyan;
+            playerTxt.color = player.IsMe ? Color.yellow : Color.cyan;
             readyLED.texture = (ready ? ledOn : ledOff);
         }
 
@@ -36,7 +37,7 @@ namespace FunBoardGames
             UnSubscribe();
         }
 
-        public void SetPlayer(BoardGamePlayer player)
+        public void SetPlayer(IBoardGamePlayer player)
         {
             this.player = player;
             Subscribe();
@@ -45,14 +46,14 @@ namespace FunBoardGames
 
         void Subscribe()
         {
-            player.ReadyChanged += OnReadyChanged;
+            player.ReadyStatusChanged += OnReadyChanged;
             player.IndexChanged += OnIndexChanged;
             player.LeftGame += PlayerLeft;
         }
 
         void UnSubscribe()
         {
-            player.ReadyChanged -= OnReadyChanged;
+            player.ReadyStatusChanged -= OnReadyChanged;
             player.IndexChanged -= OnIndexChanged;
             player.LeftGame -= PlayerLeft;
         }
