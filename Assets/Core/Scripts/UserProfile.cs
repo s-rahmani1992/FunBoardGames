@@ -13,20 +13,20 @@ namespace FunBoardGames
         public void Register(IAuthHandler authHandler)
         {
             _authHandler = authHandler;
-            _authHandler.OnAuthReceived += OnAuthReceived;
+            _authHandler.LoginSuccess += OnAuthReceived;
         }
 
-        private void OnAuthReceived(LoginResponseMsg msg)
+        private void OnAuthReceived(Profile profile)
         {
-            PlayerName = msg.PlayerName;
-            ConnectionId = msg.ConnectionId;
+            PlayerName = profile.PlayerName;
+            ConnectionId = profile.ConnectionId;
         }
 
         private void OnDisable()
         {
             if (_authHandler != null)
             {
-                _authHandler.OnAuthReceived -= OnAuthReceived;
+                _authHandler.LoginSuccess -= OnAuthReceived;
             }
         }
     }

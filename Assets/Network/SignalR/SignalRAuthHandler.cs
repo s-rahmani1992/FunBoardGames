@@ -1,16 +1,15 @@
 using Microsoft.AspNetCore.SignalR.Client;
+using FunBoardGames.Network.SignalR.Shared;
 using System;
 using System.Threading;
 
 namespace FunBoardGames.Network.SignalR
 {
-    public static class MessageNames
-    {
-        public const string Login = "Login";
-    }
-
     public class SignalRAuthHandler : IAuthHandler
     {
+        public event Action<Profile> LoginSuccess;
+        public event Action<string> LoginFailed;
+
         HubConnection _connection; 
         SynchronizationContext unityContext;
 
@@ -18,19 +17,34 @@ namespace FunBoardGames.Network.SignalR
         {
             unityContext = SynchronizationContext.Current;
             _connection = connection;
-            _connection.On<LoginResponseMsg>(MessageNames.Login, OnLogin);
+            _connection.On<LoginResponseMessage>(AuthenticationMessageNames.Login, (loginMsg) =>
+            {
+                unityContext.Post(_ => OnLogin(loginMsg), null);
+            });
         }
 
-        private void OnLogin(LoginResponseMsg msg)
+        private void OnLogin(LoginResponseMessage msg)
         {
-            unityContext.Post(_ => OnAuthReceived?.Invoke(msg), null);
+            if (msg.Success)
+            {
+                LoginSuccess?.Invoke(new Profile()
+                {
+                    ConnectionId = msg.Profile.ConnectionId,
+                    PlayerName = msg.Profile.PlayerName,
+                });
+            }
+            else 
+            {
+                LoginFailed?.Invoke(msg.ErrorMessage);
+            }
         }
 
-        public event Action<LoginResponseMsg> OnAuthReceived;
-
-        public void Authenticate(LoginRequestMsg loginMsg)
+        public void Authenticate(string playerName)
         {
-            _connection.InvokeAsync(MessageNames.Login, loginMsg);
+            _connection.InvokeAsync(AuthenticationMessageNames.Login, new LoginRequestMessage()
+            {
+                PlayerName = playerName,
+            });
         }
     }
 }

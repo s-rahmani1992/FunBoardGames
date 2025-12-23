@@ -23,7 +23,8 @@ namespace FunBoardGames.Client
         {
             authHandler = NetworkSingleton.NetworkManager.AuthHandler;
             userProfile.Register(authHandler);
-            authHandler.OnAuthReceived += OnAuthResponseMessage;
+            authHandler.LoginSuccess += OnLoginSuccess;
+            authHandler.LoginFailed += OnLoginFailed;
             loginButton.onClick.AddListener(StartLogin);
             nameField.onValueChanged.AddListener(OnNameFieldChanged);
             OnNameFieldChanged(nameField.text);
@@ -32,15 +33,8 @@ namespace FunBoardGames.Client
 
         private void OnDestroy()
         {
-            authHandler.OnAuthReceived -= OnAuthResponseMessage;
-        }
-
-        private void OnAuthResponseMessage(Network.LoginResponseMsg msg)
-        {
-            if (msg.Success == false)
-                OnLoginFailed(msg.ErrorMessage);
-            else
-                OnLoginSuccess();
+            authHandler.LoginSuccess -= OnLoginSuccess;
+            authHandler.LoginFailed -= OnLoginFailed;
         }
 
         private void SetLoginProcess(bool isProcess)
@@ -50,7 +44,7 @@ namespace FunBoardGames.Client
             waitObject.SetActive(isProcess);
         }
 
-        private void OnLoginSuccess()
+        private void OnLoginSuccess(Profile _)
         {
             DOVirtual.DelayedCall(0.5f, () => SceneManager.LoadScene("Menu"));
         }
@@ -70,10 +64,7 @@ namespace FunBoardGames.Client
         private void StartLogin()
         {
             SetLoginProcess(true);
-            authHandler.Authenticate(new LoginRequestMsg()
-            {
-                PlayerName = nameField.text
-            });
+            authHandler.Authenticate(nameField.text);
         }
 
         private void LogMessage(string message, float duration = 3)
