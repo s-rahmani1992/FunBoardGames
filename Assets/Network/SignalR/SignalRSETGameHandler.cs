@@ -1,3 +1,4 @@
+using FunBoardGames.Network.SignalR.Shared;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
@@ -23,18 +24,18 @@ namespace FunBoardGames.Network.SignalR
             unityContext = SynchronizationContext.Current;
             _connection = connection;
 
-            subscription.Add(_connection.On<PlayerJoinRoomResponseMsg>(LobbyMessageNames.PlayerJoinRoom, (playerMsg) =>
+            subscription.Add(_connection.On<PlayerJoinRoomResponseMessage>(LobbyMessageNames.PlayerJoinRoom, (playerMsg) =>
             {
                 unityContext.Post(_ => OnPlayerJoinedReceived(playerMsg), null);
             }));
 
-            subscription.Add(_connection.On<PlayerLeaveRoomResponseMsg>(LobbyMessageNames.PlayerLeave, (leaveMsg) =>
+            subscription.Add(_connection.On<PlayerLeaveRoomResponseMessage>(LobbyMessageNames.PlayerLeave, (leaveMsg) =>
             {
                 unityContext.Post(_ => OnPlayerLeft(leaveMsg), null);
             }));
         }
 
-        private void OnPlayerLeft(PlayerLeaveRoomResponseMsg leaveMsg)
+        private void OnPlayerLeft(PlayerLeaveRoomResponseMessage leaveMsg)
         {
             SignalRSETPlayer player = playerList.FirstOrDefault(player => player.ConnectionId == leaveMsg.ConnectionId);
             player.InvokeLeave();
@@ -53,7 +54,7 @@ namespace FunBoardGames.Network.SignalR
                 d.Dispose();
         }
 
-        private void OnPlayerJoinedReceived(PlayerJoinRoomResponseMsg playerMsg)
+        private void OnPlayerJoinedReceived(PlayerJoinRoomResponseMessage playerMsg)
         {
             SignalRSETPlayer player = new(playerMsg.NewPlayer.PlayerName, playerMsg.NewPlayer.ConnectionId);
             playerList.Add(player);

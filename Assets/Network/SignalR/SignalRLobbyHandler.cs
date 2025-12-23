@@ -1,19 +1,12 @@
+using FunBoardGames.Network.SignalR.Shared;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace FunBoardGames.Network.SignalR
 {
-    public static class LobbyMessageNames
-    {
-        public const string CreateRoom = "CreateRoom";
-        public const string JoinRoom = "JoinRoom";
-        public const string PlayerJoinRoom = "PlayerJoinRoom";
-        public const string GetRoomList = "GetRoomList";
-        public const string PlayerLeave = "PlayerLeave";
-    }
-
     public class SignalRLobbyHandler : ILobbyHandler
     {
         public event Action<IGameHandler, IEnumerable<IBoardGamePlayer>> JoinedGame;
@@ -27,50 +20,56 @@ namespace FunBoardGames.Network.SignalR
             unityContext = SynchronizationContext.Current;
             _connection = connection;
 
-            _connection.On<JoinRoomResponseMsg>(LobbyMessageNames.JoinRoom, (roomMsg) =>
+            _connection.On<JoinRoomResponseMessage>(LobbyMessageNames.JoinRoom, (roomMsg) =>
             {
                 unityContext.Post(_ => OnJoinRoomReceived(roomMsg), null);
             });
 
-            _connection.On<GetRoomListResponseMsg>(LobbyMessageNames.GetRoomList, (roomListMsg) =>
+            _connection.On<GetRoomListResponseMessage>(LobbyMessageNames.GetRoomList, (roomListMsg) =>
             {
                 unityContext.Post(_ => OnRoomListReceived(roomListMsg), null);
             });
         }
 
-        private void OnRoomListReceived(GetRoomListResponseMsg roomListMsg)
+        private void OnRoomListReceived(GetRoomListResponseMessage roomListMsg)
         {
-            RoomListReceived?.Invoke(roomListMsg.Rooms);
+            RoomListReceived?.Invoke(roomListMsg.Rooms.Select((roomDTO) => new RoomInfo{
+                GameType = (BoardGame)roomDTO.GameType,
+                Id = roomDTO.Id,
+                MaxPlayers = roomDTO.MaxPlayers,
+                Name = roomDTO.Name,
+                PlayerCount = roomDTO.PlayerCount,
+            }));
         }
 
         public void CreateRoom(BoardGame game, string roomName)
         {
-            _connection.InvokeAsync(LobbyMessageNames.CreateRoom, new CreateRoomRequestMsg() { 
-                Game = game, 
+            _connection.InvokeAsync(LobbyMessageNames.CreateRoom, new CreateRoomRequestMessage() { 
+                Game = (BoardGameType)game, 
                 RoomName = roomName,
             });
         }
 
         public void GetRoomList(BoardGame gameType)
         {
-            _connection.InvokeAsync(LobbyMessageNames.GetRoomList, new GetRoomListRequestMsg() { 
-                Game = gameType, 
+            _connection.InvokeAsync(LobbyMessageNames.GetRoomList, new GetRoomListRequestMessage() { 
+                Game = (BoardGameType)gameType, 
             });
         }
 
         public void JoinRoom(BoardGame game, int roomId)
         {
-            _connection.InvokeAsync(LobbyMessageNames.JoinRoom, new JoinRoomRequestMsg() { 
-                Game = game, 
+            _connection.InvokeAsync(LobbyMessageNames.JoinRoom, new JoinRoomRequestMessage() { 
+                Game = (BoardGameType)game, 
                 RoomId = roomId,
             });
         }
 
-        void OnJoinRoomReceived(JoinRoomResponseMsg msg) 
+        void OnJoinRoomReceived(JoinRoomResponseMessage msg) 
         {
             switch (msg.Game)
             {
-                case BoardGame.SET:
+                case BoardGameType.SET:
                     List<SignalRSETPlayer> players = new();
                     foreach(var player in msg.JoinedPlayers)
                     {
