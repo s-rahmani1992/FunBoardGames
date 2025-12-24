@@ -1,14 +1,17 @@
+using FunBoardGames.Network.SignalR.Shared;
+using Microsoft.AspNetCore.SignalR.Client;
 using System;
+using System.Threading;
 
 namespace FunBoardGames.Network.SignalR
 {
-    public class SignalRSETPlayer : IBoardGamePlayer
+    public class SignalRSETPlayer : IBoardGamePlayer, IDisposable
     {
         public bool IsMe => ConnectionId == UserProfile.ConnectionId;
 
         public string Name { get; private set; }
 
-        public bool IsReady => false;
+        public bool IsReady { get; private set; }
 
         public event Action<int, int> IndexChanged;
         public event Action LeftGame;
@@ -16,15 +19,42 @@ namespace FunBoardGames.Network.SignalR
 
         public string ConnectionId { get; private set; }
 
-        public SignalRSETPlayer(string name, string connectionId)
+        HubConnection _connection;
+        SynchronizationContext unityContext;
+
+        IDisposable connectionHooks;
+
+        public SignalRSETPlayer(HubConnection connection, PlayerInfoDTO playerInfo)
         {
-            Name = name;
-            ConnectionId = connectionId;
+            _connection = connection;
+            unityContext = SynchronizationContext.Current;
+            Name = playerInfo.UserProfile.PlayerName;
+            ConnectionId = playerInfo.UserProfile.ConnectionId;
+            IsReady = playerInfo.IsReady;
+
+            connectionHooks = _connection.On<PlayerReadyResponseMessage>(LobbyMessageNames.PlayerReady, (readyMsg) =>
+            {
+                unityContext.Post(_ => OnPlayerReadyReceived(readyMsg), null);
+            });
+        }
+
+        private void OnPlayerReadyReceived(PlayerReadyResponseMessage readyMsg)
+        {
+            if (readyMsg.ConnectionId != ConnectionId)
+                return;
+
+            IsReady = true;
+            ReadyStatusChanged?.Invoke(true);
         }
 
         internal void InvokeLeave()
         {
             LeftGame?.Invoke();
+        }
+
+        public void Dispose()
+        {
+            connectionHooks?.Dispose();
         }
     }
 }

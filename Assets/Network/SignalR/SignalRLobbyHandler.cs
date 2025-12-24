@@ -73,7 +73,7 @@ namespace FunBoardGames.Network.SignalR
                     List<SignalRSETPlayer> players = new();
                     foreach(var player in msg.JoinedPlayers)
                     {
-                        SignalRSETPlayer SETPlayer = new(player.PlayerName, player.ConnectionId);
+                        SignalRSETPlayer SETPlayer = new(_connection, player);
                         players.Add(SETPlayer);
                     }
 

@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace FunBoardGames.Network.SignalR
 {
-    public class SignalRSETGameHandler : IGameHandler
+    public class SignalRSETGameHandler : IGameHandler, IDisposable
     {
         public event Action<IBoardGamePlayer> PlayerJoined;
         public event Action<IBoardGamePlayer> PlayerLeft;
@@ -33,6 +33,16 @@ namespace FunBoardGames.Network.SignalR
             {
                 unityContext.Post(_ => OnPlayerLeft(leaveMsg), null);
             }));
+
+            subscription.Add(_connection.On(LobbyMessageNames.AllPlayersReady, () =>
+            {
+                unityContext.Post(_ => OnAllPlayerReady(), null);
+            }));
+        }
+
+        private void OnAllPlayerReady()
+        {
+            AllPlayersReady?.Invoke();
         }
 
         private void OnPlayerLeft(PlayerLeaveRoomResponseMessage leaveMsg)
@@ -41,6 +51,7 @@ namespace FunBoardGames.Network.SignalR
             player.InvokeLeave();
             PlayerLeft?.Invoke(player);
             playerList.Remove(player);
+            player.Dispose();
 
             if (player.IsMe)
             {
@@ -48,7 +59,7 @@ namespace FunBoardGames.Network.SignalR
             }
         }
 
-        void Dispose()
+        public void Dispose()
         {
             foreach(var d in subscription)
                 d.Dispose();
@@ -56,7 +67,7 @@ namespace FunBoardGames.Network.SignalR
 
         private void OnPlayerJoinedReceived(PlayerJoinRoomResponseMessage playerMsg)
         {
-            SignalRSETPlayer player = new(playerMsg.NewPlayer.PlayerName, playerMsg.NewPlayer.ConnectionId);
+            SignalRSETPlayer player = new(_connection, playerMsg.NewPlayer);
             playerList.Add(player);
             PlayerJoined?.Invoke(player);
         }
@@ -68,7 +79,7 @@ namespace FunBoardGames.Network.SignalR
 
         public void ReadyUp()
         {
-            throw new NotImplementedException();
+            _connection.InvokeAsync(LobbyMessageNames.PlayerReady);
         }
     }
 }
