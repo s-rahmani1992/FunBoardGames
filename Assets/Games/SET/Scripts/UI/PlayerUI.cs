@@ -1,3 +1,4 @@
+using FunBoardGames.Network;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,16 +14,18 @@ namespace FunBoardGames.SET
         [SerializeField] RawImage LED;
         [SerializeField] Texture2D ledOn, ledOff;
 
-        SETPlayer networkPlayer;
+        ISETPlayer networkPlayer;
+        int correctCount = 0;
+        int wrongCount = 0;
 
         public void RefreshUI(){
-            playerTxt.color = (networkPlayer.IsOwner ? Color.yellow : Color.cyan);
+            playerTxt.color = (networkPlayer.IsMe ? Color.yellow : Color.cyan);
             playerTxt.text = networkPlayer.Name;
-            correctTxt.text = networkPlayer.CorrectCount.ToString();
-            wrongTxt.text = networkPlayer.WrongCount.ToString();
-            scoreTxt.text = (networkPlayer.CorrectCount - networkPlayer.WrongCount).ToString();
+            //correctTxt.text = networkPlayer.CorrectCount.ToString();
+            //wrongTxt.text = networkPlayer.WrongCount.ToString();
+            //scoreTxt.text = (networkPlayer.CorrectCount - networkPlayer.WrongCount).ToString();
             gameObject.SetActive(true);
-            LED.texture = (networkPlayer.IsGuessing ? ledOn : ledOff);
+            //LED.texture = (networkPlayer.IsGuessing ? ledOn : ledOff);
         }
 
         public void PlayerLeft()
@@ -34,7 +37,7 @@ namespace FunBoardGames.SET
             //voteUI?.UpdateUI(newVal);
         }
 
-        public void SetPlayer(SETPlayer player)
+        public void SetPlayer(ISETPlayer player)
         {
             if (networkPlayer != null)
                 UnSubscribe();
@@ -46,9 +49,9 @@ namespace FunBoardGames.SET
 
         void Subscribe()
         {
-            networkPlayer.WrongGuessChanged += OnWrongGuessChanged;
-            networkPlayer.CorrectGuessChanged += OnCorrectGuessChanged;
-            networkPlayer.GuessChanged += OnGuessChanged;
+            //networkPlayer.WrongGuessChanged += OnWrongGuessChanged;
+            //networkPlayer.CorrectGuessChanged += OnCorrectGuessChanged;
+            //networkPlayer.GuessChanged += OnGuessChanged;
             networkPlayer.LeftGame += PlayerLeft;
         }
 
@@ -59,22 +62,22 @@ namespace FunBoardGames.SET
 
         void UnSubscribe()
         {
-            networkPlayer.WrongGuessChanged -= OnWrongGuessChanged;
-            networkPlayer.CorrectGuessChanged -= OnCorrectGuessChanged;
-            networkPlayer.GuessChanged -= OnGuessChanged;
+            //networkPlayer.WrongGuessChanged -= OnWrongGuessChanged;
+            //networkPlayer.CorrectGuessChanged -= OnCorrectGuessChanged;
+            //networkPlayer.GuessChanged -= OnGuessChanged;
             networkPlayer.LeftGame -= PlayerLeft;
         }
 
         private void OnCorrectGuessChanged(int _, int newValue)
         {
             correctTxt.text = newValue.ToString();
-            scoreTxt.text = (newValue - networkPlayer.WrongCount).ToString();
+            //scoreTxt.text = (newValue - networkPlayer.WrongCount).ToString();
         }
 
         private void OnWrongGuessChanged(int _, int newValue)
         {
             wrongTxt.text = newValue.ToString();
-            scoreTxt.text = (networkPlayer.CorrectCount - newValue).ToString();
+            //scoreTxt.text = (networkPlayer.CorrectCount - newValue).ToString();
         }
 
         private void OnDestroy()

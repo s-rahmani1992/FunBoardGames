@@ -1,4 +1,6 @@
 using FunBoardGames.Network.SignalR.Shared;
+using FunBoardGames.Network.SignalR.Shared.SET;
+using FunBoardGames.SET;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
@@ -7,16 +9,19 @@ using System.Threading;
 
 namespace FunBoardGames.Network.SignalR
 {
-    public class SignalRSETGameHandler : IGameHandler, IDisposable
+    public class SignalRSETGameHandler : ISETGameHandler, IDisposable
     {
         public event Action<IBoardGamePlayer> PlayerJoined;
         public event Action<IBoardGamePlayer> PlayerLeft;
         public event Action AllPlayersReady;
+        public event Action<IEnumerable<CardData>> NewCardsReceived;
 
         List<SignalRSETPlayer> playerList = new();
         HubConnection _connection;
         SynchronizationContext unityContext;
         List<IDisposable> subscription = new();
+
+        public IEnumerable<ISETPlayer> Players => playerList;
 
         public SignalRSETGameHandler(HubConnection connection, IEnumerable<SignalRSETPlayer> players)
         {
@@ -38,6 +43,16 @@ namespace FunBoardGames.Network.SignalR
             {
                 unityContext.Post(_ => OnAllPlayerReady(), null);
             }));
+
+            subscription.Add(_connection.On<DistributeNewCardsMessage>(SETGameMessageNames.DistributeCards, (cardMsg) =>
+            {
+                unityContext.Post(_ => OnNewCardsReceived(cardMsg), null);
+            }));
+        }
+
+        private void OnNewCardsReceived(DistributeNewCardsMessage cardMsg)
+        {
+            NewCardsReceived?.Invoke(cardMsg.NewCards.Select(cardDTO => new CardData(cardDTO.Color, cardDTO.Shape, cardDTO.CountIndex, cardDTO.Shading)));
         }
 
         private void OnAllPlayerReady()
@@ -80,6 +95,11 @@ namespace FunBoardGames.Network.SignalR
         public void ReadyUp()
         {
             _connection.InvokeAsync(LobbyMessageNames.PlayerReady);
+        }
+
+        public void SignalGameLoaded()
+        {
+            _connection.InvokeAsync(SETGameMessageNames.GameLoaded);
         }
     }
 }

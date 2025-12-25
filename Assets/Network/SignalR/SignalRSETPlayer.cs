@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace FunBoardGames.Network.SignalR
 {
-    public class SignalRSETPlayer : IBoardGamePlayer, IDisposable
+    public class SignalRSETPlayer : ISETPlayer, IDisposable
     {
         public bool IsMe => ConnectionId == UserProfile.ConnectionId;
 

@@ -3,17 +3,21 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using FunBoardGames.Network;
 
 namespace FunBoardGames.SET
 {
     public class SETGameUIManager : MonoBehaviour
     {
+        [SerializeField] CardDeckManager cardDeckManager;
         [SerializeField] ObjectPoolManager pool;
         [SerializeField] Button guessBtn, cardBtn, hintBtn;
         [SerializeField] Transform cardHolder;
         [SerializeField] Text remainTxt;
         [SerializeField] GraphicRaycaster cardRaycaster;
         [SerializeField] GameLogger gameLogger;
+        [SerializeField] UserGameHolder userGameHolder;
+        [SerializeField] PlayerUI[] playerUIs;
 
         public static SETGameUIManager Instance { get; private set; }
 
@@ -24,11 +28,31 @@ namespace FunBoardGames.SET
 
         int cardCount = SETRoomManager.endCursor;
         SETRoomManager sessionManager;
-        List<SETPlayer> players = new();
+        List<ISETPlayer> players = new();
         SETPlayer localPlayer;
         List<CardUI> selected = new(3);
         List<CardUI> hints = new(3);
         List<CardUI> placedCardUIs = new(18);
+
+        ISETGameHandler setGameHandler;
+        ISETPlayer selfPlayer;
+
+        private void Awake()
+        {
+            Instance = this;
+            setGameHandler = userGameHolder.GetGameHandler<ISETGameHandler>();
+            cardDeckManager.RegisterGameHandler(setGameHandler);
+            setGameHandler.SignalGameLoaded();
+            Subscribe();
+            UpdatePlayerUIs();
+            BeginGameCountDown();
+        }
+
+        void BeginGameCountDown()
+        {
+            timer.StartCountdown(4);
+            gameLogger.SetText("Wait For The Game To Start.");
+        }
 
         public bool UpdateSelected(CardUI card)
         {
@@ -47,38 +71,33 @@ namespace FunBoardGames.SET
                 return false;
         }
 
-        private void Awake()
-        {
-            Instance = this;
-            sessionManager = FindObjectOfType<SETRoomManager>();
-            sessionManager.LocalPlayer.CmdGameReady();
-            Subscribe();
-        }
-
         void Subscribe()
         {
-            sessionManager.GameBegin += OnGameBegin;
-            sessionManager.StateChanged += OnStateChanged;
-            sessionManager.NewCardsReceived += PlaceCards;
-            sessionManager.GuessBegin += OnPlayerStartedGuess;
-            sessionManager.PlayerGuessReceived += OnPlayerGuessReceived;
-            sessionManager.PlayerStartedVote += OnPlayerStartedVote;
+            setGameHandler.NewCardsReceived += PlaceCards;
+            //sessionManager.StateChanged += OnStateChanged;
+            //sessionManager.GuessBegin += OnPlayerStartedGuess;
+            //sessionManager.PlayerGuessReceived += OnPlayerGuessReceived;
+            //sessionManager.PlayerStartedVote += OnPlayerStartedVote;
         }
 
-        private void OnGameBegin()
+        private void UpdatePlayerUIs()
         {
-            players = new(sessionManager.Players.Select(b => b as SETPlayer));
+            players = new(setGameHandler.Players);
+
+            int index = 0;
 
             foreach (var player in players)
             {
-                playerPanel.GetChild(player.Index - 1).GetComponent<PlayerUI>().SetPlayer(player);
+                playerUIs[index].SetPlayer(player);
                 player.LeftGame += () => players.Remove(player);
 
-                if (player.IsOwner)
-                    localPlayer = player;
+                if (player.IsMe)
+                    selfPlayer = player;
+
+                index++;
             }
 
-            localPlayer.VoteChanged += OnLocalPlayerVoteChanged;
+            //localPlayer.VoteChanged += OnLocalPlayerVoteChanged;
         }
 
         private void OnPlayerStartedVote(SETPlayer player)
@@ -114,13 +133,12 @@ namespace FunBoardGames.SET
 
         void UnSubscribe()
         {
-            sessionManager.GameBegin -= OnGameBegin;
-            sessionManager.StateChanged -= OnStateChanged;
-            sessionManager.NewCardsReceived -= PlaceCards;
-            sessionManager.GuessBegin -= OnPlayerStartedGuess;
-            sessionManager.PlayerGuessReceived -= OnPlayerGuessReceived;
-            sessionManager.PlayerStartedVote -= OnPlayerStartedVote;
-            localPlayer.VoteChanged -= OnLocalPlayerVoteChanged;
+            //sessionManager.StateChanged -= OnStateChanged;
+            setGameHandler.NewCardsReceived -= PlaceCards;
+            //sessionManager.GuessBegin -= OnPlayerStartedGuess;
+            //sessionManager.PlayerGuessReceived -= OnPlayerGuessReceived;
+            //sessionManager.PlayerStartedVote -= OnPlayerStartedVote;
+            //localPlayer.VoteChanged -= OnLocalPlayerVoteChanged;
         }
 
         private void OnStateChanged(SETGameState _, SETGameState state)
@@ -132,9 +150,9 @@ namespace FunBoardGames.SET
             
             if(state == SETGameState.CardVote)
             {
-                DialogManager.Instance.SpawnDialog<SETVoteDialog>(DialogShowOptions.OverAll, (dialog) => {
-                    (dialog as SETVoteDialog).Init(sessionManager, players);
-                });
+                //DialogManager.Instance.SpawnDialog<SETVoteDialog>(DialogShowOptions.OverAll, (dialog) => {
+                //    (dialog as SETVoteDialog).Init(sessionManager, players);
+                //});
             }
 
             if(state == SETGameState.Start)
@@ -165,12 +183,20 @@ namespace FunBoardGames.SET
             remainTxt.text = cardCount.ToString();
         }
 
-        void PlaceCards(CardData[] cardInfos, int[] cardPoses)
+        void PlaceCards(IEnumerable<CardData> cardInfos)
         {
             gameLogger.SetText("Destributing Cards");
+            RefreshBtns(SETGameState.Destribute);
+            cardDeckManager.CardDestributionEnded += OnCardDestributionEnded;
+            //for (int i = 0; i < cardInfos.Length; i++)
+            //    placedCardUIs.Add(pool.PullFromList(0, cardInfos[i], cardPoses[i], 0.2f * i, cardHolder).GetComponent<CardUI>());
+        }
 
-            for (int i = 0; i < cardInfos.Length; i++)
-                placedCardUIs.Add(pool.PullFromList(0, cardInfos[i], cardPoses[i], 0.2f * i, cardHolder).GetComponent<CardUI>());
+        private void OnCardDestributionEnded()
+        {
+            cardDeckManager.CardDestributionEnded -= OnCardDestributionEnded;
+            gameLogger.SetText("");
+            RefreshBtns(SETGameState.Normal);
         }
 
         void RefreshBtns(SETGameState state)

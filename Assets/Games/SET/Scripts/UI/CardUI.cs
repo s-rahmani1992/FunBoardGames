@@ -27,6 +27,24 @@ namespace FunBoardGames.SET
             if (uiManager.UpdateSelected(this)) Mark(true);
         }
 
+        public void InitializeUI(CardData cardData)
+        {
+            info = cardData;
+
+            foreach (var item in shapes) 
+            { 
+                item.gameObject.SetActive(false);
+            }
+
+            for (var a = 0; a <= info.CountIndex; a++)
+            {
+                shapes[a].transform.localPosition = new Vector3(yPos[info.CountIndex][a], 0, 0);
+                shapes[a].color = uiManager.colors[info.Color];
+                shapes[a].sprite = uiManager.cardShapes[3 * info.Shape + info.Shading];
+                shapes[a].gameObject.SetActive(true);
+            }
+        }
+
         public void OnPull(params object[] parameters)
         {
             info = (CardData)(parameters[0]);
@@ -71,9 +89,9 @@ namespace FunBoardGames.SET
             GetComponent<Image>().color = new Color(0, 0.6135f, 1);
         }
 
-        public void MoveBack()
+        public void MoveBack(float delay = 0.0f)
         {
-            transform.DOLocalMove(new Vector2(-320 + 320 * position.x, -270 - 220f * position.y), 0.2f).OnComplete(() =>
+            transform.DOLocalMove(new Vector2(0, 0), 0.2f).SetDelay(delay).OnComplete(() =>
             {
                 canvas.sortingOrder = 0;
                 canvas.sortingLayerName = "card";
