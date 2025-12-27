@@ -1,3 +1,4 @@
+using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,6 +11,15 @@ namespace FunBoardGames.SET{
     {
         [SerializeField] Text statTxt;
 
+        Tween currentLogTween;
+
         public void SetText(string text) => statTxt.text = text;
+
+        public void Toast(string text, float duration = 3)
+        {
+            currentLogTween?.Kill();
+            statTxt.text = text;
+            currentLogTween = DOVirtual.DelayedCall(duration, () => statTxt.text = "");
+        }
     }
 }

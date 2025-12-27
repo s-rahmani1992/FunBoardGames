@@ -1,4 +1,5 @@
 using DG.Tweening;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,15 +9,12 @@ namespace FunBoardGames.SET {
         [SerializeField] RectTransform resultMarks;
         [SerializeField] Transform cardHolder;
         [SerializeField] Texture2D correct, wrong;
+        [SerializeField] Transform[] cardHolders;
+
         CardUI[] selectedCards;
         byte guessResult;
 
-        Vector2[] poses = new Vector2[]
-        {
-            new Vector2(-180, -970),
-            new Vector2(180, -970),
-            new Vector2(0, -1190)
-        };
+        public event Action Closed;
 
         protected override void Awake()
         {
@@ -26,9 +24,9 @@ namespace FunBoardGames.SET {
             base.Awake();
         }
 
-        public static void Show(CardUI[] cards, byte result)
+        public static GuessResultDialog Show(CardUI[] cards, byte result)
         {
-            DialogManager.Instance.SpawnDialog<GuessResultDialog>(DialogShowOptions.OverAll, (d) =>
+            return DialogManager.Instance.SpawnDialog<GuessResultDialog>(DialogShowOptions.OverAll, (d) =>
             {
                 GuessResultDialog dialog = (GuessResultDialog)d;
                 dialog.selectedCards = cards;
@@ -50,12 +48,12 @@ namespace FunBoardGames.SET {
 
             for (int i = 0; i < selectedCards.Length; i++)
             {
-                selectedCards[i].GetComponent<Canvas>().sortingOrder = 5;
-                selectedCards[i].GetComponent<Canvas>().sortingLayerName = "Dialog";
+                selectedCards[i].transform.SetParent(cardHolders[i]);
+
                 if (i != 2)
-                    selectedCards[i].transform.DOLocalMove(poses[i], 0.5f);
+                    selectedCards[i].transform.DOLocalMove(Vector3.zero, 0.5f);
                 else
-                    selectedCards[i].transform.DOLocalMove(poses[i], 0.5f).OnComplete(() => resultMarks.gameObject.SetActive(true));
+                    selectedCards[i].transform.DOLocalMove(Vector3.zero, 0.5f).OnComplete(() => resultMarks.gameObject.SetActive(true));
             }
         }
 
@@ -69,12 +67,15 @@ namespace FunBoardGames.SET {
                     s.MoveBack();
                     s.Mark(false);
                 }
-                SETGameUIManager.Instance.ClearSelected();
             }
             else
             {
-                SETGameUIManager.Instance.RemoveSelected();
+                foreach (var s in selectedCards)
+                {
+                    Destroy(s.gameObject);
+                }
             }
+            Closed?.Invoke();
             base.Close();
         }
     }

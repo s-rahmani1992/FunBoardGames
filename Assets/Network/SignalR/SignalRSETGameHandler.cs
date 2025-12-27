@@ -14,7 +14,11 @@ namespace FunBoardGames.Network.SignalR
         public event Action<IBoardGamePlayer> PlayerJoined;
         public event Action<IBoardGamePlayer> PlayerLeft;
         public event Action AllPlayersReady;
+
         public event Action<IEnumerable<CardData>> NewCardsReceived;
+        public event Action<ISETPlayer> PlayerStartedGuess;
+        public event Action<ISETPlayer> PlayerGuessTimeout;
+        public event Action<ISETPlayer, IEnumerable<CardData>, bool> PlayerGuessReceived;
 
         List<SignalRSETPlayer> playerList = new();
         HubConnection _connection;
@@ -48,6 +52,38 @@ namespace FunBoardGames.Network.SignalR
             {
                 unityContext.Post(_ => OnNewCardsReceived(cardMsg), null);
             }));
+
+            subscription.Add(_connection.On<PlayerGuessStartMessage>(SETGameMessageNames.PlayerGuessStart, (guessMsg) =>
+            {
+                unityContext.Post(_ => OnPlayerStartedGuess(guessMsg), null);
+            }));
+
+            subscription.Add(_connection.On<GuessResultResponse>(SETGameMessageNames.PlayerGuess, (guessMsg) =>
+            {
+                unityContext.Post(_ => OnPlayerGuessResultReceived(guessMsg), null);
+            }));
+        }
+
+        private void OnPlayerGuessResultReceived(GuessResultResponse guessMsg)
+        {
+            SignalRSETPlayer player = playerList.FirstOrDefault(player => player.ConnectionId == guessMsg.ConnectionId);
+
+            if (guessMsg.GuessedCards == null)
+            {
+                player.SetWrongScore(guessMsg.WrongScore);
+                PlayerGuessTimeout?.Invoke(player);
+                return;
+            }
+
+            player.SetCorrectScore(guessMsg.CorrectScore);
+            player.SetWrongScore(guessMsg.WrongScore);
+            PlayerGuessReceived?.Invoke(player, guessMsg.GuessedCards.Select(cardDTO => new CardData(cardDTO.Color, cardDTO.Shape, cardDTO.CountIndex, cardDTO.Shading)), guessMsg.GuessedCorrect);
+        }
+
+        private void OnPlayerStartedGuess(PlayerGuessStartMessage guessMsg)
+        {
+            SignalRSETPlayer player = playerList.FirstOrDefault(player => player.ConnectionId == guessMsg.ConnectionId);
+            PlayerStartedGuess?.Invoke(player);
         }
 
         private void OnNewCardsReceived(DistributeNewCardsMessage cardMsg)
@@ -100,6 +136,25 @@ namespace FunBoardGames.Network.SignalR
         public void SignalGameLoaded()
         {
             _connection.InvokeAsync(SETGameMessageNames.GameLoaded);
+        }
+
+        public void StartGuess()
+        {
+            _connection.InvokeAsync(SETGameMessageNames.PlayerGuessStart);
+        }
+
+        public void GuessCards(IEnumerable<CardData> cards)
+        {
+            _connection.InvokeAsync(SETGameMessageNames.PlayerGuess, new PlayerCardGuessRequest
+            {
+                GuessedCards = cards.Select(card => new SETCardDTO
+                {
+                    Color = card.Color,
+                    Shading = card.Shading,
+                    Shape = card.Shape,
+                    CountIndex = card.CountIndex,
+                }).ToList(),
+            });
         }
     }
 }

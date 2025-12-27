@@ -79,7 +79,6 @@ namespace FunBoardGames.SET
             return RawByte;
         }
 
-        [Server]
         public static byte CheckSET(CardData card1, CardData card2, CardData card3)
         {
             byte result = 0;

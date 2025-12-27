@@ -1,4 +1,5 @@
 using DG.Tweening;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,13 +8,17 @@ namespace FunBoardGames.SET
     public class CardUI : MonoBehaviour, IPoolable
     {
         [SerializeField] Image[] shapes;
-        [SerializeField] Canvas canvas;
 
         public string ObjectTag { get; set; }
         public CardData info { get; private set; }
 
-        Vector2Int position;
         SETGameUIManager uiManager;
+        Transform cardHolder;
+
+        public event Action<CardUI> Selected;
+        public event Action<CardUI> UnSelected;
+
+        bool isSelected = false;
 
         static float[][] yPos = new float[][] { new float[] { 0 }, new float[] { -45f, 45f }, new float[] { -90f, 0, 90f } };
 
@@ -24,12 +29,19 @@ namespace FunBoardGames.SET
 
         public void OnCardClicked()
         {
-            if (uiManager.UpdateSelected(this)) Mark(true);
+            if (isSelected == false)
+                Selected?.Invoke(this);
+            else
+                UnSelected?.Invoke(this);
+
+            isSelected = !isSelected;
+            Mark(isSelected);
         }
 
-        public void InitializeUI(CardData cardData)
+        public void InitializeUI(CardData cardData, Transform cardHolder)
         {
             info = cardData;
+            this.cardHolder = cardHolder;
 
             foreach (var item in shapes) 
             { 
@@ -48,12 +60,9 @@ namespace FunBoardGames.SET
         public void OnPull(params object[] parameters)
         {
             info = (CardData)(parameters[0]);
-            position = new Vector2Int((int)parameters[1] % 3, (int)parameters[1] / 3);
             transform.SetParent(parameters[3] as Transform);
             transform.localPosition = Vector3.zero;
             transform.localScale = Vector3.one;
-            canvas.sortingOrder = 0;
-            canvas.sortingLayerName = "card";
             gameObject.SetActive(true);
             Debug.Log("pull  " + (float)parameters[2]);
             for (var a = 0; a <= info.CountIndex; a++){
@@ -61,14 +70,8 @@ namespace FunBoardGames.SET
                 shapes[a].color = uiManager.colors[info.Color];
                 shapes[a].sprite = uiManager.cardShapes[3 * info.Shape + info.Shading];
                 shapes[a].gameObject.SetActive(true);
-                canvas.sortingOrder = 1;
-                transform.DOLocalMove(new Vector2(-320 + 320 * position.x, -270 - 220f * position.y), 0.2f).SetDelay((float)parameters[2]).OnComplete(() =>
-                {
-                    GetComponent<Canvas>().sortingOrder = 0;
-                });
             }
 
-            DOVirtual.DelayedCall((float)parameters[2], () => { uiManager.UpdateCardMeter(); });
             for (var a = info.CountIndex + 1; a < 3; a++)
                 shapes[a].gameObject.SetActive(false);
         }
@@ -91,11 +94,14 @@ namespace FunBoardGames.SET
 
         public void MoveBack(float delay = 0.0f)
         {
-            transform.DOLocalMove(new Vector2(0, 0), 0.2f).SetDelay(delay).OnComplete(() =>
-            {
-                canvas.sortingOrder = 0;
-                canvas.sortingLayerName = "card";
-            });
+            transform.SetParent(cardHolder);
+            transform.DOLocalMove(new Vector2(0, 0), 0.2f).SetDelay(delay);
+        }
+
+        public void Reset()
+        {
+            isSelected = false;
+            Mark(false);
         }
     }
 }
