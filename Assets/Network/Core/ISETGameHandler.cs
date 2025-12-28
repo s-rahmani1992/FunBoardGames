@@ -10,11 +10,16 @@ namespace FunBoardGames.Network
         void SignalGameLoaded();
         void StartGuess();
         void GuessCards(IEnumerable<CardData> cards);
+        void RequestMoreCards();
+        void VoteCard(bool positive);
 
         event Action<IEnumerable<CardData>> NewCardsReceived;
         event Action<ISETPlayer> PlayerStartedGuess;
         event Action<ISETPlayer> PlayerGuessTimeout;
         event Action<ISETPlayer, IEnumerable<CardData>, bool> PlayerGuessReceived;
+        event Action<ISETPlayer> PlayerRequestCards;
+        event Action<ISETPlayer, bool> PlayerVoteReceived;
+        event Action<bool> VoteResultReceived;
 
         IEnumerable<ISETPlayer> Players { get; }
     }

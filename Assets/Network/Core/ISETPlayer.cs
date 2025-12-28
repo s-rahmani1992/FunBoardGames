@@ -5,5 +5,6 @@ namespace FunBoardGames.Network
     {
         int WrongScore { get; }
         int CorrectScore { get; }
+        bool? Vote { get; }
     }
 }

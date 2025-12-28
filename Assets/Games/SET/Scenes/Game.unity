@@ -2498,7 +2498,7 @@ MonoBehaviour:
   - {fileID: 2114492917}
   - {fileID: 1627706687}
   - {fileID: 1563943280}
-  playerPanel: {fileID: 572606778}
+  voteDialog: {fileID: 6076122389970499832, guid: 325c8f850748b4c42b7000b2226033f7, type: 3}
   timer: {fileID: 1510764488}
   colors:
   - {r: 0.11624193, g: 1, b: 0, a: 1}

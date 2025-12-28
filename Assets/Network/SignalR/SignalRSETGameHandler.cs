@@ -19,11 +19,14 @@ namespace FunBoardGames.Network.SignalR
         public event Action<ISETPlayer> PlayerStartedGuess;
         public event Action<ISETPlayer> PlayerGuessTimeout;
         public event Action<ISETPlayer, IEnumerable<CardData>, bool> PlayerGuessReceived;
+        public event Action<ISETPlayer> PlayerRequestCards;
+        public event Action<ISETPlayer, bool> PlayerVoteReceived;
+        public event Action<bool> VoteResultReceived;
 
         List<SignalRSETPlayer> playerList = new();
         HubConnection _connection;
         SynchronizationContext unityContext;
-        List<IDisposable> subscription = new();
+        List<IDisposable> connectionHooks = new();
 
         public IEnumerable<ISETPlayer> Players => playerList;
 
@@ -33,35 +36,69 @@ namespace FunBoardGames.Network.SignalR
             unityContext = SynchronizationContext.Current;
             _connection = connection;
 
-            subscription.Add(_connection.On<PlayerJoinRoomResponseMessage>(LobbyMessageNames.PlayerJoinRoom, (playerMsg) =>
+            connectionHooks.Add(_connection.On<PlayerJoinRoomResponseMessage>(LobbyMessageNames.PlayerJoinRoom, (playerMsg) =>
             {
                 unityContext.Post(_ => OnPlayerJoinedReceived(playerMsg), null);
             }));
 
-            subscription.Add(_connection.On<PlayerLeaveRoomResponseMessage>(LobbyMessageNames.PlayerLeave, (leaveMsg) =>
+            connectionHooks.Add(_connection.On<PlayerLeaveRoomResponseMessage>(LobbyMessageNames.PlayerLeave, (leaveMsg) =>
             {
                 unityContext.Post(_ => OnPlayerLeft(leaveMsg), null);
             }));
 
-            subscription.Add(_connection.On(LobbyMessageNames.AllPlayersReady, () =>
+            connectionHooks.Add(_connection.On(LobbyMessageNames.AllPlayersReady, () =>
             {
                 unityContext.Post(_ => OnAllPlayerReady(), null);
             }));
 
-            subscription.Add(_connection.On<DistributeNewCardsMessage>(SETGameMessageNames.DistributeCards, (cardMsg) =>
+            connectionHooks.Add(_connection.On<DistributeNewCardsMessage>(SETGameMessageNames.DistributeCards, (cardMsg) =>
             {
                 unityContext.Post(_ => OnNewCardsReceived(cardMsg), null);
             }));
 
-            subscription.Add(_connection.On<PlayerGuessStartMessage>(SETGameMessageNames.PlayerGuessStart, (guessMsg) =>
+            connectionHooks.Add(_connection.On<PlayerGuessStartMessage>(SETGameMessageNames.PlayerGuessStart, (guessMsg) =>
             {
                 unityContext.Post(_ => OnPlayerStartedGuess(guessMsg), null);
             }));
 
-            subscription.Add(_connection.On<GuessResultResponse>(SETGameMessageNames.PlayerGuess, (guessMsg) =>
+            connectionHooks.Add(_connection.On<GuessResultResponse>(SETGameMessageNames.PlayerGuess, (guessMsg) =>
             {
                 unityContext.Post(_ => OnPlayerGuessResultReceived(guessMsg), null);
             }));
+
+            connectionHooks.Add(_connection.On<PlayerStartedVoteResponse>(SETGameMessageNames.PlayerStartCardVote, (startVoteMsg) =>
+            {
+                unityContext.Post(_ => OnPlayerStartVoteReceived(startVoteMsg), null);
+            }));
+
+            connectionHooks.Add(_connection.On<PlayerVoteResponse>(SETGameMessageNames.PlayerCardVote, (voteMsg) =>
+            {
+                unityContext.Post(_ => OnPlayerVoteReceived(voteMsg), null);
+            }));
+
+            connectionHooks.Add(_connection.On<VoteResultResponse>(SETGameMessageNames.CardVoteResult, (voteResultMsg) =>
+            {
+                unityContext.Post(_ => OnVoteResultReceived(voteResultMsg), null);
+            }));
+        }
+
+        private void OnVoteResultReceived(VoteResultResponse voteResultMsg)
+        {
+            VoteResultReceived?.Invoke(voteResultMsg.VotePassed);
+        }
+
+        private void OnPlayerVoteReceived(PlayerVoteResponse voteMsg)
+        {
+            SignalRSETPlayer player = playerList.FirstOrDefault(player => player.ConnectionId == voteMsg.ConnectionId);
+            player.SetVote(voteMsg.IsVoteYes);
+            PlayerVoteReceived?.Invoke(player, voteMsg.IsVoteYes);
+        }
+
+        private void OnPlayerStartVoteReceived(PlayerStartedVoteResponse startVoteMsg)
+        {
+            SignalRSETPlayer player = playerList.FirstOrDefault(player => player.ConnectionId == startVoteMsg.ConnectionId);
+            player.SetVote(true);
+            PlayerRequestCards?.Invoke(player);
         }
 
         private void OnPlayerGuessResultReceived(GuessResultResponse guessMsg)
@@ -112,7 +149,7 @@ namespace FunBoardGames.Network.SignalR
 
         public void Dispose()
         {
-            foreach(var d in subscription)
+            foreach(var d in connectionHooks)
                 d.Dispose();
         }
 
@@ -154,6 +191,19 @@ namespace FunBoardGames.Network.SignalR
                     Shape = card.Shape,
                     CountIndex = card.CountIndex,
                 }).ToList(),
+            });
+        }
+
+        public void RequestMoreCards()
+        {
+            _connection.SendAsync(SETGameMessageNames.PlayerStartCardVote);
+        }
+
+        public void VoteCard(bool positive)
+        {
+            _connection.SendAsync(SETGameMessageNames.PlayerCardVote, new PlayerVoteRequest()
+            {
+                Vote = positive
             });
         }
     }

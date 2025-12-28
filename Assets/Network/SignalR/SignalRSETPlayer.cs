@@ -23,6 +23,8 @@ namespace FunBoardGames.Network.SignalR
 
         public string ConnectionId { get; private set; }
 
+        public bool? Vote { get; private set; } = null;
+
         HubConnection _connection;
         SynchronizationContext unityContext;
 
@@ -64,6 +66,11 @@ namespace FunBoardGames.Network.SignalR
         internal void SetCorrectScore(int score)
         {
             CorrectScore = score;
+        }
+
+        internal void SetVote(bool? vote)
+        {
+            Vote = vote;
         }
 
         public void Dispose()

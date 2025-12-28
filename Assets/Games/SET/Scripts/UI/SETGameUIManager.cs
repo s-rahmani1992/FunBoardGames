@@ -14,20 +14,19 @@ namespace FunBoardGames.SET
         [SerializeField] GameLogger gameLogger;
         [SerializeField] UserGameHolder userGameHolder;
         [SerializeField] PlayerUI[] playerUIs;
+        [SerializeField] SETVoteDialog voteDialog;
+        [SerializeField] Timer timer;
 
         Dictionary<ISETPlayer, PlayerUI> playerUIMap = new();
 
         public static SETGameUIManager Instance { get; private set; }
 
-        public Transform playerPanel;
-        public Timer timer;
         public Color[] colors;
         public Sprite[] cardShapes;
 
         int cardCount = SETRoomManager.endCursor;
         SETRoomManager sessionManager;
         List<ISETPlayer> players = new();
-        SETPlayer localPlayer;
         List<CardUI> hints = new(3);
         List<CardUI> placedCardUIs = new(18);
 
@@ -57,8 +56,27 @@ namespace FunBoardGames.SET
             setGameHandler.PlayerStartedGuess += OnPlayerStartedGuess;
             setGameHandler.PlayerGuessTimeout += OnPlayerGuessTimeout;
             setGameHandler.PlayerGuessReceived += OnPlayerGuessReceived;
-            //sessionManager.StateChanged += OnStateChanged;
-            //sessionManager.PlayerStartedVote += OnPlayerStartedVote;
+            setGameHandler.PlayerRequestCards += OnCardVoteStarted;
+            setGameHandler.PlayerVoteReceived += OnPlayerVoteReceived;
+            setGameHandler.VoteResultReceived += OnVoteResultReceived;
+        }
+
+        private void OnPlayerVoteReceived(ISETPlayer player, bool _)
+        {
+            if(player.IsMe)
+                gameLogger.SetText("Wait For Others to vote.");
+        }
+
+        private void OnVoteResultReceived(bool _)
+        {
+            RefreshBtns(SETGameState.Normal);
+        }
+
+        private void OnCardVoteStarted(ISETPlayer player)
+        {
+            gameLogger.SetText(player.IsMe ? "Wait For Others to vote." : $"{player.Name} Started Vote destribute. place your vote.");
+            RefreshBtns(SETGameState.CardVote);
+            DialogManager.Instance.ShowDialog(voteDialog, DialogShowOptions.OverAll, (setGameHandler, player, players));
         }
 
         private void OnPlayerGuessReceived(ISETPlayer player, IEnumerable<CardData> enumerable, bool isCorrect)
@@ -96,19 +114,6 @@ namespace FunBoardGames.SET
 
                 index++;
             }
-
-            //localPlayer.VoteChanged += OnLocalPlayerVoteChanged;
-        }
-
-        private void OnPlayerStartedVote(SETPlayer player)
-        {
-            gameLogger.SetText(player.IsOwner ? "Wait For Others to vote." : $"{player.Name} Started Vote destribute. place your vote.");
-        }
-
-        private void OnLocalPlayerVoteChanged(VoteAnswer _, VoteAnswer vote)
-        {
-            if(vote != VoteAnswer.None)
-                gameLogger.SetText("Wait For Others to vote.");
         }
 
         private void OnPlayerStartedGuess(ISETPlayer player)
@@ -125,30 +130,14 @@ namespace FunBoardGames.SET
             setGameHandler.PlayerStartedGuess -= OnPlayerStartedGuess;
             setGameHandler.PlayerGuessTimeout -= OnPlayerGuessTimeout;
             setGameHandler.PlayerGuessReceived -= OnPlayerGuessReceived;
-            //sessionManager.StateChanged -= OnStateChanged;
-            //sessionManager.PlayerStartedVote -= OnPlayerStartedVote;
-            //localPlayer.VoteChanged -= OnLocalPlayerVoteChanged;
+            setGameHandler.PlayerRequestCards -= OnCardVoteStarted;
+            setGameHandler.PlayerVoteReceived -= OnPlayerVoteReceived;
+            setGameHandler.VoteResultReceived -= OnVoteResultReceived;
         }
 
         private void OnStateChanged(SETGameState _, SETGameState state)
         {
             RefreshBtns(state);
-
-            if (state == SETGameState.Normal)
-                gameLogger.SetText("");
-            
-            if(state == SETGameState.CardVote)
-            {
-                //DialogManager.Instance.SpawnDialog<SETVoteDialog>(DialogShowOptions.OverAll, (dialog) => {
-                //    (dialog as SETVoteDialog).Init(sessionManager, players);
-                //});
-            }
-
-            if(state == SETGameState.Start)
-            {
-                timer.StartCountdown(4);
-                gameLogger.SetText("Wait For The Game To Start.");
-            }
 
             if(state == SETGameState.Finish)
             {
@@ -209,7 +198,7 @@ namespace FunBoardGames.SET
 
         public void SendCardRequest()
         {
-            sessionManager.CmdRequestMoreCards(localPlayer);
+            setGameHandler.RequestMoreCards();
         }
 
         public void SendHint()
