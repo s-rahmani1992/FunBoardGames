@@ -38,9 +38,9 @@ namespace FunBoardGames
             SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
         }
 
-        private void SceneManager_activeSceneChanged(Scene arg0, Scene arg1)
+        private void SceneManager_activeSceneChanged(Scene arg0, Scene newScene)
         {
-            GetComponent<Canvas>().worldCamera = Camera.main;
+            GetComponent<Canvas>().worldCamera = newScene.name == "Menu" ? null : Camera.main;
             CloseAllDialogs();
         }
 
@@ -168,7 +168,10 @@ namespace FunBoardGames
         public void CloseAllDialogs()
         {
             foreach (var d in opendialogs)
+            {
+                d.OnClose();
                 Destroy(d.gameObject);
+            }
 
             opendialogs.Clear();
         }

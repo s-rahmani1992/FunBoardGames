@@ -22,6 +22,7 @@ namespace FunBoardGames.Network.SignalR
         public event Action<ISETPlayer> PlayerRequestCards;
         public event Action<ISETPlayer, bool> PlayerVoteReceived;
         public event Action<bool> VoteResultReceived;
+        public event Action<IEnumerable<ISETPlayer>> GameEnded;
 
         List<SignalRSETPlayer> playerList = new();
         HubConnection _connection;
@@ -80,6 +81,28 @@ namespace FunBoardGames.Network.SignalR
             {
                 unityContext.Post(_ => OnVoteResultReceived(voteResultMsg), null);
             }));
+
+            connectionHooks.Add(_connection.On<GameEndedMessage>(SETGameMessageNames.GameEnded, (gameEndMsg) =>
+            {
+                unityContext.Post(_ => OnGameEnded(gameEndMsg), null);
+            }));
+        }
+
+        private void OnGameEnded(GameEndedMessage gameEndMsg)
+        {
+            List<SignalRSETPlayer> rankedPlayers = new();
+
+            foreach(var playerScore in gameEndMsg.FinalScores)
+            {
+                SignalRSETPlayer player = playerList.FirstOrDefault(p => p.ConnectionId == playerScore.ConnectionId);
+                player.SetCorrectScore(playerScore.Corrects);
+                player.SetWrongScore(playerScore.Wrongs);
+                rankedPlayers.Add(player);
+            }
+
+            GameEnded?.Invoke(rankedPlayers);
+
+            Dispose();
         }
 
         private void OnVoteResultReceived(VoteResultResponse voteResultMsg)

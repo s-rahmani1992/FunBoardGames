@@ -7,7 +7,7 @@ namespace FunBoardGames.SET
     {
         private static List<CardData> SETCards = new(81);
 
-#if UNITY_Editor || UNITY_SERVER
+#if UNITY_EDITOR || UNITY_SERVER
         [RuntimeInitializeOnLoadMethod]
 #endif
         static void Initialize()

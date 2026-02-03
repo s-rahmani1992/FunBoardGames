@@ -1,27 +1,39 @@
-using System.Collections;
+using FunBoardGames.Network;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace FunBoardGames.SET
 {
-    public class SETResultDialog : BaseDialog
+    public class SETResultDialog : BaseDialog, IDataDialog<IEnumerable<ISETPlayer>>
     {
-        [SerializeField] SETPlayerUIResult[] players;
+        [SerializeField] SETPlayerUIResult[] playerUIs;
+        List<ISETPlayer> players;
 
-        public void Initialize(SETRoomManager roomManager)
+        public override void Show()
         {
-            List<SETPlayer> sortedPlayers = new(roomManager.Players.Select(p => p as SETPlayer));
-            sortedPlayers.Sort(SETPlayer.Compare);
-            sortedPlayers.Reverse();
+            base.Show();
 
-            for (int i = 0; i < sortedPlayers.Count; i++)
-                players[i].SETUI(sortedPlayers[i], i + 1);
+            for(int i = 0; i < players.Count; i++)
+            {
+                playerUIs[i].SETUI(players[i], i + 1);
+            }
+
+            for(int i = players.Count; i < playerUIs.Length; i++)
+            {
+                playerUIs[i].gameObject.SetActive(false);
+            }
+        }
+
+        public void Initialize(IEnumerable<ISETPlayer> data)
+        {
+            players = data.ToList();
         }
 
         public void OnMenuClicked()
         {
-            //Mirror.NetworkClient.Send(new LeaveRoomMessage { gameType = BoardGame.SET });
+            SceneManager.LoadScene("Menu");
         }
     }
 }

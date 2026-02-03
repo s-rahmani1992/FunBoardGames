@@ -42,10 +42,10 @@ namespace FunBoardGames
 
         private void OnDestroy()
         {
-            lobbyManager.JoinedRoom -= OnJoinedRoom;
+            //lobbyManager.JoinedRoom -= OnJoinedRoom;
 
-            if (roomManager != null)
-                roomManager.PlayerJoined -= OnPlayerJoined;
+            //if (roomManager != null)
+            //    roomManager.PlayerJoined -= OnPlayerJoined;
         }
     }
 }

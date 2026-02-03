@@ -2499,6 +2499,7 @@ MonoBehaviour:
   - {fileID: 1627706687}
   - {fileID: 1563943280}
   voteDialog: {fileID: 6076122389970499832, guid: 325c8f850748b4c42b7000b2226033f7, type: 3}
+  resultDialog: {fileID: 258059968493700469, guid: bbf8996fb7ace54458e588df8963e58a, type: 3}
   timer: {fileID: 1510764488}
   colors:
   - {r: 0.11624193, g: 1, b: 0, a: 1}

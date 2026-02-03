@@ -15,6 +15,7 @@ namespace FunBoardGames.SET
         [SerializeField] UserGameHolder userGameHolder;
         [SerializeField] PlayerUI[] playerUIs;
         [SerializeField] SETVoteDialog voteDialog;
+        [SerializeField] SETResultDialog resultDialog;
         [SerializeField] Timer timer;
 
         Dictionary<ISETPlayer, PlayerUI> playerUIMap = new();
@@ -59,6 +60,14 @@ namespace FunBoardGames.SET
             setGameHandler.PlayerRequestCards += OnCardVoteStarted;
             setGameHandler.PlayerVoteReceived += OnPlayerVoteReceived;
             setGameHandler.VoteResultReceived += OnVoteResultReceived;
+            setGameHandler.GameEnded += OnGameFinished;
+        }
+
+        private void OnGameFinished(IEnumerable<ISETPlayer> players)
+        {
+            gameLogger.SetText("Game Finished!");
+            RefreshBtns(SETGameState.Finish);
+            DialogManager.Instance.ShowDialog(resultDialog, DialogShowOptions.OverAll, players);
         }
 
         private void OnPlayerVoteReceived(ISETPlayer player, bool _)
@@ -133,20 +142,7 @@ namespace FunBoardGames.SET
             setGameHandler.PlayerRequestCards -= OnCardVoteStarted;
             setGameHandler.PlayerVoteReceived -= OnPlayerVoteReceived;
             setGameHandler.VoteResultReceived -= OnVoteResultReceived;
-        }
-
-        private void OnStateChanged(SETGameState _, SETGameState state)
-        {
-            RefreshBtns(state);
-
-            if(state == SETGameState.Finish)
-            {
-                gameLogger.SetText("Game Finished!");
-                DialogManager.Instance.SpawnDialog<SETResultDialog>(DialogShowOptions.OverAll, (dialog) =>
-                {
-                    (dialog as SETResultDialog).Initialize(sessionManager);
-                });
-            }
+            setGameHandler.GameEnded -= OnGameFinished;
         }
 
         private void OnDestroy()

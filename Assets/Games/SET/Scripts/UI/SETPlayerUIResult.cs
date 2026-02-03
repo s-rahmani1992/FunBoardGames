@@ -1,3 +1,4 @@
+using FunBoardGames.Network;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,14 +11,13 @@ namespace FunBoardGames.SET {
         [SerializeField] Text wrongText;
         [SerializeField] Text scoreText;
 
-        public void SETUI(SETPlayer player, int rank)
+        public void SETUI(ISETPlayer player, int rank)
         {
             rankText.text = rank.ToString();
             nameText.text = player.Name;
-            correctText.text = player.CorrectCount.ToString();
-            wrongText.text = player.WrongCount.ToString();
-            scoreText.text = player.Score.ToString();
-            gameObject.SetActive(true);
+            correctText.text = player.CorrectScore.ToString();
+            wrongText.text = player.WrongScore.ToString();
+            scoreText.text = (player.CorrectScore - player.WrongScore).ToString();
         }
     } 
 }

@@ -20,6 +20,7 @@ namespace FunBoardGames.Network
         event Action<ISETPlayer> PlayerRequestCards;
         event Action<ISETPlayer, bool> PlayerVoteReceived;
         event Action<bool> VoteResultReceived;
+        event Action<IEnumerable<ISETPlayer>> GameEnded;
 
         IEnumerable<ISETPlayer> Players { get; }
     }
