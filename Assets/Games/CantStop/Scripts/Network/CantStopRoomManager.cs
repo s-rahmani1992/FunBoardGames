@@ -28,9 +28,7 @@ namespace FunBoardGames.CantStop
 
         public const int whineConeLimit = 3;
 
-#if UNITY_EDITOR
         [SerializeField] GameBoard board;
-#endif
 
         private void OnTurnStarted(CantStopPlayer _, CantStopPlayer player, bool __)
         {
@@ -154,16 +152,6 @@ namespace FunBoardGames.CantStop
         void RpcDiceSelect(int index1, int index2)
         {
             DiceSelected?.Invoke(index1, index2);
-        }
-
-        public override void OnStartServer()
-        {
-            base.OnStartServer();
-#if UNITY_EDITOR
-            Board = board;
-#else
-            Board = BoardGameCardDataHolder.Instance.Board;
-#endif
         }
 
         public override void OnStartClient()
