@@ -77,11 +77,12 @@ namespace FunBoardGames.Client
         {
             RoomPlayerUI UIPlayer = Instantiate(roomPlyerUI, playersPanel);
             UIPlayer.SetPlayer(player);
-            readyBtn.interactable = !player.IsReady;
+            
 
             if (player.IsMe)
             {
                 player.ReadyStatusChanged += OnReadyChanged;
+                readyBtn.interactable = !player.IsReady;
             }
         }
 

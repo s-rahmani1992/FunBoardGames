@@ -80,6 +80,16 @@ namespace FunBoardGames.Network.SignalR
                     var setGame = new SignalRSETGameHandler(_connection, players);
                     JoinedGame?.Invoke(setGame, players);
                     break;
+                case BoardGameType.CantStop:
+                    List<SignalRCantStopPlayer> csPlayers = new();
+                    foreach(var player in msg.JoinedPlayers)
+                    {
+                        SignalRCantStopPlayer csPlayer = new(_connection, player);
+                        csPlayers.Add(csPlayer);
+                    }
+                    var csGame = new SignalRCantStopGameHandler(_connection, csPlayers);
+                    JoinedGame?.Invoke(csGame, csPlayers);
+                    break;
             }
         }
 
