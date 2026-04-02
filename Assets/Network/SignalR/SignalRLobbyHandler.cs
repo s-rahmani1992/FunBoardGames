@@ -82,5 +82,12 @@ namespace FunBoardGames.Network.SignalR
                     break;
             }
         }
+
+        public void JointTestGame(BoardGame game)
+        {
+            _connection.InvokeAsync(LobbyMessageNames.JoinStraightGame, new JoinStraightGameRequestMessage() { 
+                Game = (BoardGameType)game, 
+            });
+        }
     }
 }

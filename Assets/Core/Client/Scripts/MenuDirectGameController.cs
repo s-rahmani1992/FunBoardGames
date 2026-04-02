@@ -1,51 +1,26 @@
+using FunBoardGames.Client;
+using FunBoardGames.Network;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace FunBoardGames
 {
     public class MenuDirectGameController : MonoBehaviour
     {
-        [SerializeField] DirectGameContainer directGameContainer;
+        [SerializeField] RoomDialog roomDialog;
+        [SerializeField] bool autoJoin;
+        [SerializeField] BoardGame gameType;
 
-        LobbyManager lobbyManager;
-        RoomManager roomManager;
+        ILobbyHandler lobbyHandler;
 
         void Start()
         {
-            lobbyManager = FindObjectOfType<LobbyManager>();
+            lobbyHandler = NetworkSingleton.NetworkManager.LobbyHandler; 
 
-            if (directGameContainer.IsDirectGameActive)
+            if (autoJoin)
             {
-                lobbyManager.JoinedRoom += OnJoinedRoom;
-                lobbyManager.CmdJoinRoom(directGameContainer.Game, directGameContainer.TestRoomId);
+                DialogManager.Instance.ShowDialog(roomDialog, DialogShowOptions.OverAll, (lobbyHandler, gameType, "Direct Game " + gameType, (int?)-1));
             }
-        }
-
-        private void OnJoinedRoom(RoomManager room)
-        {
-            DontDestroyOnLoad(room.gameObject);
-            roomManager = room;
-
-            foreach (var p in roomManager.Players)
-                OnPlayerJoined(p);
-
-            room.PlayerJoined += OnPlayerJoined;
-        }
-
-        private void OnPlayerJoined(BoardGamePlayer player)
-        {
-            DontDestroyOnLoad(player.gameObject);
-
-            if (player.IsOwner)
-                SceneManager.LoadScene("Game");
-        }
-
-        private void OnDestroy()
-        {
-            //lobbyManager.JoinedRoom -= OnJoinedRoom;
-
-            //if (roomManager != null)
-            //    roomManager.PlayerJoined -= OnPlayerJoined;
         }
     }
 }

@@ -38,6 +38,7 @@ namespace FunBoardGames.Network
         void CreateRoom(BoardGame game, string roomName);
         void JoinRoom(BoardGame game, int roomId);
         void GetRoomList(BoardGame gameType);
+        void JointTestGame(BoardGame game);
 
         event Action<IGameHandler, IEnumerable<IBoardGamePlayer>> JoinedGame;
         event Action<IEnumerable<RoomInfo>> RoomListReceived;

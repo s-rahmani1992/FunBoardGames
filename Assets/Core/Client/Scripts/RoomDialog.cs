@@ -39,6 +39,8 @@ namespace FunBoardGames.Client
 
             if (roomId == null)
                 lobbyManager.CreateRoom(gameType, roomName);
+            else if(roomId == -1)
+                lobbyManager.JointTestGame(gameType);
             else
                 lobbyManager.JoinRoom(gameType, roomId.GetValueOrDefault());
         }
@@ -75,6 +77,7 @@ namespace FunBoardGames.Client
         {
             RoomPlayerUI UIPlayer = Instantiate(roomPlyerUI, playersPanel);
             UIPlayer.SetPlayer(player);
+            readyBtn.interactable = !player.IsReady;
 
             if (player.IsMe)
             {
