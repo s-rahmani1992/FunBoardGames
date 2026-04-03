@@ -29,6 +29,7 @@ namespace FunBoardGames.CantStop
         IEnumerable<int> selectedNumbers;
 
         ICantStopGameHandler gameHandler;
+        ICantStopPlayer currentPlayer;
 
         private void Awake()
         {
@@ -39,29 +40,25 @@ namespace FunBoardGames.CantStop
             playButton.interactable = false;
 
             gameHandler.SignalGameLoaded();
-            //roomManager = FindObjectOfType<CantStopRoomManager>();
-            //localPlayer = roomManager.LocalPlayer as CantStopPlayer;
-            //diceController.Block(!roomManager.IsYourTurn);
-            gameHandler.GameDataReceived += OnGameReceived;
-            //diceController.PairSelected += (v1, v2) =>
-            //{
-            //    if (!roomManager.IsYourTurn)
-            //        return;
 
-            //    playButton.interactable = v1 != null;
+            diceController.PairSelected += (v1, v2) =>
+            {
+                //if (!roomManager.IsYourTurn)
+                //    return;
 
-            //    if (v1 != null)
-            //    {
-            //        CheckMove(v1.Value, v2.Value);
-            //        boardController.MarkColumn(v1.Value, possibleMoves.ContainsKey(v1.Value));
-            //        boardController.MarkColumn(v2.Value, possibleMoves.ContainsKey(v2.Value));
-            //    }
-            //    else
-            //        boardController.ClearMarks();
-            //};
+                playButton.interactable = v1 != null;
 
-            //Subscribe();
-            //roomManager.LocalPlayer.CmdGameReady();
+                if (v1 != null)
+                {
+                    //CheckMove(v1.Value, v2.Value);
+                    boardController.MarkColumn(v1.Value, possibleMoves.ContainsKey(v1.Value));
+                    boardController.MarkColumn(v2.Value, possibleMoves.ContainsKey(v2.Value));
+                }
+                else
+                    boardController.ClearMarks();
+            };
+
+            Subscribe();
         }
 
         private void OnGameReceived(CantStopBoardData data, ICantStopPlayer startPlayer)
@@ -77,7 +74,10 @@ namespace FunBoardGames.CantStop
                 index++;
             }
 
+            currentPlayer = startPlayer;
             playerUiDict[startPlayer].ToggleTurn(true);
+
+            OnTurnStarted(startPlayer);
         }
 
         void CheckMove(int v1, int v2)
@@ -214,10 +214,11 @@ namespace FunBoardGames.CantStop
         void Subscribe()
         {
             Unsubscribe();
-            roomManager.GameBegin += OnGameBegin;
-            roomManager.TurnStarted += OnTurnStarted;
-            roomManager.DiceSelected += OnRivalDiceSelected;
-            roomManager.WhiteConeMoved += OnMovedWhiteCone;
+            gameHandler.GameDataReceived += OnGameReceived;
+            gameHandler.DiceRolled += OnRollChanged;
+            //roomManager.TurnStarted += OnTurnStarted;
+            //roomManager.DiceSelected += OnRivalDiceSelected;
+            //roomManager.WhiteConeMoved += OnMovedWhiteCone;
         }
 
         private void OnRivalDiceSelected(int index1, int index2)
@@ -227,8 +228,8 @@ namespace FunBoardGames.CantStop
 
         void Unsubscribe()
         {
-            gameHandler.GameDataReceived += OnGameReceived;
-            //roomManager.GameBegin -= OnGameBegin;
+            gameHandler.GameDataReceived -= OnGameReceived;
+            gameHandler.DiceRolled -= OnRollChanged;
             //roomManager.TurnStarted -= OnTurnStarted;
             //roomManager.WhiteConeMoved -= OnMovedWhiteCone;
         }
@@ -238,9 +239,9 @@ namespace FunBoardGames.CantStop
             boardController.PlaceCone(number, PlayerColor.None, position);
         }
 
-        private void OnTurnStarted(CantStopPlayer player)
+        private void OnTurnStarted(ICantStopPlayer player)
         {
-            rollButton.interactable = player.IsOwner;
+            rollButton.interactable = player.IsMe;
             placeButton.interactable = false;
             playButton.interactable = false;
             diceController.Reset();
@@ -248,21 +249,21 @@ namespace FunBoardGames.CantStop
             boardController.ClearMarks();
         }
 
-        private void OnRollChanged(DiceData data)
+        private void OnRollChanged(int[] dices)
         {
-            if (!data.IsValid)
-            {
-                possibleMoves.Clear();
-                diceController.Reset();
-                diceController.Block(true);
-                placeButton.interactable = false;
-                rollButton.interactable = roomManager.LocalPlayer == roomManager.CurrentTurnPlayer;
-                whiteConePanel.UpdateUI(CantStopRoomManager.whineConeLimit - roomManager.WhiteConePositions.Count());
-                return;
-            }
+            //if (!data.IsValid)
+            //{
+            //    possibleMoves.Clear();
+            //    diceController.Reset();
+            //    diceController.Block(true);
+            //    placeButton.interactable = false;
+            //    rollButton.interactable = roomManager.LocalPlayer == roomManager.CurrentTurnPlayer;
+            //    whiteConePanel.UpdateUI(CantStopRoomManager.whineConeLimit - roomManager.WhiteConePositions.Count());
+            //    return;
+            //}
 
-            diceController.Block(!roomManager.IsYourTurn);
-            diceController.SetDiceValues(data);
+            diceController.Block(currentPlayer.IsMe == false);
+            diceController.SetDiceValues(dices);
         }
 
         private void OnGameBegin()
@@ -287,7 +288,7 @@ namespace FunBoardGames.CantStop
         public void OnRollClicked()
         {
             rollButton.interactable = false;
-            (roomManager.LocalPlayer as CantStopPlayer).CmdRoll();
+            gameHandler.RollDice();
         }
 
         public void OnPlaceClicked()

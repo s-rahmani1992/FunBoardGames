@@ -37,7 +37,6 @@ namespace FunBoardGames.CantStop
             selectedDices.Clear();
             number1Text.text = number2Text.text = "";
             ClearDices();
-            PairSelected?.Invoke(null, null);
         }
 
         private void OnDiceClicked(DiceItem dice)
@@ -78,7 +77,7 @@ namespace FunBoardGames.CantStop
             }
         }
 
-        public void SetDiceValues(DiceData diceData)
+        public void SetDiceValues(int[] diceData)
         {
             for (int i = 0; i < dices.Length; i++)
                 dices[i].SetValue(diceData[i]);

@@ -1733,10 +1733,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a77ca56c9d91af4b81b73a9907d6112, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  usernameInput: {fileID: 0}
-  hostButton: {fileID: 0}
-  clientButton: {fileID: 0}
-  errorText: {fileID: 0}
 --- !u!1 &940844899
 GameObject:
   m_ObjectHideFlags: 0

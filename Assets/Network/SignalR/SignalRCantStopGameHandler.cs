@@ -20,6 +20,8 @@ namespace FunBoardGames.Network.SignalR
 
         List<SignalRCantStopPlayer> playerList = new();
 
+        int[] dices = new int[4];
+
         HubConnection _connection;
         SynchronizationContext unityContext;
         List<IDisposable> connectionHooks = new();
@@ -27,6 +29,7 @@ namespace FunBoardGames.Network.SignalR
         public IEnumerable<ICantStopPlayer> Players => playerList;
 
         public event Action<CantStopBoardData, ICantStopPlayer> GameDataReceived;
+        public event Action<int[]> DiceRolled;
 
         public SignalRCantStopGameHandler(HubConnection connection, IEnumerable<SignalRCantStopPlayer> players)
         {
@@ -53,6 +56,17 @@ namespace FunBoardGames.Network.SignalR
             {
                 unityContext.Post(_ => OnGameDataReceived(gameDataMsg), null);
             }));
+
+            connectionHooks.Add(_connection.On<RollDiceMessage>(CantStopGameMessageNames.RollDice, (diceMsg) =>
+            {
+                unityContext.Post(_ => OnDiceReceived(diceMsg), null);
+            }));
+        }
+
+        private void OnDiceReceived(RollDiceMessage diceMsg)
+        {
+            dices = diceMsg.diceValues;
+            DiceRolled?.Invoke(dices);
         }
 
         private void OnGameDataReceived(GameDataMessage gameDataMsg)
@@ -112,6 +126,11 @@ namespace FunBoardGames.Network.SignalR
         public void SignalGameLoaded()
         {
             _connection.InvokeAsync(CantStopGameMessageNames.GameLoaded);
+        }
+
+        public void RollDice()
+        {
+            _connection.InvokeAsync(CantStopGameMessageNames.RollDice);
         }
     }
 }
