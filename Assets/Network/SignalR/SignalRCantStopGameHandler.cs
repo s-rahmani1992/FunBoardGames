@@ -1,14 +1,19 @@
+using FunBoardGames.CantStop;
 using FunBoardGames.Network.SignalR.Shared;
+using FunBoardGames.Network.SignalR.Shared.CantStop;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using UnityEngine;
 
 namespace FunBoardGames.Network.SignalR
 {
     public class SignalRCantStopGameHandler : ICantStopGameHandler, IDisposable
     {
+        static Color[] playerColors = new Color[] { Color.red, Color.green, Color.blue, Color.yellow };
+
         public event Action<IBoardGamePlayer> PlayerJoined;
         public event Action<IBoardGamePlayer> PlayerLeft;
         public event Action AllPlayersReady;
@@ -19,8 +24,13 @@ namespace FunBoardGames.Network.SignalR
         SynchronizationContext unityContext;
         List<IDisposable> connectionHooks = new();
 
+        public IEnumerable<ICantStopPlayer> Players => playerList;
+
+        public event Action<CantStopBoardData, ICantStopPlayer> GameDataReceived;
+
         public SignalRCantStopGameHandler(HubConnection connection, IEnumerable<SignalRCantStopPlayer> players)
         {
+            playerList = new(players);
             unityContext = SynchronizationContext.Current;
             _connection = connection;
 
@@ -38,6 +48,23 @@ namespace FunBoardGames.Network.SignalR
             {
                 unityContext.Post(_ => OnAllPlayerReady(), null);
             }));
+
+            connectionHooks.Add(_connection.On<GameDataMessage>(CantStopGameMessageNames.SendGameData, (gameDataMsg) =>
+            {
+                unityContext.Post(_ => OnGameDataReceived(gameDataMsg), null);
+            }));
+        }
+
+        private void OnGameDataReceived(GameDataMessage gameDataMsg)
+        {
+            int index = 0;
+            foreach(var player in playerList)
+            {
+                player.SetPlayerColor(playerColors[index]);
+                index++;
+            }
+
+            GameDataReceived?.Invoke(new CantStopBoardData(gameDataMsg.BoardData.Columns), playerList.FirstOrDefault(player => player.ConnectionId == gameDataMsg.StartPlayerConnectionId));
         }
 
         private void OnPlayerJoinedReceived(PlayerJoinRoomResponseMessage playerMsg)
@@ -80,6 +107,11 @@ namespace FunBoardGames.Network.SignalR
         public void ReadyUp()
         {
             _connection.InvokeAsync(LobbyMessageNames.PlayerReady);
+        }
+
+        public void SignalGameLoaded()
+        {
+            _connection.InvokeAsync(CantStopGameMessageNames.GameLoaded);
         }
     }
 }

@@ -1,3 +1,4 @@
+using FunBoardGames.Network;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,11 +16,11 @@ namespace FunBoardGames.CantStop
 
         public event Action<IEnumerable<GameBoardColumn>> SelectedChanged;
 
-        public void Initialize(GameBoard board)
+        public void Initialize(CantStopBoardData board)
         {
             columnList = new();
 
-            foreach(var pair in board.GetEnumerator())
+            foreach(var pair in board.GetColumns())
             {
                 var c = Instantiate(column, holder);
                 c.Initalize(pair.Key, pair.Value);

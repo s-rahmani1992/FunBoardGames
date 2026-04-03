@@ -1,6 +1,7 @@
 using FunBoardGames.Network.SignalR.Shared;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
+using UnityEngine;
 using System.Threading;
 
 namespace FunBoardGames.Network.SignalR
@@ -14,6 +15,8 @@ namespace FunBoardGames.Network.SignalR
         public bool IsReady { get; private set; }
 
         public string ConnectionId { get; private set; }
+
+        public Color PlayerColor { get; private set; }
 
         public event Action<int, int> IndexChanged;
         public event Action LeftGame;
@@ -50,6 +53,11 @@ namespace FunBoardGames.Network.SignalR
 
             IsReady = true;
             ReadyStatusChanged?.Invoke(true);
+        }
+
+        public void SetPlayerColor(Color color)
+        {
+            PlayerColor = color;
         }
 
         public void Dispose()

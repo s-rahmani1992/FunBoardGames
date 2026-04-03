@@ -1,3 +1,4 @@
+using FunBoardGames.Network;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,15 +12,15 @@ namespace FunBoardGames.CantStop
         [SerializeField] RawImage turnLED;
         [SerializeField] Texture2D onTex, offTex;
 
-        CantStopPlayer networkPlayer;
+        ICantStopPlayer networkPlayer;
         Color playerColor;
 
-        public void SetPlayer(CantStopPlayer player, Color color)
+        public void SetPlayer(ICantStopPlayer player)
         {
             if (networkPlayer != null)
                 UnSubscribe();
 
-            playerColor = color;
+            playerColor = player.PlayerColor;
             networkPlayer = player;
             RefreshUI();
             Subscribe();
@@ -27,18 +28,18 @@ namespace FunBoardGames.CantStop
 
         public void RefreshUI()
         {
-            nameText.color = (networkPlayer.IsOwner ? Color.yellow : Color.cyan);
+            nameText.color = (networkPlayer.IsMe ? Color.yellow : Color.cyan);
             nameText.text = networkPlayer.Name;
             coneIcon.color = playerColor;
-            scoreText.text = networkPlayer.FinishedConeCount.ToString();
+            //scoreText.text = networkPlayer.FinishedConeCount.ToString();
             gameObject.SetActive(true);
         }
 
         void Subscribe()
         {
-            networkPlayer.TurnStart += OnTurnStart;
-            networkPlayer.TurnEnd += OnTurnEnd;
-            networkPlayer.FinishedConeChanged += OnFinishedConeChanged;
+            //networkPlayer.TurnStart += OnTurnStart;
+            //networkPlayer.TurnEnd += OnTurnEnd;
+            //networkPlayer.FinishedConeChanged += OnFinishedConeChanged;
         }
 
         private void OnFinishedConeChanged(int value)
@@ -48,9 +49,14 @@ namespace FunBoardGames.CantStop
 
         void UnSubscribe()
         {
-            networkPlayer.TurnStart -= OnTurnStart;
-            networkPlayer.TurnEnd -= OnTurnEnd;
-            networkPlayer.FinishedConeChanged -= OnFinishedConeChanged;
+            //networkPlayer.TurnStart -= OnTurnStart;
+            //networkPlayer.TurnEnd -= OnTurnEnd;
+            //networkPlayer.FinishedConeChanged -= OnFinishedConeChanged;
+        }
+
+        public void ToggleTurn(bool isTurn)
+        {
+            turnLED.texture = (isTurn ? onTex : offTex);
         }
 
         private void OnTurnEnd() => turnLED.texture = offTex;
