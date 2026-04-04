@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using UnityEngine;
 using System.Threading;
+using System.Collections.Generic;
 
 namespace FunBoardGames.Network.SignalR
 {
@@ -18,9 +19,13 @@ namespace FunBoardGames.Network.SignalR
 
         public Color PlayerColor { get; private set; }
 
+        public IDictionary<int, int> ConePositions => conePositions;
+
         public event Action<int, int> IndexChanged;
         public event Action LeftGame;
         public event Action<bool> ReadyStatusChanged;
+
+        SortedDictionary<int, int> conePositions = new();
 
         HubConnection _connection;
         SynchronizationContext unityContext;

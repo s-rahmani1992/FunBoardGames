@@ -23,13 +23,16 @@ namespace FunBoardGames.CantStop
 
         Dictionary<ICantStopPlayer, CantStopPlayerUI> playerUiDict = new();
 
-        SortedDictionary<int, (int pos, int cone)> possibleMoves = new();
+        SortedDictionary<int, (int, MarkMode)> possibleMoves = new();
+        bool mustSelectMoves;
+
         CantStopPlayer localPlayer;
-        GameBoard board;
-        IEnumerable<int> selectedNumbers;
+        CantStopBoardData boardData;
+        IEnumerable<int> selectedNumbers = new HashSet<int>();
 
         ICantStopGameHandler gameHandler;
         ICantStopPlayer currentPlayer;
+        ICantStopPlayer selfPlayer;
 
         private void Awake()
         {
@@ -43,19 +46,18 @@ namespace FunBoardGames.CantStop
 
             diceController.PairSelected += (v1, v2) =>
             {
-                //if (!roomManager.IsYourTurn)
-                //    return;
-
-                playButton.interactable = v1 != null;
-
                 if (v1 != null)
                 {
-                    //CheckMove(v1.Value, v2.Value);
-                    boardController.MarkColumn(v1.Value, possibleMoves.ContainsKey(v1.Value));
-                    boardController.MarkColumn(v2.Value, possibleMoves.ContainsKey(v2.Value));
+                    UpdatePossibleMoves(v1.Value, v2.Value);
+                    placeButton.interactable = !mustSelectMoves;
+                    boardController.PreviewColumn(v1.Value, possibleMoves[v1.Value].Item1, possibleMoves[v1.Value].Item2);
+                    boardController.PreviewColumn(v2.Value, possibleMoves[v2.Value].Item1, possibleMoves[v2.Value].Item2);
                 }
                 else
+                {
+                    placeButton.interactable = false;
                     boardController.ClearMarks();
+                }
             };
 
             Subscribe();
@@ -63,83 +65,92 @@ namespace FunBoardGames.CantStop
 
         private void OnGameReceived(CantStopBoardData data, ICantStopPlayer startPlayer)
         {
+            boardData = data;
             boardController.Initialize(data);
-
             int index = 0;
 
             foreach (var player in gameHandler.Players)
             {
                 playerUis[index].SetPlayer(player);
                 playerUiDict[player] = playerUis[index];
+
+                if(player.IsMe)
+                    selfPlayer = player;
+
                 index++;
             }
 
             currentPlayer = startPlayer;
             playerUiDict[startPlayer].ToggleTurn(true);
-
             OnTurnStarted(startPlayer);
         }
 
-        void CheckMove(int v1, int v2)
+        void UpdatePossibleMoves(int v1, int v2)
         {
-            var g = roomManager.WhiteConePositions;
             possibleMoves.Clear();
 
-            if(v1 == v2)
+            if (v1 == v2)
             {
-                if (roomManager.PlayerFinishPositions.ContainsKey(v1))
-                    return;
+                var move = GetPosibleMove(v1);
 
-                if (g.TryGetValue(v1, out int c))
+                if(move == null || move.Value.pos >= boardData[v1] - 2)
                 {
-                    if (c == board[v1] - 1)
-                        return; 
-                    
-                    possibleMoves[v1] = (Mathf.Clamp(c + 2, 0, board[v1] - 1), 0);
+                    possibleMoves[v1] = (-1, MarkMode.Wrong);
+                    return;
                 }
-                    
-                else if(g.Count < CantStopRoomManager.whineConeLimit)
-                {
-                    if(localPlayer.ConePositions.TryGetValue(v1, out int pos))
-                        possibleMoves[v1] = (pos + 2, 1);
-                    else
-                        possibleMoves[v1] = (1, 1);
-                }
-                    
+
+                possibleMoves[v1] = (move.Value.pos + 1, MarkMode.Correct);
                 return;
             }
 
             (int pos, int cone)? c1 = GetPosibleMove(v1);
             (int pos, int cone)? c2 = GetPosibleMove(v2);
 
-            if(c1 != null) possibleMoves[v1] = c1.Value;
-            if (c2 != null) possibleMoves[v2] = c2.Value;
+            if (c1 == null && c2 == null) {
+                possibleMoves[v1] = (-1, MarkMode.Wrong);
+                possibleMoves[v2] = (-1, MarkMode.Wrong);
+                return; 
+            }
+            int newWhiteCones = (c1 != null ? c1.Value.cone : 0) + (c2 != null ? c2.Value.cone : 0);
+
+            mustSelectMoves = newWhiteCones + gameHandler.WhiteConePositions.Count() > CantStopRoomManager.whineConeLimit;
+
+            if (c1 == null)
+                possibleMoves[v1] = (-1, MarkMode.Wrong);
+            else
+                possibleMoves[v1] = (c1.Value.pos, (mustSelectMoves ? MarkMode.Select : MarkMode.Correct));
+            
+            if (c2 == null)
+                possibleMoves[v2] = (-1, MarkMode.Wrong);
+            else
+                possibleMoves[v2] = (c2.Value.pos, (mustSelectMoves ? MarkMode.Select : MarkMode.Correct));
         }
 
         (int pos, int cone)? GetPosibleMove(int columnNumber)
         {
-            if (roomManager.PlayerFinishPositions.ContainsKey(columnNumber))
+            if (gameHandler.FinishedColumns.Contains(columnNumber))
                 return null;
 
-            var g = roomManager.WhiteConePositions;
+            int whiteConePos = -1;
+            int newCone = 0;
 
-            if (g.TryGetValue(columnNumber, out int whiteConePos))
+            if (gameHandler.WhiteConePositions.TryGetValue(columnNumber, out whiteConePos) == false) // new white cone required
             {
-                if (whiteConePos == board[columnNumber] - 1)
+                if (gameHandler.WhiteConePositions.Count() >= CantStopRoomManager.whineConeLimit) // Check if we run out of white cones
                     return null;
 
-                return (whiteConePos + 1, 0);
-            }
-                
-            else if (g.Count < CantStopRoomManager.whineConeLimit)
-            {
-                if (localPlayer.ConePositions.TryGetValue(columnNumber, out int conePos))
-                    return (conePos + 1, 1);
-                else
-                    return (0, 1);
+                newCone = 1;
+                if(selfPlayer.ConePositions.TryGetValue(columnNumber, out whiteConePos) == false)
+                    whiteConePos = -1;
             }
 
-            return null;
+            if (whiteConePos == -1)
+                return (0, 1);
+
+            if (whiteConePos >= boardData[columnNumber] - 1) // the cone is at 1 cell to the top
+                return null;
+
+            return (whiteConePos + 1, newCone);
         }
 
         private void Start()
@@ -175,40 +186,11 @@ namespace FunBoardGames.CantStop
         {
             selectedNumbers = columns.Select(c => c.Number);
 
-            foreach (var p in possibleMoves)
-                boardController.PreviewColumn(p.Key, null);
-
-            foreach (var p in columns)
-                boardController.PreviewColumn(p.Number, possibleMoves[p.Number].pos);
-
-            whiteConePanel.UpdateUI(CantStopRoomManager.whineConeLimit - roomManager.WhiteConePositions.Count()- columns.Sum(p => possibleMoves[p.Number].cone));
-
-            if (columns.Count() == 0)
-            {
-                foreach (var p in possibleMoves)
-                    boardController.MarkColumn(p.Key, true);
-
-                placeButton.interactable = false;
-                return;
-            }
-
-            if(columns.Count() == 1)
+            if (columns.Count() == 1)
             {
                 placeButton.interactable = true;
-
-                if(possibleMoves.Count == 2)
-                {
-                    var c = possibleMoves[columns.ElementAt(0).Number];
-
-                    var pair = possibleMoves.FirstOrDefault(x => x.Key != columns.ElementAt(0).Number);
-                    if (c.cone == 1)
-                        boardController.MarkColumn(pair.Key, c.cone + pair.Value.cone + roomManager.WhiteConePositions.Count <= CantStopRoomManager.whineConeLimit);
-                }
-
                 return;
             }
-
-            placeButton.interactable = true;
         }
 
         void Subscribe()
@@ -216,27 +198,31 @@ namespace FunBoardGames.CantStop
             Unsubscribe();
             gameHandler.GameDataReceived += OnGameReceived;
             gameHandler.DiceRolled += OnRollChanged;
-            //roomManager.TurnStarted += OnTurnStarted;
-            //roomManager.DiceSelected += OnRivalDiceSelected;
-            //roomManager.WhiteConeMoved += OnMovedWhiteCone;
+            gameHandler.WhiteConesPlaced += OnWhiteConePlaced;
         }
 
-        private void OnRivalDiceSelected(int index1, int index2)
+        private async void OnWhiteConePlaced(ICantStopPlayer player, IDictionary<int, int> dictionary, int dice1, int dice2)
         {
-            diceController.PickDices(index1, index2);
+            foreach (var p in dictionary)
+                boardController.PlaceCone(p.Key, PlayerColor.None, p.Value);
+
+            whiteConePanel.UpdateUI(CantStopRoomManager.whineConeLimit - gameHandler.WhiteConePositions.Count());
+
+            if (player != selfPlayer)
+            {
+                diceController.PickDices(dice1, dice2);
+                await System.Threading.Tasks.Task.Delay(2000);
+                diceController.ClearSelection();
+            }
+            else
+                rollButton.interactable = true;
         }
 
         void Unsubscribe()
         {
             gameHandler.GameDataReceived -= OnGameReceived;
             gameHandler.DiceRolled -= OnRollChanged;
-            //roomManager.TurnStarted -= OnTurnStarted;
-            //roomManager.WhiteConeMoved -= OnMovedWhiteCone;
-        }
-
-        private void OnMovedWhiteCone(int number, int position)
-        {
-            boardController.PlaceCone(number, PlayerColor.None, position);
+            gameHandler.WhiteConesPlaced -= OnWhiteConePlaced;
         }
 
         private void OnTurnStarted(ICantStopPlayer player)
@@ -251,32 +237,8 @@ namespace FunBoardGames.CantStop
 
         private void OnRollChanged(int[] dices)
         {
-            //if (!data.IsValid)
-            //{
-            //    possibleMoves.Clear();
-            //    diceController.Reset();
-            //    diceController.Block(true);
-            //    placeButton.interactable = false;
-            //    rollButton.interactable = roomManager.LocalPlayer == roomManager.CurrentTurnPlayer;
-            //    whiteConePanel.UpdateUI(CantStopRoomManager.whineConeLimit - roomManager.WhiteConePositions.Count());
-            //    return;
-            //}
-
             diceController.Block(currentPlayer.IsMe == false);
             diceController.SetDiceValues(dices);
-        }
-
-        private void OnGameBegin()
-        {
-            //boardController.Initialize(roomManager.Board);
-            board = roomManager.Board;
-
-            foreach(var player in roomManager.PlayerList)
-            {
-                //playerUis[player.Index - 1].SetPlayer(player, playerColors.GetPlayerColor(player.PlayerColor));
-                //player.RollChanged += OnRollChanged;
-                //player.ConePositionChanged += OnConePositionChanged;
-            }
         }
 
         private void OnConePositionChanged(CantStopPlayer player, int c, int p)
@@ -293,21 +255,11 @@ namespace FunBoardGames.CantStop
 
         public void OnPlaceClicked()
         {
-            var g = diceController.SelectedIndices.ToArray();
-
-            switch (selectedNumbers.Count())
-            {
-                case 0:
-                    return;
-                case 1:
-                    localPlayer.CmdPlace(new(g[0], g[1], selectedNumbers.ElementAt(0), null));
-                    break;
-                case 2:
-                    localPlayer.CmdPlace(new(g[0], g[1], selectedNumbers.ElementAt(0), selectedNumbers.ElementAt(1)));
-                    break;
-            }
+            placeButton.interactable = false;
+            gameHandler.PlaceWhiteCones(diceController.SelectedIndices.ElementAtOrDefault(0), diceController.SelectedIndices.ElementAtOrDefault(1), selectedNumbers.Count() == 0 ? null : selectedNumbers.ElementAt(0));
 
             diceController.Block(true);
+            diceController.Reset();
             boardController.ClearMarks();
         }
 

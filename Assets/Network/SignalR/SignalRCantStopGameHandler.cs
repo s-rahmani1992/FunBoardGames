@@ -21,15 +21,21 @@ namespace FunBoardGames.Network.SignalR
         List<SignalRCantStopPlayer> playerList = new();
 
         int[] dices = new int[4];
-
+        SortedDictionary<int, int> whiteConePositions = new();
+        SortedDictionary<int, SignalRCantStopPlayer> playerFinishPositions = new();
         HubConnection _connection;
         SynchronizationContext unityContext;
         List<IDisposable> connectionHooks = new();
 
         public IEnumerable<ICantStopPlayer> Players => playerList;
 
+        public IDictionary<int, int> WhiteConePositions => whiteConePositions;
+
+        public IEnumerable<int> FinishedColumns => playerFinishPositions.Keys;
+
         public event Action<CantStopBoardData, ICantStopPlayer> GameDataReceived;
         public event Action<int[]> DiceRolled;
+        public event Action<ICantStopPlayer, IDictionary<int, int>, int, int> WhiteConesPlaced;
 
         public SignalRCantStopGameHandler(HubConnection connection, IEnumerable<SignalRCantStopPlayer> players)
         {
@@ -61,6 +67,20 @@ namespace FunBoardGames.Network.SignalR
             {
                 unityContext.Post(_ => OnDiceReceived(diceMsg), null);
             }));
+            connectionHooks.Add(_connection.On<PlaceWhiteConeResponseMessage>(CantStopGameMessageNames.PlaceWhiteCone, (placeConesMsg) =>
+            {
+                unityContext.Post(_ => OnPlaceWhiteConesReceived(placeConesMsg), null);
+            }));
+        }
+
+        private void OnPlaceWhiteConesReceived(PlaceWhiteConeResponseMessage placeConesMsg)
+        {
+            var player = playerList.FirstOrDefault(player => player.ConnectionId == placeConesMsg.PlayerConnectionId);
+            
+            foreach(var cone in placeConesMsg.UpdatedColumns)
+                whiteConePositions[cone.Key] = cone.Value;
+
+            WhiteConesPlaced?.Invoke(player, placeConesMsg.UpdatedColumns, placeConesMsg.DiceIndex1, placeConesMsg.DiceIndex2);
         }
 
         private void OnDiceReceived(RollDiceMessage diceMsg)
@@ -131,6 +151,16 @@ namespace FunBoardGames.Network.SignalR
         public void RollDice()
         {
             _connection.InvokeAsync(CantStopGameMessageNames.RollDice);
+        }
+
+        public void PlaceWhiteCones(int diceIndex1, int diceIndex2, int? columnIndex1)
+        {
+            _connection.InvokeAsync(CantStopGameMessageNames.PlaceWhiteCone, new PlaceWhiteConeRequestMessage()
+            {
+                DiceIndex1 = diceIndex1,
+                DiceIndex2 = diceIndex2,
+                Selectedcolumn = columnIndex1,
+            });
         }
     }
 }

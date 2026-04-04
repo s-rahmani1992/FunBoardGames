@@ -6,6 +6,14 @@ using UnityEngine.UI;
 
 namespace FunBoardGames.CantStop
 {
+    public enum MarkMode
+    {
+        Correct,
+        Wrong, 
+        Select,
+        Clear,
+    }
+
     public class GameBoardColumn : MonoBehaviour
     {
         [SerializeField] BoardCell square;
@@ -14,6 +22,7 @@ namespace FunBoardGames.CantStop
         [SerializeField] Transform lastCell;
         [SerializeField] GameObject correctObject;
         [SerializeField] GameObject wrongObject;
+        [SerializeField] GameObject selectObject;
         [SerializeField] Toggle toggle;
         [SerializeField] Image conePrefab;
         [SerializeField] CantStopAssetManager assetManager;
@@ -28,12 +37,18 @@ namespace FunBoardGames.CantStop
 
         private void Start()
         {
-            toggle.onValueChanged.AddListener((isOn) => SelectChanged?.Invoke(this, isOn));
+            toggle.onValueChanged.AddListener((isOn) =>
+            {
+                previewCone.SetActive(isOn);
+                SelectChanged?.Invoke(this, isOn);
+            });
         }
 
-        public void Initalize(int number, int count)
+        public void Initalize(int number, int count, ToggleGroup toggleGroup)
         {
-            Mark(null);
+            Mark(MarkMode.Clear);
+            toggle.group = toggleGroup;
+            toggleGroup.RegisterToggle(toggle);
             Number = number;
             cells = new();
 
@@ -44,17 +59,19 @@ namespace FunBoardGames.CantStop
             lastCell.SetParent(holder);
         }
 
-        public void Mark(bool? mark)
+        public void Mark(MarkMode mark)
         {
-            if(mark == null)
+            if(mark == MarkMode.Clear)
             {
                 correctObject.SetActive(false);
                 wrongObject.SetActive(false);
+                selectObject.SetActive(false);
                 return;
             }
 
-            correctObject.SetActive(mark.Value);
-            wrongObject.SetActive(!mark.Value);
+            correctObject.SetActive(mark == MarkMode.Correct);
+            wrongObject.SetActive(mark == MarkMode.Wrong);
+            selectObject.SetActive(mark == MarkMode.Select);
         }
 
         public void ResetToggle()
@@ -89,6 +106,12 @@ namespace FunBoardGames.CantStop
         public void PreviewCone(int? pos)
         {
             previewCone.SetActive(pos != null);
+            previewCone.transform.position = cells[pos.GetValueOrDefault()].transform.position;
+        }
+
+        public void SetPreviewPosition(int? pos)
+        {
+            previewCone.SetActive(false);
             previewCone.transform.position = cells[pos.GetValueOrDefault()].transform.position;
         }
     }

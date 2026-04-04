@@ -92,6 +92,14 @@ namespace FunBoardGames.CantStop
             }
         }
 
+        public void ClearSelection()
+        {
+            foreach (var dice in dices)
+            {
+                dice.Highlight(false);
+            }
+        }
+
         public void PickDices(int index1, int index2)
         {
             dices[index1].Highlight(true);
