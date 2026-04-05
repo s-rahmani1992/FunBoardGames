@@ -1,6 +1,7 @@
 using FunBoardGames.Network;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,6 +19,7 @@ namespace FunBoardGames.CantStop
         [SerializeField] DiceController diceController;
         [SerializeField] GameBoardUI boardController;
         [SerializeField] WhiteConePanel whiteConePanel;
+        [SerializeField] TextMeshProUGUI statText;
 
         Dictionary<ICantStopPlayer, CantStopPlayerUI> playerUiDict = new();
 
@@ -30,6 +32,7 @@ namespace FunBoardGames.CantStop
         ICantStopGameHandler gameHandler;
         ICantStopPlayer currentPlayer;
         ICantStopPlayer selfPlayer;
+        bool isbusted;
 
         private void Awake()
         {
@@ -46,15 +49,16 @@ namespace FunBoardGames.CantStop
                 if (v1 != null)
                 {
                     UpdatePossibleMoves(v1.Value, v2.Value);
-                    placeButton.interactable = !mustSelectMoves;
-                    playButton.interactable = !mustSelectMoves;
+                    bool allWrong = possibleMoves.All(m => m.Value.Item2 == MarkMode.Wrong);
+                    placeButton.interactable = !allWrong && !isbusted && !mustSelectMoves;
+                    playButton.interactable =  isbusted || (!allWrong && !mustSelectMoves);
                     boardController.PreviewColumn(v1.Value, possibleMoves[v1.Value].Item1, possibleMoves[v1.Value].Item2);
                     boardController.PreviewColumn(v2.Value, possibleMoves[v2.Value].Item1, possibleMoves[v2.Value].Item2);
                 }
                 else
                 {
                     placeButton.interactable = false;
-                    playButton.interactable = false;
+                    playButton.interactable = isbusted;
                     boardController.ClearMarks();
                 }
             };
@@ -92,7 +96,7 @@ namespace FunBoardGames.CantStop
             {
                 var move = GetPosibleMove(v1);
 
-                if(move == null || move.Value.pos >= boardData[v1] - 2)
+                if(move == null || move.Value.pos >= boardData[v1] - 1)
                 {
                     possibleMoves[v1] = (-1, MarkMode.Wrong);
                     return;
@@ -166,7 +170,10 @@ namespace FunBoardGames.CantStop
 
             placeButton.interactable = false;
             playButton.interactable = false;
-            gameHandler.PlayRound(diceController.SelectedIndices.ElementAtOrDefault(0), diceController.SelectedIndices.ElementAtOrDefault(1), selectedNumbers.Count() == 0 ? null : selectedNumbers.ElementAt(0));
+            if(isbusted)
+                 gameHandler.CancelRound();
+            else
+                gameHandler.PlayRound(diceController.SelectedIndices.ElementAtOrDefault(0), diceController.SelectedIndices.ElementAtOrDefault(1), selectedNumbers.Count() == 0 ? null : selectedNumbers.ElementAt(0));
 
             diceController.Block(true);
             diceController.Reset();
@@ -192,6 +199,17 @@ namespace FunBoardGames.CantStop
             gameHandler.DiceRolled += OnRollChanged;
             gameHandler.WhiteConesPlaced += OnWhiteConePlaced;
             gameHandler.RoundPlayed += OnRoundPlayed;
+            gameHandler.RoundCanceled += OnRoundCanceled;
+        }
+
+        private async void OnRoundCanceled(ICantStopPlayer player1, ICantStopPlayer nextPlayer)
+        {
+            statText.text = (player1.IsMe ? "You" : player1.Name) + " Canceled the Round!";
+            whiteConePanel.UpdateUI(CantStopRoomManager.whineConeLimit);
+            boardController.RemoveWhiteCones();
+            OnTurnStarted(nextPlayer);
+            await System.Threading.Tasks.Task.Delay(2000);
+            statText.text = "";
         }
 
         private async void OnWhiteConePlaced(ICantStopPlayer player, IDictionary<int, int> dictionary, int dice1, int dice2)
@@ -250,6 +268,7 @@ namespace FunBoardGames.CantStop
             gameHandler.DiceRolled -= OnRollChanged;
             gameHandler.WhiteConesPlaced -= OnWhiteConePlaced;
             gameHandler.RoundPlayed -= OnRoundPlayed;
+            gameHandler.RoundCanceled -= OnRoundCanceled;
         }
 
         private void OnTurnStarted(ICantStopPlayer player)
@@ -270,10 +289,14 @@ namespace FunBoardGames.CantStop
             boardController.ClearMarks();
         }
 
-        private void OnRollChanged(int[] dices)
+        private void OnRollChanged(int[] dices, bool isBusted)
         {
             diceController.Block(currentPlayer.IsMe == false);
             diceController.SetDiceValues(dices);
+            this.isbusted = isBusted;
+            playButton.interactable = currentPlayer.IsMe && isbusted;
+            if (isbusted)
+                statText.text = (currentPlayer.IsMe ? "You are Busted!" : $"{currentPlayer.Name} is Busted!");
         }
 
         public void OnRollClicked()

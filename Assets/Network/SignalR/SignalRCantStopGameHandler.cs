@@ -33,9 +33,10 @@ namespace FunBoardGames.Network.SignalR
         public IEnumerable<int> FinishedColumns => playerFinishPositions.Keys;
 
         public event Action<CantStopBoardData, ICantStopPlayer> GameDataReceived;
-        public event Action<int[]> DiceRolled;
+        public event Action<int[], bool> DiceRolled;
         public event Action<ICantStopPlayer, IDictionary<int, int>, int, int> WhiteConesPlaced;
         public event Action<ICantStopPlayer, IDictionary<int, int>, int, int, ICantStopPlayer> RoundPlayed;
+        public event Action<ICantStopPlayer, ICantStopPlayer> RoundCanceled;
 
         public SignalRCantStopGameHandler(HubConnection connection, IEnumerable<SignalRCantStopPlayer> players)
         {
@@ -77,6 +78,19 @@ namespace FunBoardGames.Network.SignalR
             {
                 unityContext.Post(_ => OnPlayRoundReceived(playRoundMsg), null);
             }));
+
+            connectionHooks.Add(_connection.On<EndRoundResponseMessage>(CantStopGameMessageNames.EndRound, (endRoundMsg) =>
+            {
+                unityContext.Post(_ => OnRoundCanceled(endRoundMsg), null);
+            }));
+        }
+
+        private void OnRoundCanceled(EndRoundResponseMessage endRoundMsg)
+        {
+            var player  = playerList.FirstOrDefault(p => p.ConnectionId == endRoundMsg.PlayerConnectionId);
+            var nextplayer = playerList.FirstOrDefault(p => p.ConnectionId == endRoundMsg.NextPlayerConnectionId);
+            whiteConePositions.Clear();
+            RoundCanceled?.Invoke(player, nextplayer);
         }
 
         private void OnPlayRoundReceived(PlayRoundResponseMessage playRoundMsg)
@@ -106,7 +120,7 @@ namespace FunBoardGames.Network.SignalR
         private void OnDiceReceived(RollDiceMessage diceMsg)
         {
             dices = diceMsg.diceValues;
-            DiceRolled?.Invoke(dices);
+            DiceRolled?.Invoke(dices, diceMsg.IsBusted);
         }
 
         private void OnGameDataReceived(GameDataMessage gameDataMsg)
@@ -191,6 +205,11 @@ namespace FunBoardGames.Network.SignalR
                 DiceIndex2 = diceIndex2,
                 Selectedcolumn = columnIndex1,
             });
+        }
+
+        public void CancelRound()
+        {
+            _connection.InvokeAsync(CantStopGameMessageNames.EndRound);
         }
     }
 }
