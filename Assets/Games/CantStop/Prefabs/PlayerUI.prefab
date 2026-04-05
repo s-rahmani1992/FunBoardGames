@@ -31,7 +31,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1367999874485694401}
-  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
@@ -105,7 +104,6 @@ RectTransform:
   m_Children:
   - {fileID: 3792031767908313994}
   m_Father: {fileID: 1367999874485694401}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
@@ -186,7 +184,6 @@ RectTransform:
   - {fileID: 2246383033705126644}
   - {fileID: 7537643546733719845}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -242,11 +239,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   nameText: {fileID: 850101874318133456}
   coneIcon: {fileID: 2370570644866262627}
-  freeConeCount: {fileID: 0}
   scoreText: {fileID: 7311757148711686280}
   turnLED: {fileID: 1204528236476607658}
   onTex: {fileID: 2800000, guid: 75708a39bc9a58e4288adba61b5f3e5e, type: 3}
   offTex: {fileID: 2800000, guid: c664f7f91f8cf184e9dbb26af8d50036, type: 3}
+  assetManager: {fileID: 11400000, guid: 8b3d4ae71d41ae4479a5e884fd28f978, type: 2}
 --- !u!1 &3419004601613915501
 GameObject:
   m_ObjectHideFlags: 0
@@ -278,7 +275,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1367999874485694401}
-  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
@@ -355,7 +351,6 @@ RectTransform:
   m_Children:
   - {fileID: 8555451014616319118}
   m_Father: {fileID: 1367999874485694401}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
@@ -428,7 +423,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2666735088908411241}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -508,7 +502,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 664527113825355694}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}

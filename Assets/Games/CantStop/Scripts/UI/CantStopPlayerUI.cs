@@ -11,6 +11,7 @@ namespace FunBoardGames.CantStop
         [SerializeField] Text scoreText;
         [SerializeField] RawImage turnLED;
         [SerializeField] Texture2D onTex, offTex;
+        [SerializeField] CantStopAssetManager assetManager;
 
         ICantStopPlayer networkPlayer;
         Color playerColor;
@@ -20,7 +21,7 @@ namespace FunBoardGames.CantStop
             if (networkPlayer != null)
                 UnSubscribe();
 
-            playerColor = player.PlayerColor;
+            playerColor = assetManager.GetPlayerColor(player.ConeColor);
             networkPlayer = player;
             RefreshUI();
             Subscribe();

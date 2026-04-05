@@ -1,12 +1,12 @@
 
+using FunBoardGames.CantStop;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace FunBoardGames.Network
 {
     public interface ICantStopPlayer : IBoardGamePlayer
     {
-        Color PlayerColor { get; }
+        PlayerColor ConeColor { get; }
 
         IDictionary<int, int> ConePositions { get; }
     }

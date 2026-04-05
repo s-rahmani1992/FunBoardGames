@@ -1,9 +1,9 @@
 using FunBoardGames.Network.SignalR.Shared;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
-using UnityEngine;
 using System.Threading;
 using System.Collections.Generic;
+using FunBoardGames.CantStop;
 
 namespace FunBoardGames.Network.SignalR
 {
@@ -17,7 +17,7 @@ namespace FunBoardGames.Network.SignalR
 
         public string ConnectionId { get; private set; }
 
-        public Color PlayerColor { get; private set; }
+        public PlayerColor ConeColor { get; private set; }
 
         public IDictionary<int, int> ConePositions => conePositions;
 
@@ -60,14 +60,20 @@ namespace FunBoardGames.Network.SignalR
             ReadyStatusChanged?.Invoke(true);
         }
 
-        public void SetPlayerColor(Color color)
+        public void SetPlayerColor(PlayerColor color)
         {
-            PlayerColor = color;
+            ConeColor = color;
         }
 
         public void Dispose()
         {
             connectionHooks?.Dispose();
+        }
+
+        internal void UpdateCones(SortedDictionary<int, int> whiteConePositions)
+        {
+            foreach (var kvp in whiteConePositions)
+                conePositions[kvp.Key] = kvp.Value;
         }
     }
 }

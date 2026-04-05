@@ -8,8 +8,6 @@ namespace FunBoardGames.CantStop
 {
     public class CantStopUIManager : MonoBehaviour
     {
-        CantStopRoomManager roomManager;
-
         [SerializeField] UserGameHolder userGameHolder;
 
         [SerializeField] CantStopPlayerUI[] playerUis;
@@ -26,7 +24,6 @@ namespace FunBoardGames.CantStop
         SortedDictionary<int, (int, MarkMode)> possibleMoves = new();
         bool mustSelectMoves;
 
-        CantStopPlayer localPlayer;
         CantStopBoardData boardData;
         IEnumerable<int> selectedNumbers = new HashSet<int>();
 
@@ -50,12 +47,14 @@ namespace FunBoardGames.CantStop
                 {
                     UpdatePossibleMoves(v1.Value, v2.Value);
                     placeButton.interactable = !mustSelectMoves;
+                    playButton.interactable = !mustSelectMoves;
                     boardController.PreviewColumn(v1.Value, possibleMoves[v1.Value].Item1, possibleMoves[v1.Value].Item2);
                     boardController.PreviewColumn(v2.Value, possibleMoves[v2.Value].Item1, possibleMoves[v2.Value].Item2);
                 }
                 else
                 {
                     placeButton.interactable = false;
+                    playButton.interactable = false;
                     boardController.ClearMarks();
                 }
             };
@@ -165,20 +164,12 @@ namespace FunBoardGames.CantStop
         {
             var g = diceController.SelectedIndices.ToArray();
 
-            switch (selectedNumbers.Count())
-            {
-                case 0:
-                    localPlayer.CmdPlay(null);
-                    return;
-                case 1:
-                    localPlayer.CmdPlay(new PlayerPlayData(g[0], g[1], selectedNumbers.ElementAt(0), null));
-                    break;
-                case 2:
-                    localPlayer.CmdPlay(new PlayerPlayData(g[0], g[1], selectedNumbers.ElementAt(0), selectedNumbers.ElementAt(1)));
-                    break;
-            }
+            placeButton.interactable = false;
+            playButton.interactable = false;
+            gameHandler.PlayRound(diceController.SelectedIndices.ElementAtOrDefault(0), diceController.SelectedIndices.ElementAtOrDefault(1), selectedNumbers.Count() == 0 ? null : selectedNumbers.ElementAt(0));
 
             diceController.Block(true);
+            diceController.Reset();
             boardController.ClearMarks();
         }
 
@@ -189,6 +180,7 @@ namespace FunBoardGames.CantStop
             if (columns.Count() == 1)
             {
                 placeButton.interactable = true;
+                playButton.interactable = true;
                 return;
             }
         }
@@ -199,6 +191,7 @@ namespace FunBoardGames.CantStop
             gameHandler.GameDataReceived += OnGameReceived;
             gameHandler.DiceRolled += OnRollChanged;
             gameHandler.WhiteConesPlaced += OnWhiteConePlaced;
+            gameHandler.RoundPlayed += OnRoundPlayed;
         }
 
         private async void OnWhiteConePlaced(ICantStopPlayer player, IDictionary<int, int> dictionary, int dice1, int dice2)
@@ -218,18 +211,60 @@ namespace FunBoardGames.CantStop
                 rollButton.interactable = true;
         }
 
+        private async void OnRoundPlayed(ICantStopPlayer player, IDictionary<int, int> updatedWhitecones, int dice1, int dice2, ICantStopPlayer nextPlayer)
+        {
+            foreach (var p in updatedWhitecones)
+                boardController.PlaceCone(p.Key, PlayerColor.None, p.Value);
+
+            whiteConePanel.UpdateUI(CantStopRoomManager.whineConeLimit - gameHandler.WhiteConePositions.Count());
+
+            if (player != selfPlayer)
+            {
+                diceController.PickDices(dice1, dice2);
+                await System.Threading.Tasks.Task.Delay(2000);
+                diceController.ClearSelection();
+
+                foreach(var p in currentPlayer.ConePositions)
+                {
+                    boardController.PlaceCone(p.Key, currentPlayer.ConeColor, p.Value);
+                }
+
+                boardController.RemoveWhiteCones();
+            }
+            else
+            {
+                await System.Threading.Tasks.Task.Delay(2000);
+                foreach (var p in currentPlayer.ConePositions)
+                {
+                    boardController.PlaceCone(p.Key, currentPlayer.ConeColor, p.Value);
+                }
+                boardController.RemoveWhiteCones();
+            }
+
+            OnTurnStarted(nextPlayer);
+        }
+
         void Unsubscribe()
         {
             gameHandler.GameDataReceived -= OnGameReceived;
             gameHandler.DiceRolled -= OnRollChanged;
             gameHandler.WhiteConesPlaced -= OnWhiteConePlaced;
+            gameHandler.RoundPlayed -= OnRoundPlayed;
         }
 
         private void OnTurnStarted(ICantStopPlayer player)
         {
+            if(currentPlayer != null)
+            {
+                playerUiDict[currentPlayer].ToggleTurn(false);
+            }
+
+            currentPlayer = player;
+            playerUiDict[player].ToggleTurn(true);
             rollButton.interactable = player.IsMe;
             placeButton.interactable = false;
             playButton.interactable = false;
+            whiteConePanel.UpdateUI(CantStopRoomManager.whineConeLimit);
             diceController.Reset();
             boardController.RemoveWhiteCones();
             boardController.ClearMarks();
@@ -241,12 +276,6 @@ namespace FunBoardGames.CantStop
             diceController.SetDiceValues(dices);
         }
 
-        private void OnConePositionChanged(CantStopPlayer player, int c, int p)
-        {
-            boardController.PlaceCone(c, PlayerColor.None, null);
-            boardController.PlaceCone(c, player.PlayerColor, p);
-        }
-
         public void OnRollClicked()
         {
             rollButton.interactable = false;
@@ -256,6 +285,7 @@ namespace FunBoardGames.CantStop
         public void OnPlaceClicked()
         {
             placeButton.interactable = false;
+            playButton.interactable = false;
             gameHandler.PlaceWhiteCones(diceController.SelectedIndices.ElementAtOrDefault(0), diceController.SelectedIndices.ElementAtOrDefault(1), selectedNumbers.Count() == 0 ? null : selectedNumbers.ElementAt(0));
 
             diceController.Block(true);

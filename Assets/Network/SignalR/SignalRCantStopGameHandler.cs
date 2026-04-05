@@ -6,13 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using UnityEngine;
 
 namespace FunBoardGames.Network.SignalR
 {
     public class SignalRCantStopGameHandler : ICantStopGameHandler, IDisposable
     {
-        static Color[] playerColors = new Color[] { Color.red, Color.green, Color.blue, Color.yellow };
+        static PlayerColor[] playerColors = new PlayerColor[] { PlayerColor.Red, PlayerColor.Green, PlayerColor.Blue, PlayerColor.Yellow };
 
         public event Action<IBoardGamePlayer> PlayerJoined;
         public event Action<IBoardGamePlayer> PlayerLeft;
@@ -36,6 +35,7 @@ namespace FunBoardGames.Network.SignalR
         public event Action<CantStopBoardData, ICantStopPlayer> GameDataReceived;
         public event Action<int[]> DiceRolled;
         public event Action<ICantStopPlayer, IDictionary<int, int>, int, int> WhiteConesPlaced;
+        public event Action<ICantStopPlayer, IDictionary<int, int>, int, int, ICantStopPlayer> RoundPlayed;
 
         public SignalRCantStopGameHandler(HubConnection connection, IEnumerable<SignalRCantStopPlayer> players)
         {
@@ -67,10 +67,30 @@ namespace FunBoardGames.Network.SignalR
             {
                 unityContext.Post(_ => OnDiceReceived(diceMsg), null);
             }));
+
             connectionHooks.Add(_connection.On<PlaceWhiteConeResponseMessage>(CantStopGameMessageNames.PlaceWhiteCone, (placeConesMsg) =>
             {
                 unityContext.Post(_ => OnPlaceWhiteConesReceived(placeConesMsg), null);
             }));
+
+            connectionHooks.Add(_connection.On<PlayRoundResponseMessage>(CantStopGameMessageNames.PlayRound, (playRoundMsg) =>
+            {
+                unityContext.Post(_ => OnPlayRoundReceived(playRoundMsg), null);
+            }));
+        }
+
+        private void OnPlayRoundReceived(PlayRoundResponseMessage playRoundMsg)
+        {
+            var player = playerList.FirstOrDefault(player => player.ConnectionId == playRoundMsg.PlayerConnectionId);
+            var nextPlayer = playerList.FirstOrDefault(player => player.ConnectionId == playRoundMsg.NextPlayerConnectionId);
+            
+            foreach (var cone in playRoundMsg.UpdatedColumns)
+                whiteConePositions[cone.Key] = cone.Value;
+
+            player.UpdateCones(whiteConePositions);
+
+            RoundPlayed?.Invoke(player, playRoundMsg.UpdatedColumns, playRoundMsg.DiceIndex1, playRoundMsg.DiceIndex2, nextPlayer);
+            whiteConePositions.Clear();
         }
 
         private void OnPlaceWhiteConesReceived(PlaceWhiteConeResponseMessage placeConesMsg)
@@ -156,6 +176,16 @@ namespace FunBoardGames.Network.SignalR
         public void PlaceWhiteCones(int diceIndex1, int diceIndex2, int? columnIndex1)
         {
             _connection.InvokeAsync(CantStopGameMessageNames.PlaceWhiteCone, new PlaceWhiteConeRequestMessage()
+            {
+                DiceIndex1 = diceIndex1,
+                DiceIndex2 = diceIndex2,
+                Selectedcolumn = columnIndex1,
+            });
+        }
+
+        public void PlayRound(int diceIndex1, int diceIndex2, int? columnIndex1)
+        {
+            _connection.InvokeAsync(CantStopGameMessageNames.PlayRound, new PlaceWhiteConeRequestMessage()
             {
                 DiceIndex1 = diceIndex1,
                 DiceIndex2 = diceIndex2,
