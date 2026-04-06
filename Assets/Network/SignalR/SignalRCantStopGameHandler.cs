@@ -37,6 +37,7 @@ namespace FunBoardGames.Network.SignalR
         public event Action<ICantStopPlayer, IDictionary<int, int>, int, int> WhiteConesPlaced;
         public event Action<ICantStopPlayer, IDictionary<int, int>, int, int, ICantStopPlayer> RoundPlayed;
         public event Action<ICantStopPlayer, ICantStopPlayer> RoundCanceled;
+        public event Action<IEnumerable<ICantStopPlayer>> GameFinished;
 
         public SignalRCantStopGameHandler(HubConnection connection, IEnumerable<SignalRCantStopPlayer> players)
         {
@@ -83,6 +84,28 @@ namespace FunBoardGames.Network.SignalR
             {
                 unityContext.Post(_ => OnRoundCanceled(endRoundMsg), null);
             }));
+
+            connectionHooks.Add(_connection.On<GameFinishedResponseMessage>(CantStopGameMessageNames.GameFinished, (gameFinishedMsg) =>
+            {
+                unityContext.Post(_ => OnGameFinished(gameFinishedMsg), null);
+            }));
+        }
+
+        private void OnGameFinished(GameFinishedResponseMessage gameFinishedMsg)
+        {
+            List<SignalRCantStopPlayer> finishedPlayers = new();
+
+            gameFinishedMsg.PlayerScores.ToList().ForEach(scoreData =>
+            {
+                var player = playerList.FirstOrDefault(p => p.ConnectionId == scoreData.PlayerConnectionId);
+                if (player != null)
+                {
+                    player.UpdateScore(scoreData.Score);
+                    finishedPlayers.Add(player);
+                }
+            });
+
+            GameFinished?.Invoke(finishedPlayers);
         }
 
         private void OnRoundCanceled(EndRoundResponseMessage endRoundMsg)

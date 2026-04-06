@@ -846,7 +846,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fafe2cfe61f6974895a912c3755e8f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ToggleGroup
-  m_AllowSwitchOff: 0
+  m_AllowSwitchOff: 1
 --- !u!1 &439460824
 GameObject:
   m_ObjectHideFlags: 0
@@ -1476,7 +1476,7 @@ GameObject:
   - component: {fileID: 854211649}
   - component: {fileID: 854211648}
   m_Layer: 0
-  m_Name: RoomUIManager
+  m_Name: CantStopUIManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1508,6 +1508,7 @@ MonoBehaviour:
   boardController: {fileID: 1739800933}
   whiteConePanel: {fileID: 940844901}
   statText: {fileID: 579905195}
+  resultDialog: {fileID: 1661453084615204824, guid: 69d3084c7f58ca147a5368a91471fb1e, type: 3}
 --- !u!4 &854211649
 Transform:
   m_ObjectHideFlags: 0

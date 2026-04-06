@@ -20,6 +20,7 @@ namespace FunBoardGames.CantStop
         [SerializeField] GameBoardUI boardController;
         [SerializeField] WhiteConePanel whiteConePanel;
         [SerializeField] TextMeshProUGUI statText;
+        [SerializeField] CantStopResultDialog resultDialog;
 
         Dictionary<ICantStopPlayer, CantStopPlayerUI> playerUiDict = new();
 
@@ -200,6 +201,13 @@ namespace FunBoardGames.CantStop
             gameHandler.WhiteConesPlaced += OnWhiteConePlaced;
             gameHandler.RoundPlayed += OnRoundPlayed;
             gameHandler.RoundCanceled += OnRoundCanceled;
+            gameHandler.GameFinished += OnGameFinished;
+        }
+
+        private async void OnGameFinished(IEnumerable<ICantStopPlayer> players)
+        {
+            await System.Threading.Tasks.Task.Delay(2500);
+            DialogManager.Instance.ShowDialog(resultDialog, DialogShowOptions.OverAll, players);
         }
 
         private async void OnRoundCanceled(ICantStopPlayer player1, ICantStopPlayer nextPlayer)

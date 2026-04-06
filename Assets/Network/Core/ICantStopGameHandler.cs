@@ -11,6 +11,8 @@ namespace FunBoardGames.Network
         event Action<ICantStopPlayer, IDictionary<int, int>, int, int> WhiteConesPlaced;
         event Action<ICantStopPlayer, IDictionary<int, int>, int, int, ICantStopPlayer> RoundPlayed;
         event Action<ICantStopPlayer, ICantStopPlayer> RoundCanceled;
+        event Action<IEnumerable<ICantStopPlayer>> GameFinished;
+
         void SignalGameLoaded();
         void RollDice();
         void PlaceWhiteCones(int diceIndex1, int diceIndex2, int? columnIndex1);
