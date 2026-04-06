@@ -21,6 +21,8 @@ namespace FunBoardGames.Network.SignalR
 
         public IDictionary<int, int> ConePositions => conePositions;
 
+        public int Score { get; private set; }
+
         public event Action<int, int> IndexChanged;
         public event Action LeftGame;
         public event Action<bool> ReadyStatusChanged;
@@ -70,10 +72,14 @@ namespace FunBoardGames.Network.SignalR
             connectionHooks?.Dispose();
         }
 
-        internal void UpdateCones(SortedDictionary<int, int> whiteConePositions)
+        internal void UpdateCones(SortedDictionary<int, int> conePositions)
         {
-            foreach (var kvp in whiteConePositions)
-                conePositions[kvp.Key] = kvp.Value;
+            this.conePositions = new(conePositions);
+        }
+
+        internal void UpdateScore(int score)
+        {
+            Score = score;
         }
     }
 }

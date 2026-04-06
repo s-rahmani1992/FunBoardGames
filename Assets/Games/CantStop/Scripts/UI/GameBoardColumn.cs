@@ -27,6 +27,7 @@ namespace FunBoardGames.CantStop
         [SerializeField] Image conePrefab;
         [SerializeField] CantStopAssetManager assetManager;
         [SerializeField] GameObject previewCone;
+        [SerializeField] GameObject finishObject;
 
         List<BoardCell> cells;
         SortedDictionary<PlayerColor, GameObject> placedCones = new();
@@ -101,6 +102,9 @@ namespace FunBoardGames.CantStop
                 placedCones.Add(playerColor, newCcne.gameObject);
                 cells[number.Value].AddCone(newCcne.gameObject);
             }
+
+            if(playerColor != PlayerColor.None && !finishObject.activeSelf)
+                finishObject.SetActive(number == cells.Count - 1);
         }
 
         public void PreviewCone(int? pos)

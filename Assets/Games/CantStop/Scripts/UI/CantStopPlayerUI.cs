@@ -18,13 +18,9 @@ namespace FunBoardGames.CantStop
 
         public void SetPlayer(ICantStopPlayer player)
         {
-            if (networkPlayer != null)
-                UnSubscribe();
-
             playerColor = assetManager.GetPlayerColor(player.ConeColor);
             networkPlayer = player;
             RefreshUI();
-            Subscribe();
         }
 
         public void RefreshUI()
@@ -32,27 +28,8 @@ namespace FunBoardGames.CantStop
             nameText.color = (networkPlayer.IsMe ? Color.yellow : Color.cyan);
             nameText.text = networkPlayer.Name;
             coneIcon.color = playerColor;
-            //scoreText.text = networkPlayer.FinishedConeCount.ToString();
+            scoreText.text = networkPlayer.Score.ToString();
             gameObject.SetActive(true);
-        }
-
-        void Subscribe()
-        {
-            //networkPlayer.TurnStart += OnTurnStart;
-            //networkPlayer.TurnEnd += OnTurnEnd;
-            //networkPlayer.FinishedConeChanged += OnFinishedConeChanged;
-        }
-
-        private void OnFinishedConeChanged(int value)
-        {
-            scoreText.text = value.ToString();
-        }
-
-        void UnSubscribe()
-        {
-            //networkPlayer.TurnStart -= OnTurnStart;
-            //networkPlayer.TurnEnd -= OnTurnEnd;
-            //networkPlayer.FinishedConeChanged -= OnFinishedConeChanged;
         }
 
         public void ToggleTurn(bool isTurn)
@@ -60,8 +37,9 @@ namespace FunBoardGames.CantStop
             turnLED.texture = (isTurn ? onTex : offTex);
         }
 
-        private void OnTurnEnd() => turnLED.texture = offTex;
-
-        private void OnTurnStart() => turnLED.texture = onTex;
+        internal void UpdateScore(int score)
+        {
+            scoreText.text = score.ToString();
+        }
     }
 }

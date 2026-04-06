@@ -21,7 +21,7 @@ namespace FunBoardGames.Network.SignalR
 
         int[] dices = new int[4];
         SortedDictionary<int, int> whiteConePositions = new();
-        SortedDictionary<int, SignalRCantStopPlayer> playerFinishPositions = new();
+        HashSet<int> playerFinishPositions = new();
         HubConnection _connection;
         SynchronizationContext unityContext;
         List<IDisposable> connectionHooks = new();
@@ -30,7 +30,7 @@ namespace FunBoardGames.Network.SignalR
 
         public IDictionary<int, int> WhiteConePositions => whiteConePositions;
 
-        public IEnumerable<int> FinishedColumns => playerFinishPositions.Keys;
+        public IEnumerable<int> FinishedColumns => playerFinishPositions;
 
         public event Action<CantStopBoardData, ICantStopPlayer> GameDataReceived;
         public event Action<int[], bool> DiceRolled;
@@ -101,8 +101,9 @@ namespace FunBoardGames.Network.SignalR
             foreach (var cone in playRoundMsg.UpdatedColumns)
                 whiteConePositions[cone.Key] = cone.Value;
 
-            player.UpdateCones(whiteConePositions);
-
+            player.UpdateCones(playRoundMsg.playerCones);
+            player.UpdateScore(playRoundMsg.FinalScore);
+            playerFinishPositions = new HashSet<int>(playRoundMsg.FinishedColumns);
             RoundPlayed?.Invoke(player, playRoundMsg.UpdatedColumns, playRoundMsg.DiceIndex1, playRoundMsg.DiceIndex2, nextPlayer);
             whiteConePositions.Clear();
         }

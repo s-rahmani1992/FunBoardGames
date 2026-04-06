@@ -259,6 +259,8 @@ namespace FunBoardGames.CantStop
                 boardController.RemoveWhiteCones();
             }
 
+            playerUiDict[player].UpdateScore(player.Score);
+
             OnTurnStarted(nextPlayer);
         }
 

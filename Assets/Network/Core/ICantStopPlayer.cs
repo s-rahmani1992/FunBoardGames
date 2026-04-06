@@ -9,5 +9,7 @@ namespace FunBoardGames.Network
         PlayerColor ConeColor { get; }
 
         IDictionary<int, int> ConePositions { get; }
+
+        int Score { get; }
     }
 }
