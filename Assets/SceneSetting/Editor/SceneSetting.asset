@@ -11,5 +11,5 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b18860c610971784fafefab589000e15, type: 3}
   m_Name: SceneSetting
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::SceneSetting
   awakeScene: {fileID: 102900000, guid: d4583f0ee2442f84cb5ebcd378e6b896, type: 3}
