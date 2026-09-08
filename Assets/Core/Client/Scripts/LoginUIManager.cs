@@ -11,11 +11,10 @@ namespace FunBoardGames.Client
 {
     public class LoginUIManager : MonoBehaviour
     {
-        [SerializeField] TMP_InputField nameField;
-        [SerializeField] Button loginButton;
         [SerializeField] TMP_Text messageLogText;
         [SerializeField] GameObject waitObject;
         [SerializeField] UserProfile userProfile;
+        [SerializeField] SignUpDialog signUpDialog;
 
         IAuthHandler authHandler;
 
@@ -25,10 +24,20 @@ namespace FunBoardGames.Client
             userProfile.Register(authHandler);
             authHandler.LoginSuccess += OnLoginSuccess;
             authHandler.LoginFailed += OnLoginFailed;
-            loginButton.onClick.AddListener(StartLogin);
-            nameField.onValueChanged.AddListener(OnNameFieldChanged);
-            OnNameFieldChanged(nameField.text);
             SetLoginProcess(false);
+
+            if(PlayerPrefs.HasKey("username"))
+            {
+                StartLogin();
+            }
+            else
+            {
+                var dialog = DialogManager.Instance.ShowDialog(signUpDialog, DialogShowOptions.OverAll);
+                dialog.OnClosedEvent += () =>
+                {
+                   SignUp(dialog.ChosenUsername);
+                };
+            }
         }
 
         private void OnDestroy()
@@ -39,12 +48,10 @@ namespace FunBoardGames.Client
 
         private void SetLoginProcess(bool isProcess)
         {
-            loginButton.gameObject.SetActive(!isProcess);
-            nameField.interactable = !isProcess;
             waitObject.SetActive(isProcess);
         }
 
-        private void OnLoginSuccess(Profile _)
+        private void OnLoginSuccess(SignInResponse _)
         {
             DOVirtual.DelayedCall(0.5f, () => SceneManager.LoadScene("Menu"));
         }
@@ -52,25 +59,24 @@ namespace FunBoardGames.Client
         private void OnLoginFailed(string errorMessage)
         {
             LogMessage(errorMessage);
-            nameField.text = "";
             SetLoginProcess(false);
-        }
-
-        private void OnNameFieldChanged(string text)
-        {
-            loginButton.interactable = text.Length > 2;
         }
 
         private void StartLogin()
         {
             SetLoginProcess(true);
-            authHandler.Authenticate(nameField.text);
+            authHandler.SignIn(new SignInData{ PlayerName = PlayerPrefs.GetString("username"), DeviceId = Utilities.DeviceId, Password = PlayerPrefs.GetString("password") });
+        }
+
+        private void SignUp(string name)
+        {
+            SetLoginProcess(true);
+            authHandler.SignUp(new SignUpData { PlayerName = name, DeviceId = Utilities.DeviceId });
         }
 
         private void LogMessage(string message, float duration = 3)
         {
             messageLogText.text = message;
-            nameField.text = "";
             DOVirtual.DelayedCall(duration, () => messageLogText.text = "");
         }
     }

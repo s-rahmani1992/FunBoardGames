@@ -44,10 +44,11 @@ namespace FunBoardGames
             CloseAllDialogs();
         }
 
-        public void ShowDialog<TDialog>(TDialog dialog, DialogShowOptions showOption) where TDialog : BaseDialog
+        public TDialog ShowDialog<TDialog>(TDialog dialog, DialogShowOptions showOption) where TDialog : BaseDialog
         {
             var createdDialog = Instantiate(dialog, transform);
             ArrangeDialog(createdDialog, showOption);
+            return createdDialog;
         }
 
         public void ShowDialog<TDialog, TData>(TDialog dialog, DialogShowOptions showOption, TData data) where TDialog : BaseDialog, IDataDialog<TData>
@@ -144,6 +145,7 @@ namespace FunBoardGames
         {
             dialog.OnClose();
             yield return new WaitForSeconds(dialog.closeTime);
+            dialog.InvokeCloseEvent();
             Destroy(dialog.gameObject);
             RefreshDialogs();
         }

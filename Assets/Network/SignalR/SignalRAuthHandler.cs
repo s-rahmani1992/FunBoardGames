@@ -7,7 +7,7 @@ namespace FunBoardGames.Network.SignalR
 {
     public class SignalRAuthHandler : IAuthHandler
     {
-        public event Action<Profile> LoginSuccess;
+        public event Action<SignInResponse> LoginSuccess;
         public event Action<string> LoginFailed;
 
         HubConnection _connection; 
@@ -17,33 +17,49 @@ namespace FunBoardGames.Network.SignalR
         {
             unityContext = SynchronizationContext.Current;
             _connection = connection;
-            _connection.On<LoginResponseMessage>(AuthenticationMessageNames.Login, (loginMsg) =>
+            _connection.On<AuthenticationResponseMessage>(AuthenticationMessageNames.SignIn, (loginMsg) =>
             {
                 unityContext.Post(_ => OnLogin(loginMsg), null);
             });
         }
 
-        private void OnLogin(LoginResponseMessage msg)
+        private void OnLogin(AuthenticationResponseMessage msg)
         {
-            if (msg.Success)
+            if (msg.ErrorCode == AuthenticationErrorCode.None)
             {
-                LoginSuccess?.Invoke(new Profile()
+                LoginSuccess?.Invoke(new SignInResponse()
                 {
-                    ConnectionId = msg.Profile.ConnectionId,
-                    PlayerName = msg.Profile.PlayerName,
+                    Profile = new Profile()
+                    {
+                        UserId = msg.ProfileDTO.UserId,
+                        PlayerName = msg.ProfileDTO.PlayerName,
+                        ConnectionId = msg.ProfileDTO.ConnectionId,
+                    },
+                    Token = msg.AuthToken,
                 });
             }
             else 
             {
-                LoginFailed?.Invoke(msg.ErrorMessage);
+                LoginFailed?.Invoke("Error");
             }
         }
 
-        public void Authenticate(string playerName)
+        public void SignUp(SignUpData signUpData)
         {
-            _connection.InvokeAsync(AuthenticationMessageNames.Login, new LoginRequestMessage()
+            _connection.InvokeAsync(AuthenticationMessageNames.SignUp, new SignUpRequestMessage()
             {
-                PlayerName = playerName,
+                PlayerName = signUpData.PlayerName,
+                DeviceId = signUpData.DeviceId,
+            });
+        }
+
+        public void SignIn(SignInData signInData)
+        {
+            _connection.InvokeAsync(AuthenticationMessageNames.SignIn, new SignInRequestMessage()
+            {
+                PlayerName = signInData.PlayerName,
+                AuthToken = signInData.Password,
+                DeviceId = signInData.DeviceId,
             });
         }
     }

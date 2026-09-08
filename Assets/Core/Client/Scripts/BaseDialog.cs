@@ -14,6 +14,8 @@ namespace FunBoardGames
 
         public float showTime, closeTime;
 
+        public event System.Action OnClosedEvent;
+
         protected virtual void Awake()
         {
             DialogAnimator = GetComponent<Animator>();
@@ -38,6 +40,11 @@ namespace FunBoardGames
         public virtual void OnClose() 
         {
             if (DialogAnimator != null) DialogAnimator.SetTrigger("close");
+        }
+
+        public void InvokeCloseEvent()
+        {
+            OnClosedEvent?.Invoke();
         }
     }
 }

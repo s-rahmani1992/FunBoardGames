@@ -6,7 +6,9 @@ namespace FunBoardGames
     public class UserProfile : ScriptableObject
     {
         IAuthHandler _authHandler;
-        public string PlayerName { get; private set; }
+        public string PlayerName => Profile?.PlayerName;
+
+        public Profile Profile { get; private set; }
 
         public static string ConnectionId { get; private set; }
         
@@ -16,10 +18,12 @@ namespace FunBoardGames
             _authHandler.LoginSuccess += OnAuthReceived;
         }
 
-        private void OnAuthReceived(Profile profile)
+        private void OnAuthReceived(SignInResponse profile)
         {
-            PlayerName = profile.PlayerName;
-            ConnectionId = profile.ConnectionId;
+            Profile = profile.Profile;
+            ConnectionId = profile.Profile.ConnectionId;
+            PlayerPrefs.SetString("username", profile.Profile.PlayerName);
+            PlayerPrefs.SetString("password", profile.Token);
         }
 
         private void OnDisable()
