@@ -16,11 +16,34 @@ namespace FunBoardGames.Client
         [SerializeField] UserProfile userProfile;
         [SerializeField] SignUpDialog signUpDialog;
 
+        INetworkManager networkManager;
         IAuthHandler authHandler;
 
         private void Start()
         {
-            authHandler = NetworkSingleton.NetworkManager.AuthHandler;
+            networkManager = NetworkSingleton.NetworkManager;
+            networkManager.Connected += OnConnected;
+            networkManager.ConnectionFailed += OnConnectionFailed;
+
+            SetLoginProcess(true);
+            networkManager.Connect();
+        }
+
+        private void OnDestroy()
+        {
+            networkManager.Connected -= OnConnected;
+            networkManager.ConnectionFailed -= OnConnectionFailed;
+
+            if (authHandler != null)
+            {
+                authHandler.LoginSuccess -= OnLoginSuccess;
+                authHandler.LoginFailed -= OnLoginFailed;
+            }
+        }
+
+        private void OnConnected()
+        {
+            authHandler = networkManager.AuthHandler;
             userProfile.Register(authHandler);
             authHandler.LoginSuccess += OnLoginSuccess;
             authHandler.LoginFailed += OnLoginFailed;
@@ -40,10 +63,10 @@ namespace FunBoardGames.Client
             }
         }
 
-        private void OnDestroy()
+        private void OnConnectionFailed(string error)
         {
-            authHandler.LoginSuccess -= OnLoginSuccess;
-            authHandler.LoginFailed -= OnLoginFailed;
+            LogMessage(error);
+            SetLoginProcess(false);
         }
 
         private void SetLoginProcess(bool isProcess)
