@@ -1,4 +1,5 @@
 using DG.Tweening;
+using System.Collections.Generic;
 using TMPro;
 
 using UnityEngine;
@@ -15,6 +16,7 @@ namespace FunBoardGames.Client
         [SerializeField] GameObject waitObject;
         [SerializeField] UserProfile userProfile;
         [SerializeField] SignUpDialog signUpDialog;
+        [SerializeField] MessageDialog messageDialog;
 
         INetworkManager networkManager;
         IAuthHandler authHandler;
@@ -65,8 +67,25 @@ namespace FunBoardGames.Client
 
         private void OnConnectionFailed(string error)
         {
-            LogMessage(error);
             SetLoginProcess(false);
+
+            var data = new MessageData("Error", error, new List<ButtonData>
+            {
+                new ButtonData("Retry", OnRetryConnectionClicked),
+                new ButtonData("Quit", OnQuitClicked)
+            });
+            DialogManager.Instance.ShowDialog(messageDialog, DialogShowOptions.OverAll, data);
+        }
+
+        private void OnRetryConnectionClicked()
+        {
+            SetLoginProcess(true);
+            networkManager.Connect();
+        }
+
+        private void OnQuitClicked()
+        {
+            Application.Quit();
         }
 
         private void SetLoginProcess(bool isProcess)

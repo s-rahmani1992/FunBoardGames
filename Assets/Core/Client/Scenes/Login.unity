@@ -850,6 +850,7 @@ MonoBehaviour:
   waitObject: {fileID: 1934364307}
   userProfile: {fileID: 11400000, guid: 64194ba9ba2799b4dafa3757146ee5e2, type: 2}
   signUpDialog: {fileID: 4914538396962790312, guid: 0ae3a6a3a0bd9b24dbdb74c900299b5c, type: 3}
+  messageDialog: {fileID: 147469796528152084, guid: cd7be6b9ff60bec45aedb9b9fd335aac, type: 3}
 --- !u!1001 &1393531653389706867
 PrefabInstance:
   m_ObjectHideFlags: 0
