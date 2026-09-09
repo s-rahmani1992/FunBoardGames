@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "unity": {
+      "command": "C:\\Users\\rahma\\AppData\\Local\\Unity\\bin\\unity.exe",
+      "args": [
+        "mcp",
+        "--project-path",
+        "C:\\Users\\rahma\\Desktop\\My Projects\\Personal-Projects\\FunBoardGames"
+      ]
+    }
+  }
+}
