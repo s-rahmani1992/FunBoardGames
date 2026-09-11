@@ -16,6 +16,7 @@ namespace FunBoardGames.Client
         [SerializeField] TMP_InputField roomNameField;
         [SerializeField] RoomDialog roomDialog;
         [SerializeField] RoomListDialog roomListDialog;
+        [SerializeField] JoinGamePanel joinGamePanel;
 
         ILobbyHandler lobbyHandler;
 
@@ -37,7 +38,8 @@ namespace FunBoardGames.Client
 
         private void OnJoinRandomClicked()
         {
-            throw new NotImplementedException();
+            var joinPanel = Instantiate(joinGamePanel);
+            joinPanel.Initialize(lobbyHandler, gameType);
         }
 
         private void OnJoinListClicked()

@@ -24,11 +24,6 @@ namespace FunBoardGames.Network.SignalR
             {
                 unityContext.Post(_ => OnJoinRoomReceived(roomMsg), null);
             });
-
-            _connection.On<GetRoomListResponseMessage>(LobbyMessageNames.GetRoomList, (roomListMsg) =>
-            {
-                unityContext.Post(_ => OnRoomListReceived(roomListMsg), null);
-            });
         }
 
         private void OnRoomListReceived(GetRoomListResponseMessage roomListMsg)
@@ -44,17 +39,12 @@ namespace FunBoardGames.Network.SignalR
 
         public void CreateRoom(BoardGame game, string roomName)
         {
-            _connection.InvokeAsync(LobbyMessageNames.CreateRoom, new CreateRoomRequestMessage() { 
-                Game = (BoardGameType)game, 
-                RoomName = roomName,
-            });
+            
         }
 
         public void GetRoomList(BoardGame gameType)
         {
-            _connection.InvokeAsync(LobbyMessageNames.GetRoomList, new GetRoomListRequestMessage() { 
-                Game = (BoardGameType)gameType, 
-            });
+            
         }
 
         public void JoinRoom(BoardGame game, int roomId)
@@ -95,8 +85,15 @@ namespace FunBoardGames.Network.SignalR
 
         public void JointTestGame(BoardGame game)
         {
-            _connection.InvokeAsync(LobbyMessageNames.JoinStraightGame, new JoinStraightGameRequestMessage() { 
-                Game = (BoardGameType)game, 
+            _connection.InvokeAsync(LobbyMessageNames.JoinStraightGame, new JoinStraightGameRequestMessage() {
+                Game = (BoardGameType)game,
+            });
+        }
+
+        public void JoinGame(BoardGame game)
+        {
+            _connection.InvokeAsync(LobbyMessageNames.JoinGame, new JoinGameRequestMessage() {
+                Game = (BoardGameType)game,
             });
         }
     }

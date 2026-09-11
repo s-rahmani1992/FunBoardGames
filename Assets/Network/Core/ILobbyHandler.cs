@@ -17,7 +17,7 @@ namespace FunBoardGames.Network
 
     public class RoomInfo
     {
-        public int Id { get; set; }
+        public uint Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public BoardGame GameType { get; set; }
         public int PlayerCount { get; set; }
@@ -39,6 +39,7 @@ namespace FunBoardGames.Network
         void JoinRoom(BoardGame game, int roomId);
         void GetRoomList(BoardGame gameType);
         void JointTestGame(BoardGame game);
+        void JoinGame(BoardGame game);
 
         event Action<IGameHandler, IEnumerable<IBoardGamePlayer>> JoinedGame;
         event Action<IEnumerable<RoomInfo>> RoomListReceived;
