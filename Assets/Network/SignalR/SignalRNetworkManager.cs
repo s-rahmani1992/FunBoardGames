@@ -12,12 +12,14 @@ namespace FunBoardGames.Network.SignalR
     {
         SignalRAuthHandler _authHandler;
         SignalRLobbyHandler _lobbyHandler;
+        SignalRUserHandler _userHandler;
         HubConnection _connection;
         SynchronizationContext unityContext;
         string serverUrl = "http://localhost:5020/game";
 
         public IAuthHandler AuthHandler => _authHandler;
         public ILobbyHandler LobbyHandler => _lobbyHandler;
+        public IUserHandler UserHandler => _userHandler;
 
         public event Action OnInitialized;
         public event Action Connected;
@@ -42,6 +44,7 @@ namespace FunBoardGames.Network.SignalR
 
             _authHandler = new SignalRAuthHandler(_connection);
             _lobbyHandler = new SignalRLobbyHandler(_connection);
+            _userHandler = new SignalRUserHandler(_connection);
 
             OnInitialized?.Invoke();
         }

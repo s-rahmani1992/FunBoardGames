@@ -11,7 +11,7 @@ namespace FunBoardGames.Network.SignalR
     {
         public event Action<IGameHandler, IEnumerable<IBoardGamePlayer>> JoinedGame;
         public event Action<IEnumerable<RoomInfo>> RoomListReceived;
-
+       
         HubConnection _connection;
         SynchronizationContext unityContext;
 
@@ -90,10 +90,10 @@ namespace FunBoardGames.Network.SignalR
             });
         }
 
-        public void JoinGame(BoardGame game)
+        public void JoinGame(uint gameId)
         {
             _connection.InvokeAsync(LobbyMessageNames.JoinGame, new JoinGameRequestMessage() {
-                Game = (BoardGameType)game,
+                GameId = gameId,
             });
         }
     }

@@ -1,5 +1,4 @@
 using FunBoardGames.Network;
-using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,48 +7,28 @@ namespace FunBoardGames.Client
 {
     public class GameBanner : MonoBehaviour
     {
-        [SerializeField] BoardGame gameType; 
         [SerializeField] TMP_Text titleText;
-        [SerializeField] Button createButton;
-        [SerializeField] Button joinListButton;
+        [SerializeField] TMP_Text playerCountText;
         [SerializeField] Button joinRandomButton;
-        [SerializeField] TMP_InputField roomNameField;
-        [SerializeField] RoomDialog roomDialog;
-        [SerializeField] RoomListDialog roomListDialog;
         [SerializeField] JoinGamePanel joinGamePanel;
 
         ILobbyHandler lobbyHandler;
+        BoardGameData gameData;
 
-        private void Start()
+        public void Initialize(BoardGameData gameData)
         {
+            this.gameData = gameData;
+
             lobbyHandler = NetworkSingleton.NetworkManager.LobbyHandler;
-            titleText.text = gameType.ToString();
-            createButton.onClick.AddListener(OnCreateClicked);
-            joinListButton.onClick.AddListener(OnJoinListClicked);
+            titleText.text = string.IsNullOrEmpty(gameData.Name) ? gameData.Type.ToString() : gameData.Name;
+            playerCountText.text = $"{gameData.NumberofPlayers} Players";
             joinRandomButton.onClick.AddListener(OnJoinRandomClicked);
-            roomNameField.onValueChanged.AddListener(OnroomNameChanged);
-            OnroomNameChanged("");
-        }
-
-        private void OnroomNameChanged(string textValue)
-        {
-            createButton.interactable = textValue.Length > 1;
         }
 
         private void OnJoinRandomClicked()
         {
             var joinPanel = Instantiate(joinGamePanel);
-            joinPanel.Initialize(lobbyHandler, gameType);
-        }
-
-        private void OnJoinListClicked()
-        {
-            DialogManager.Instance.ShowDialog(roomListDialog, DialogShowOptions.OverAll, (gameType, lobbyHandler));
-        }
-
-        private void OnCreateClicked()
-        {
-            DialogManager.Instance.ShowDialog(roomDialog, DialogShowOptions.OverAll, (lobbyHandler, gameType, roomNameField.text, (int?)null));
+            joinPanel.Initialize(lobbyHandler, gameData);
         }
     } 
 }

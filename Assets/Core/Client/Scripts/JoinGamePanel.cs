@@ -1,5 +1,4 @@
 using FunBoardGames.Network;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -37,16 +36,16 @@ namespace FunBoardGames.Client
             Destroy(gameObject);
         }
 
-        public void Initialize(ILobbyHandler lobbyHandler, BoardGame gameType)
+        public void Initialize(ILobbyHandler lobbyHandler, BoardGameData gameData)
         {
             this.lobbyHandler = lobbyHandler;
-            this.gameType = gameType;
+            this.gameType = gameData.Type;
 
-            gameTxt.text = gameType.ToString();
+            gameTxt.text = gameData.Name;
             waitingObject.SetActive(true);
 
             lobbyHandler.JoinedGame += OnJoinedGame;
-            lobbyHandler.JoinGame(gameType);
+            lobbyHandler.JoinGame(gameData.Id);
         }
 
         private void OnJoinedGame(IGameHandler handler, IEnumerable<IBoardGamePlayer> players)

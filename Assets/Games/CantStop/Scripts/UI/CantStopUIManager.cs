@@ -279,6 +279,7 @@ namespace FunBoardGames.CantStop
             gameHandler.WhiteConesPlaced -= OnWhiteConePlaced;
             gameHandler.RoundPlayed -= OnRoundPlayed;
             gameHandler.RoundCanceled -= OnRoundCanceled;
+            gameHandler.GameFinished -= OnGameFinished;
         }
 
         private void OnTurnStarted(ICantStopPlayer player)

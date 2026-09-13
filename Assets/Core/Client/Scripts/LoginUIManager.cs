@@ -18,8 +18,12 @@ namespace FunBoardGames.Client
         [SerializeField] Image progressFillImage;
         [SerializeField] TMP_Text progressText;
 
+        //TODO : This is a temporary solution to pass the game data to the menu scene. Replace it with scriptable object later
+        public static List<BoardGameData> Games { get; private set; }
+
         INetworkManager networkManager;
         IAuthHandler authHandler;
+        IUserHandler userHandler;
 
         private void Start()
         {
@@ -41,10 +45,17 @@ namespace FunBoardGames.Client
                 authHandler.LoginSuccess -= OnLoginSuccess;
                 authHandler.LoginFailed -= OnLoginFailed;
             }
+
+            if (userHandler != null)
+            {
+                userHandler.UserGameDataReceived -= OnUserGameDataReceived;
+            }
         }
 
         private void OnConnected()
         {
+            SetProgress(0.3f, "Signing In .....");
+
             authHandler = networkManager.AuthHandler;
             userProfile.Register(authHandler);
             authHandler.LoginSuccess += OnLoginSuccess;
@@ -93,7 +104,16 @@ namespace FunBoardGames.Client
 
         private void OnLoginSuccess(SignInResponse _)
         {
-            SetProgress(1f, "Loading .....");
+            SetProgress(0.6f, "Getting Data .....");
+            userHandler = networkManager.UserHandler;
+            userHandler.UserGameDataReceived += OnUserGameDataReceived;
+            userHandler.GetUserData();
+        }
+
+        private void OnUserGameDataReceived(UserGameData obj)
+        {
+            SetProgress(1.0f, "Loading Menu .....");
+            Games = obj.Games;
             DOVirtual.DelayedCall(0.5f, () => SceneManager.LoadScene("Menu"));
         }
 
@@ -109,7 +129,6 @@ namespace FunBoardGames.Client
 
         private void StartLogin()
         {
-            SetProgress(0.5f, "Signing In .....");
             authHandler.SignIn(new SignInData{ PlayerName = PlayerPrefs.GetString("username"), DeviceId = Utilities.DeviceId, Password = PlayerPrefs.GetString("password") });
         }
 

@@ -9,6 +9,8 @@ namespace FunBoardGames.Client
         [SerializeField] UserProfile userProfile;
         [SerializeField] TMP_Text playerNameText;
         [SerializeField] UserGameHolder userGameHolder;
+        [SerializeField] GameBanner gameBannerPrefab;
+        [SerializeField] RectTransform gameBannerHolder;
 
         ILobbyHandler lobbyHandler;
 
@@ -18,6 +20,12 @@ namespace FunBoardGames.Client
             lobbyHandler = NetworkSingleton.NetworkManager.LobbyHandler;
             playerNameText.text = userProfile.PlayerName;
             userGameHolder.Register(lobbyHandler);
+
+            foreach (var gameData in LoginUIManager.Games)
+            {
+                var banner = Instantiate(gameBannerPrefab, gameBannerHolder);
+                banner.Initialize(gameData);
+            }
         }
     }
 }
