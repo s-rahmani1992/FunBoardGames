@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1026a430e2080d04ab39532c3221c8bb, type: 3}
   m_Name: SignalRNetworkManager
   m_EditorClassIdentifier: Assembly-CSharp::FunBoardGames.Network.SignalR.SignalRNetworkManager
+  serverUrl: http://192.168.1.176:5020/game

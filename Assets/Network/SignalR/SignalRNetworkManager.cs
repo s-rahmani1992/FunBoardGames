@@ -15,6 +15,11 @@ namespace FunBoardGames.Network.SignalR
         SignalRUserHandler _userHandler;
         HubConnection _connection;
         SynchronizationContext unityContext;
+        [SerializeField]
+        [Tooltip("Editor/Standalone default: http://localhost:5020/game. " +
+                 "On a physical Android device or emulator, 'localhost' means the device itself, not this PC. " +
+                 "Override this per-build/per-test with your PC's LAN IP, e.g. http://192.168.1.23:5020/game " +
+                 "(the exact host address depends on the emulator's network mode).")]
         string serverUrl = "http://localhost:5020/game";
 
         public IAuthHandler AuthHandler => _authHandler;
