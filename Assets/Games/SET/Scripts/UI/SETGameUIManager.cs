@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using FunBoardGames.Network;
+using FunBoardGames.Client;
 
 namespace FunBoardGames.SET
 {
@@ -19,6 +20,8 @@ namespace FunBoardGames.SET
         [SerializeField] Timer timer;
 
         Dictionary<ISETPlayer, PlayerUI> playerUIMap = new();
+
+        SETGameData gameData;
 
         public static SETGameUIManager Instance { get; private set; }
 
@@ -37,8 +40,9 @@ namespace FunBoardGames.SET
         private void Awake()
         {
             Instance = this;
+            gameData = LoginUIManager.ActiveGame as SETGameData;
             setGameHandler = userGameHolder.GetGameHandler<ISETGameHandler>();
-            cardDeckManager.RegisterGameHandler(setGameHandler);
+            cardDeckManager.RegisterGameHandler(setGameHandler, gameData);
             setGameHandler.SignalGameLoaded();
             Subscribe();
             UpdatePlayerUIs();

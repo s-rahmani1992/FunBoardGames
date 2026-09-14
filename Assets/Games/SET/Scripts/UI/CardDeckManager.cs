@@ -18,22 +18,26 @@ namespace FunBoardGames.SET
         [SerializeField] CardUI cardUIPrefab;
 
         ISETGameHandler gameHandler;
+        SETGameData gameData;
 
         public event Action CardDestributionEnded;
 
         public HashSet<CardUI> selectedCards = new(3);
         List<CardUI> placedCards = new();
 
-        int remained = 81;
+        int remained = 1;
 
-        private void Start()
-        {
-            remainTxt.text = remained.ToString();
-        }
-
-        public void RegisterGameHandler(ISETGameHandler gameHandler)
+        public void RegisterGameHandler(ISETGameHandler gameHandler, SETGameData gameData)
         {
             this.gameHandler = gameHandler;
+            this.gameData = gameData;
+
+            remained = 1;
+
+            for (int i = 0; i < gameData.AttributeCount; i++)
+                remained *= 3;
+
+            remainTxt.text = remained.ToString();
             gameHandler.NewCardsReceived += OnNewCardsReceived;
             gameHandler.PlayerStartedGuess += OnPlayerStartedGuess;
             gameHandler.PlayerGuessReceived += OnPlayerGuessReceived;

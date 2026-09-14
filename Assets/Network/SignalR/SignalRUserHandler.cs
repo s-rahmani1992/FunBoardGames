@@ -38,7 +38,7 @@ namespace FunBoardGames.Network.SignalR
 
             return gameDto switch
             {
-                SETGameDTO setGameDto => new SETGameData(setGameDto.Id, setGameDto.GuessTime, name, playerCount),
+                SETGameDTO setGameDto => new SETGameData(setGameDto.Id, setGameDto.GuessTime, name, playerCount, setGameDto.AttributeCount),
                 CantStopGameDTO cantStopGameDto => new CantStopGameData(cantStopGameDto.Id, new CantStopBoardData(cantStopGameDto.BoardData), name, playerCount),
                 _ => new BoardGameData(gameDto.Id, (BoardGame)(int)gameDto.GameType, name, playerCount),
             };

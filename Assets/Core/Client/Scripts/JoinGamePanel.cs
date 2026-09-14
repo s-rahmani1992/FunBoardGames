@@ -46,6 +46,7 @@ namespace FunBoardGames.Client
 
             lobbyHandler.JoinedGame += OnJoinedGame;
             lobbyHandler.JoinGame(gameData.Id);
+            LoginUIManager.ActiveGame = gameData;
         }
 
         private void OnJoinedGame(IGameHandler handler, IEnumerable<IBoardGamePlayer> players)

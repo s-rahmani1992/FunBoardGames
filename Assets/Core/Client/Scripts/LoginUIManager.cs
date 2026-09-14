@@ -20,6 +20,7 @@ namespace FunBoardGames.Client
 
         //TODO : This is a temporary solution to pass the game data to the menu scene. Replace it with scriptable object later
         public static List<BoardGameData> Games { get; private set; }
+        public static BoardGameData ActiveGame { get; set; }
 
         INetworkManager networkManager;
         IAuthHandler authHandler;
