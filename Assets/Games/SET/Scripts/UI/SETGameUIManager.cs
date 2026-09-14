@@ -40,7 +40,7 @@ namespace FunBoardGames.SET
         private void Awake()
         {
             Instance = this;
-            gameData = LoginUIManager.ActiveGame as SETGameData;
+            gameData = userGameHolder.ActiveGame as SETGameData;
             setGameHandler = userGameHolder.GetGameHandler<ISETGameHandler>();
             cardDeckManager.RegisterGameHandler(setGameHandler, gameData);
             setGameHandler.SignalGameLoaded();

@@ -152,6 +152,7 @@ MonoBehaviour:
   userProfile: {fileID: 11400000, guid: 64194ba9ba2799b4dafa3757146ee5e2, type: 2}
   playerNameText: {fileID: 835234677}
   userGameHolder: {fileID: 11400000, guid: 024728347846f934e9cf6f23e7599d80, type: 2}
+  tournamentGameHolder: {fileID: 11400000, guid: 3c36d055f185d5a42a85f1d7dca7e921, type: 2}
   gameBannerPrefab: {fileID: 1567049037893325204, guid: a25608634cc43474c947afc25fb1c81a, type: 3}
   gameBannerHolder: {fileID: 786924135}
 --- !u!4 &223646720

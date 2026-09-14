@@ -852,6 +852,7 @@ MonoBehaviour:
   messageDialog: {fileID: 147469796528152084, guid: cd7be6b9ff60bec45aedb9b9fd335aac, type: 3}
   progressFillImage: {fileID: 10371059}
   progressText: {fileID: 1630840038}
+  tournamentGameHolder: {fileID: 11400000, guid: 3c36d055f185d5a42a85f1d7dca7e921, type: 2}
 --- !u!1 &2124085952
 GameObject:
   m_ObjectHideFlags: 0

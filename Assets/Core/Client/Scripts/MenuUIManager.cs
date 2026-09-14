@@ -9,6 +9,7 @@ namespace FunBoardGames.Client
         [SerializeField] UserProfile userProfile;
         [SerializeField] TMP_Text playerNameText;
         [SerializeField] UserGameHolder userGameHolder;
+        [SerializeField] TournamentGameHolder tournamentGameHolder;
         [SerializeField] GameBanner gameBannerPrefab;
         [SerializeField] RectTransform gameBannerHolder;
 
@@ -21,7 +22,7 @@ namespace FunBoardGames.Client
             playerNameText.text = userProfile.PlayerName;
             userGameHolder.Register(lobbyHandler);
 
-            foreach (var gameData in LoginUIManager.Games)
+            foreach (var gameData in tournamentGameHolder.Games)
             {
                 var banner = Instantiate(gameBannerPrefab, gameBannerHolder);
                 banner.Initialize(gameData);

@@ -17,10 +17,7 @@ namespace FunBoardGames.Client
         [SerializeField] MessageDialog messageDialog;
         [SerializeField] Image progressFillImage;
         [SerializeField] TMP_Text progressText;
-
-        //TODO : This is a temporary solution to pass the game data to the menu scene. Replace it with scriptable object later
-        public static List<BoardGameData> Games { get; private set; }
-        public static BoardGameData ActiveGame { get; set; }
+        [SerializeField] TournamentGameHolder tournamentGameHolder;
 
         INetworkManager networkManager;
         IAuthHandler authHandler;
@@ -107,6 +104,7 @@ namespace FunBoardGames.Client
         {
             SetProgress(0.6f, "Getting Data .....");
             userHandler = networkManager.UserHandler;
+            tournamentGameHolder.Register(userHandler);
             userHandler.UserGameDataReceived += OnUserGameDataReceived;
             userHandler.GetUserData();
         }
@@ -114,7 +112,6 @@ namespace FunBoardGames.Client
         private void OnUserGameDataReceived(UserGameData obj)
         {
             SetProgress(1.0f, "Loading Menu .....");
-            Games = obj.Games;
             DOVirtual.DelayedCall(0.5f, () => SceneManager.LoadScene("Menu"));
         }
 

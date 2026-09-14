@@ -6,6 +6,13 @@ public class UserGameHolder : ScriptableObject
     IGameHandler _currentGameHandler;
     ILobbyHandler _lobbyHandler;
 
+    public BoardGameData ActiveGame { get; private set; }
+
+    public void SetActiveGame(BoardGameData gameData)
+    {
+        ActiveGame = gameData;
+    }
+
     public void Register(ILobbyHandler lobbyHandler)
     {
         if (_lobbyHandler != null)

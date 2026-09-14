@@ -311,6 +311,7 @@ MonoBehaviour:
   waitingObject: {fileID: 7426761975248654822}
   sceneMap: {fileID: 11400000, guid: 434c2b0e7a791d04fbf2766ad005fade, type: 2}
   leaveBtn: {fileID: 2482353158347725067}
+  userGameHolder: {fileID: 11400000, guid: 024728347846f934e9cf6f23e7599d80, type: 2}
 --- !u!1 &4409962432674191545
 GameObject:
   m_ObjectHideFlags: 0

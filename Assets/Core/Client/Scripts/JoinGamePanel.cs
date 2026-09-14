@@ -18,6 +18,7 @@ namespace FunBoardGames.Client
         [SerializeField] GameObject waitingObject;
         [SerializeField] SceneAssetMap sceneMap;
         [SerializeField] Button leaveBtn;
+        [SerializeField] UserGameHolder userGameHolder;
 
         Coroutine toast;
         ILobbyHandler lobbyHandler;
@@ -46,7 +47,7 @@ namespace FunBoardGames.Client
 
             lobbyHandler.JoinedGame += OnJoinedGame;
             lobbyHandler.JoinGame(gameData.Id);
-            LoginUIManager.ActiveGame = gameData;
+            userGameHolder.SetActiveGame(gameData);
         }
 
         private void OnJoinedGame(IGameHandler handler, IEnumerable<IBoardGamePlayer> players)
