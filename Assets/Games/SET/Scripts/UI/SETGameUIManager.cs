@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using FunBoardGames.Network;
-using FunBoardGames.Client;
 
 namespace FunBoardGames.SET
 {
@@ -11,7 +10,7 @@ namespace FunBoardGames.SET
     {
         [SerializeField] CardDeckManager cardDeckManager;
         [SerializeField] ObjectPoolManager pool;
-        [SerializeField] Button guessBtn, cardBtn, hintBtn;
+        [SerializeField] Button guessBtn, hintBtn;
         [SerializeField] GameLogger gameLogger;
         [SerializeField] UserGameHolder userGameHolder;
         [SerializeField] PlayerUI[] playerUIs;
@@ -61,9 +60,6 @@ namespace FunBoardGames.SET
             setGameHandler.PlayerStartedGuess += OnPlayerStartedGuess;
             setGameHandler.PlayerGuessTimeout += OnPlayerGuessTimeout;
             setGameHandler.PlayerGuessReceived += OnPlayerGuessReceived;
-            setGameHandler.PlayerRequestCards += OnCardVoteStarted;
-            setGameHandler.PlayerVoteReceived += OnPlayerVoteReceived;
-            setGameHandler.VoteResultReceived += OnVoteResultReceived;
             setGameHandler.GameEnded += OnGameFinished;
         }
 
@@ -143,9 +139,6 @@ namespace FunBoardGames.SET
             setGameHandler.PlayerStartedGuess -= OnPlayerStartedGuess;
             setGameHandler.PlayerGuessTimeout -= OnPlayerGuessTimeout;
             setGameHandler.PlayerGuessReceived -= OnPlayerGuessReceived;
-            setGameHandler.PlayerRequestCards -= OnCardVoteStarted;
-            setGameHandler.PlayerVoteReceived -= OnPlayerVoteReceived;
-            setGameHandler.VoteResultReceived -= OnVoteResultReceived;
             setGameHandler.GameEnded -= OnGameFinished;
         }
 
@@ -172,7 +165,6 @@ namespace FunBoardGames.SET
         void RefreshBtns(SETGameState state)
         {
             guessBtn.interactable = hintBtn.interactable = (state == SETGameState.Normal);
-            cardBtn.interactable = (cardCount > 0 && state == SETGameState.Normal);
             for (int i = 0; i < hints.Count; i++)
                 hints[i].Mark(false);
             hints.Clear();
@@ -194,11 +186,6 @@ namespace FunBoardGames.SET
 
             yield return new WaitForSeconds(6);
             DialogManager.Instance.CloseDialog<GuessResultDialog>();
-        }
-
-        public void SendCardRequest()
-        {
-            setGameHandler.RequestMoreCards();
         }
 
         public void SendHint()

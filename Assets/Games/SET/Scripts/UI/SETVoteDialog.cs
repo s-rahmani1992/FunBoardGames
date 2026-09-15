@@ -1,4 +1,3 @@
-using DG.Tweening;
 using FunBoardGames.Network;
 using System.Collections.Generic;
 using UnityEngine;
@@ -20,8 +19,6 @@ namespace FunBoardGames.SET
         public override void Show()
         {
             base.Show();
-            setGameHandler.VoteResultReceived += OnVoteResultReceived;
-            setGameHandler.PlayerVoteReceived += OnPlayerVoteReceived;
             int index = 0;
 
             foreach(var player in players)
@@ -44,11 +41,6 @@ namespace FunBoardGames.SET
             voteUIMap[player].UpdateVoteUI(positive);
         }
 
-        private void OnVoteResultReceived(bool passed)
-        {
-            DOVirtual.DelayedCall(0.5f, Close);
-        }
-
         private void OnLocalPlayerVoteChanged(bool? vote)
         {
             noBtn.interactable = yesBtn.interactable = (!vote.HasValue);
@@ -56,14 +48,11 @@ namespace FunBoardGames.SET
 
         public override void Close()
         {
-            setGameHandler.VoteResultReceived -= OnVoteResultReceived;
-            setGameHandler.PlayerVoteReceived -= OnPlayerVoteReceived;
             base.Close();
         }
 
         public void SendVote(bool yes)
         {
-            setGameHandler.VoteCard(yes);
         }
 
         public void Initialize((ISETGameHandler gameHandler, ISETPlayer starterPlayer, List<ISETPlayer> players) data)
