@@ -15,6 +15,7 @@ namespace FunBoardGames.Network
         event Action<IEnumerable<CardData>> NewCardsReceived;
         event Action<ISETPlayer, DateTimeOffset> PlayerStartedGuess;
         event Action<ISETPlayer> PlayerGuessTimeout;
+        event Action<ISETPlayer> PlayerBusted;
         event Action<ISETPlayer, IEnumerable<CardData>, bool> PlayerGuessReceived;
         event Action<IEnumerable<ISETPlayer>> GameEnded;
         event Action<DateTimeOffset> RoundStarted;

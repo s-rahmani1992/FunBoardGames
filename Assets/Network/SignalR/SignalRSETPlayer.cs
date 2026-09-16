@@ -17,6 +17,10 @@ namespace FunBoardGames.Network.SignalR
 
         public int CorrectScore { get; private set; } = 0;
 
+        public bool IsBusted { get; private set; } = false;
+
+        public bool HasLeft { get; private set; } = false;
+
         public event Action<int, int> IndexChanged;
         public event Action LeftGame;
         public event Action<bool> ReadyStatusChanged;
@@ -55,6 +59,7 @@ namespace FunBoardGames.Network.SignalR
 
         internal void InvokeLeave()
         {
+            HasLeft = true;
             LeftGame?.Invoke();
         }
 
@@ -66,6 +71,13 @@ namespace FunBoardGames.Network.SignalR
         internal void SetCorrectScore(int score)
         {
             CorrectScore = score;
+        }
+
+        internal bool SetBusted(bool isBusted)
+        {
+            bool justBusted = isBusted && IsBusted == false;
+            IsBusted = isBusted;
+            return justBusted;
         }
 
         internal void SetVote(bool? vote)

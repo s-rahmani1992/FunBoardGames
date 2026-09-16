@@ -39,6 +39,7 @@ namespace FunBoardGames.SET
         ISETPlayer selfPlayer;
         List<ISETPlayer> playerResult;
         bool gameFinished = false;
+        bool isWaitingForCardDestribution = false;
 
         // Start time of a round that begins once the cards on the table are settled
         DateTimeOffset? pendingRoundStartTime = null;
@@ -73,6 +74,7 @@ namespace FunBoardGames.SET
             setGameHandler.GameStarted += OnGameStarted;
             setGameHandler.PlayerStartedGuess += OnPlayerStartedGuess;
             setGameHandler.PlayerGuessTimeout += OnPlayerGuessTimeout;
+            setGameHandler.PlayerBusted += OnPlayerBusted;
             setGameHandler.PlayerGuessReceived += OnPlayerGuessReceived;
             setGameHandler.GameEnded += OnGameFinished;
             setGameHandler.RoundStarted += OnRoundStarted;
@@ -107,6 +109,7 @@ namespace FunBoardGames.SET
             // Unsubscribe first so overlapping flows, like a wrong guess followed by a round timeout, only subscribe once
             cardDeckManager.CardDestributionEnded -= OnCardDestributionEnded;
             cardDeckManager.CardDestributionEnded += OnCardDestributionEnded;
+            isWaitingForCardDestribution = true;
         }
 
         private void OnGameStarted()
@@ -119,6 +122,19 @@ namespace FunBoardGames.SET
             gameFinished = true;
             roundTimer.Clear();
             playerResult = new(players);
+
+            // Nothing is animating, e.g. the game ended by a guess timeout, so the results are shown right away
+            if (isWaitingForCardDestribution == false)
+                ShowGameResult();
+        }
+
+        private void OnPlayerBusted(ISETPlayer player)
+        {
+            playerUIMap[player].RefreshStatus();
+            gameLogger.Toast(player.IsMe ? "You are busted! You can't guess anymore." : $"{player.Name} is busted!");
+
+            if (player.IsMe)
+                guessBtn.interactable = hintBtn.interactable = false;
         }
 
         private void OnPlayerGuessReceived(ISETPlayer player, IEnumerable<CardData> enumerable, bool isCorrect)
@@ -151,7 +167,7 @@ namespace FunBoardGames.SET
 
             foreach (var player in players)
             {
-                playerUIs[index].SetPlayer(player);
+                playerUIs[index].SetPlayer(player, gameData.WrongLimit);
                 player.LeftGame += () => players.Remove(player);
                 playerUIMap.Add(player, playerUIs[index]);
 
@@ -175,6 +191,7 @@ namespace FunBoardGames.SET
             setGameHandler.GameStarted -= OnGameStarted;
             setGameHandler.PlayerStartedGuess -= OnPlayerStartedGuess;
             setGameHandler.PlayerGuessTimeout -= OnPlayerGuessTimeout;
+            setGameHandler.PlayerBusted -= OnPlayerBusted;
             setGameHandler.PlayerGuessReceived -= OnPlayerGuessReceived;
             setGameHandler.GameEnded -= OnGameFinished;
             setGameHandler.RoundStarted -= OnRoundStarted;
@@ -190,12 +207,11 @@ namespace FunBoardGames.SET
         private void OnCardDestributionEnded()
         {
             cardDeckManager.CardDestributionEnded -= OnCardDestributionEnded;
+            isWaitingForCardDestribution = false;
 
             if(gameFinished)
             {
-                gameLogger.SetText("Game Finished!");
-                RefreshBtns(SETGameState.Finish);
-                DialogManager.Instance.ShowDialog(resultDialog, DialogShowOptions.OverAll, playerResult.AsEnumerable());
+                ShowGameResult();
                 return;
             }
 
@@ -204,9 +220,17 @@ namespace FunBoardGames.SET
             StartPendingRound();
         }
 
+        void ShowGameResult()
+        {
+            gameLogger.SetText("Game Finished!");
+            RefreshBtns(SETGameState.Finish);
+            DialogManager.Instance.ShowDialog(resultDialog, DialogShowOptions.OverAll, playerResult.AsEnumerable());
+        }
+
         void RefreshBtns(SETGameState state)
         {
-            guessBtn.interactable = hintBtn.interactable = (state == SETGameState.Normal);
+            // A busted player can't guess for the rest of the game
+            guessBtn.interactable = hintBtn.interactable = (state == SETGameState.Normal && selfPlayer?.IsBusted != true);
             for (int i = 0; i < hints.Count; i++)
                 hints[i].Mark(false);
             hints.Clear();
@@ -214,6 +238,9 @@ namespace FunBoardGames.SET
 
         public void AttemptGuess()
         {
+            if (selfPlayer?.IsBusted == true)
+                return;
+
             setGameHandler.StartGuess();
         }
 

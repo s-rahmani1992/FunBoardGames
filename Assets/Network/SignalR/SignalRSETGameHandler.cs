@@ -19,12 +19,15 @@ namespace FunBoardGames.Network.SignalR
         public event Action GameStarted;
         public event Action<ISETPlayer, DateTimeOffset> PlayerStartedGuess;
         public event Action<ISETPlayer> PlayerGuessTimeout;
+        public event Action<ISETPlayer> PlayerBusted;
         public event Action<ISETPlayer, IEnumerable<CardData>, bool> PlayerGuessReceived;
         public event Action<IEnumerable<ISETPlayer>> GameEnded;
         public event Action<DateTimeOffset> RoundStarted;
         public event Action<IEnumerable<CardData>> RoundTimedOut;
 
         List<SignalRSETPlayer> playerList = new();
+        // Players who left are not in the server's final scores, but still appear at the end of the results
+        List<SignalRSETPlayer> leftPlayers = new();
         HubConnection _connection;
         SynchronizationContext unityContext;
         List<IDisposable> connectionHooks = new();
@@ -98,10 +101,18 @@ namespace FunBoardGames.Network.SignalR
         {
             SignalRSETPlayer player = playerList.FirstOrDefault(player => player.ConnectionId == guessMsg.ConnectionId);
 
+            bool justBusted = player.SetBusted(guessMsg.IsBusted);
+
             if (guessMsg.GuessedCards == null)
             {
                 player.SetWrongScore(guessMsg.WrongScore);
                 PlayerGuessTimeout?.Invoke(player);
+
+                if (justBusted)
+                    PlayerBusted?.Invoke(player);
+
+                if (guessMsg.FinalScores != null)
+                    OnFinalScoresReceived(guessMsg.FinalScores);
                 return;
             }
 
@@ -111,6 +122,9 @@ namespace FunBoardGames.Network.SignalR
             player.SetCorrectScore(guessMsg.CorrectScore);
             player.SetWrongScore(guessMsg.WrongScore);
             PlayerGuessReceived?.Invoke(player, guessMsg.GuessedCards.Select(ToCardData), guessMsg.GuessedCorrect);
+
+            if (justBusted)
+                PlayerBusted?.Invoke(player);
 
             if (guessMsg.RoundStartTime != null)
                 RoundStarted?.Invoke(guessMsg.RoundStartTime.Value);
@@ -127,8 +141,13 @@ namespace FunBoardGames.Network.SignalR
                 SignalRSETPlayer p = playerList.FirstOrDefault(p => p.ConnectionId == playerScore.ConnectionId);
                 p.SetCorrectScore(playerScore.Corrects);
                 p.SetWrongScore(playerScore.Wrongs);
+
+                if (p.SetBusted(playerScore.IsBusted))
+                    PlayerBusted?.Invoke(p);
+
                 rankedPlayers.Add(p);
             }
+            rankedPlayers.AddRange(leftPlayers);
             GameEnded?.Invoke(rankedPlayers);
             Dispose();
         }
@@ -157,6 +176,7 @@ namespace FunBoardGames.Network.SignalR
             player.InvokeLeave();
             PlayerLeft?.Invoke(player);
             playerList.Remove(player);
+            leftPlayers.Add(player);
             player.Dispose();
 
             if (player.IsMe)
