@@ -24,7 +24,7 @@ namespace FunBoardGames.SET
 
         public HashSet<CardUI> selectedCards = new(3);
         List<CardUI> placedCards = new();
-
+        List<CardData> pendingCards = new();
         int remained = 1;
 
         public void RegisterGameHandler(ISETGameHandler gameHandler, SETGameData gameData)
@@ -43,7 +43,15 @@ namespace FunBoardGames.SET
             gameHandler.PlayerGuessReceived += OnPlayerGuessReceived;
         }
 
-        private void OnPlayerStartedGuess(ISETPlayer player)
+        public void DestributePendingCards()
+        {
+            if (pendingCards != null && pendingCards.Count > 0)
+            {
+                StartCoroutine(DestributeCardsIE());
+            }
+        }
+
+        private void OnPlayerStartedGuess(ISETPlayer player, DateTimeOffset _)
         {
             if(player.IsMe)
                 block.SetActive(false);
@@ -73,6 +81,7 @@ namespace FunBoardGames.SET
             {
                 block.SetActive(true);
                 guessDialog.Close();
+                DestributePendingCards();
                 CardDestributionEnded?.Invoke();
             });
         }
@@ -84,15 +93,15 @@ namespace FunBoardGames.SET
 
         private void OnNewCardsReceived(IEnumerable<CardData> cards)
         {
-            StartCoroutine(DestributeCardsIE(cards));
+            pendingCards.AddRange(cards);
         }
 
-        IEnumerator DestributeCardsIE(IEnumerable<CardData> cards)
+        IEnumerator DestributeCardsIE()
         {
             int cardHolderIndex = 0;
             int index = 0;
 
-            foreach (var card in cards)
+            foreach (var card in pendingCards)
             {
                 while (cardHolders[cardHolderIndex].childCount > 0)
                     cardHolderIndex++;
@@ -108,7 +117,7 @@ namespace FunBoardGames.SET
                 index++;
                 yield return new WaitForSeconds(0.2f);
             }
-
+            pendingCards.Clear();
             CardDestributionEnded?.Invoke();
         }
 

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using FunBoardGames.Network;
+using DG.Tweening;
+using System.Linq;
+using System;
 
 namespace FunBoardGames.SET
 {
@@ -27,14 +30,14 @@ namespace FunBoardGames.SET
         public Color[] colors;
         public Sprite[] cardShapes;
 
-        int cardCount = SETRoomManager.endCursor;
-        SETRoomManager sessionManager;
         List<ISETPlayer> players = new();
         List<CardUI> hints = new(3);
         List<CardUI> placedCardUIs = new(18);
 
         ISETGameHandler setGameHandler;
         ISETPlayer selfPlayer;
+        List<ISETPlayer> playerResult;
+        bool gameFinished = false;
 
         private void Awake()
         {
@@ -45,47 +48,39 @@ namespace FunBoardGames.SET
             setGameHandler.SignalGameLoaded();
             Subscribe();
             UpdatePlayerUIs();
-            BeginGameCountDown();
         }
 
         void BeginGameCountDown()
         {
             timer.StartCountdown(4);
             gameLogger.SetText("Wait For The Game To Start.");
+            cardDeckManager.CardDestributionEnded += OnCardDestributionEnded;
+            DOVirtual.DelayedCall(4, () =>
+            {
+                gameLogger.SetText("Destributing Cards");
+                RefreshBtns(SETGameState.Destribute);
+                cardDeckManager.DestributePendingCards();
+            });
         }
 
         void Subscribe()
         {
-            setGameHandler.NewCardsReceived += PlaceCards;
+            setGameHandler.GameStarted += OnGameStarted;
             setGameHandler.PlayerStartedGuess += OnPlayerStartedGuess;
             setGameHandler.PlayerGuessTimeout += OnPlayerGuessTimeout;
             setGameHandler.PlayerGuessReceived += OnPlayerGuessReceived;
             setGameHandler.GameEnded += OnGameFinished;
         }
 
+        private void OnGameStarted()
+        {
+            BeginGameCountDown();
+        }
+
         private void OnGameFinished(IEnumerable<ISETPlayer> players)
         {
-            gameLogger.SetText("Game Finished!");
-            RefreshBtns(SETGameState.Finish);
-            DialogManager.Instance.ShowDialog(resultDialog, DialogShowOptions.OverAll, players);
-        }
-
-        private void OnPlayerVoteReceived(ISETPlayer player, bool _)
-        {
-            if(player.IsMe)
-                gameLogger.SetText("Wait For Others to vote.");
-        }
-
-        private void OnVoteResultReceived(bool _)
-        {
-            RefreshBtns(SETGameState.Normal);
-        }
-
-        private void OnCardVoteStarted(ISETPlayer player)
-        {
-            gameLogger.SetText(player.IsMe ? "Wait For Others to vote." : $"{player.Name} Started Vote destribute. place your vote.");
-            RefreshBtns(SETGameState.CardVote);
-            DialogManager.Instance.ShowDialog(voteDialog, DialogShowOptions.OverAll, (setGameHandler, player, players));
+            gameFinished = true;
+            playerResult = new(players);
         }
 
         private void OnPlayerGuessReceived(ISETPlayer player, IEnumerable<CardData> enumerable, bool isCorrect)
@@ -125,17 +120,17 @@ namespace FunBoardGames.SET
             }
         }
 
-        private void OnPlayerStartedGuess(ISETPlayer player)
+        private void OnPlayerStartedGuess(ISETPlayer player, DateTimeOffset guessStartTime)
         {
             RefreshBtns(SETGameState.Guess);
             playerUIMap[player].ToggleGuess(true);
-            timer.StartCountdown(7); //TODO sync with game data in future
+            timer.StartCountdown((float)(DateTimeOffset.UtcNow - guessStartTime).TotalSeconds + 7.0f); //TODO sync with game data in future
             gameLogger.SetText(player.IsMe ? "Your are guessing. Guess quickly" : $"{player.Name} is guessing");
         }
 
         void UnSubscribe()
         {
-            setGameHandler.NewCardsReceived -= PlaceCards;
+            setGameHandler.GameStarted -= OnGameStarted;
             setGameHandler.PlayerStartedGuess -= OnPlayerStartedGuess;
             setGameHandler.PlayerGuessTimeout -= OnPlayerGuessTimeout;
             setGameHandler.PlayerGuessReceived -= OnPlayerGuessReceived;
@@ -148,16 +143,18 @@ namespace FunBoardGames.SET
             Instance = null;
         }
 
-        void PlaceCards(IEnumerable<CardData> cardInfos)
-        {
-            gameLogger.SetText("Destributing Cards");
-            RefreshBtns(SETGameState.Destribute);
-            cardDeckManager.CardDestributionEnded += OnCardDestributionEnded;
-        }
-
         private void OnCardDestributionEnded()
         {
             cardDeckManager.CardDestributionEnded -= OnCardDestributionEnded;
+
+            if(gameFinished)
+            {
+                gameLogger.SetText("Game Finished!");
+                RefreshBtns(SETGameState.Finish);
+                DialogManager.Instance.ShowDialog(resultDialog, DialogShowOptions.OverAll, playerResult.AsEnumerable());
+                return;
+            }
+
             gameLogger.SetText("");
             RefreshBtns(SETGameState.Normal);
         }
@@ -190,7 +187,7 @@ namespace FunBoardGames.SET
 
         public void SendHint()
         {
-            sessionManager.CmdHintRequest();
+            //sessionManager.CmdHintRequest();
         }
 
         public void MarkHints(CardData[] cards)
