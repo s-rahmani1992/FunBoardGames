@@ -16,6 +16,7 @@ namespace FunBoardGames.SET
         [SerializeField] GameObject block;
         [SerializeField] TMPro.TMP_Text remainTxt;
         [SerializeField] CardUI cardUIPrefab;
+        [SerializeField] float timeoutFadeDuration = 0.5f;
 
         ISETGameHandler gameHandler;
         SETGameData gameData;
@@ -26,6 +27,9 @@ namespace FunBoardGames.SET
         List<CardUI> placedCards = new();
         List<CardData> pendingCards = new();
         int remained = 1;
+
+        bool isShowingGuessResult = false;
+        List<CardData> pendingTimeoutCards = null;
 
         public void RegisterGameHandler(ISETGameHandler gameHandler, SETGameData gameData)
         {
@@ -41,6 +45,7 @@ namespace FunBoardGames.SET
             gameHandler.NewCardsReceived += OnNewCardsReceived;
             gameHandler.PlayerStartedGuess += OnPlayerStartedGuess;
             gameHandler.PlayerGuessReceived += OnPlayerGuessReceived;
+            gameHandler.RoundTimedOut += OnRoundTimedOut;
         }
 
         public void DestributePendingCards()
@@ -77,13 +82,68 @@ namespace FunBoardGames.SET
 
             byte r = CardData.CheckSET(cards[0].info, cards[1].info, cards[2].info);
             var guessDialog = GuessResultDialog.Show(cards.ToArray(), CardData.CheckSET(cards[0].info, cards[1].info, cards[2].info));
+            isShowingGuessResult = true;
             DOVirtual.DelayedCall(5, () =>
             {
                 block.SetActive(true);
                 guessDialog.Close();
+                isShowingGuessResult = false;
+
+                // The round timed out while the guessed cards were shown in the dialog
+                if (pendingTimeoutCards != null)
+                {
+                    var timeoutCards = pendingTimeoutCards;
+                    pendingTimeoutCards = null;
+                    StartCoroutine(RemoveTimeoutCardsIE(timeoutCards));
+                    return;
+                }
+
                 DestributePendingCards();
                 CardDestributionEnded?.Invoke();
             });
+        }
+
+        private void OnRoundTimedOut(IEnumerable<CardData> removedCards)
+        {
+            // Removed cards can be the ones in the guess dialog, so wait until they are back on the table
+            if (isShowingGuessResult)
+            {
+                pendingTimeoutCards = removedCards.ToList();
+                return;
+            }
+
+            StartCoroutine(RemoveTimeoutCardsIE(removedCards.ToList()));
+        }
+
+        IEnumerator RemoveTimeoutCardsIE(List<CardData> removedCards)
+        {
+            List<CardUI> removedCardUIs = placedCards.Where(cardUI => removedCards.Contains(cardUI.info)).ToList();
+
+            Sequence fadeSequence = DOTween.Sequence();
+            foreach (var cardUI in removedCardUIs)
+            {
+                placedCards.Remove(cardUI);
+                selectedCards.Remove(cardUI);
+
+                if (cardUI.TryGetComponent(out CanvasGroup canvasGroup) == false)
+                    canvasGroup = cardUI.gameObject.AddComponent<CanvasGroup>();
+                canvasGroup.blocksRaycasts = false;
+                fadeSequence.Join(canvasGroup.DOFade(0f, timeoutFadeDuration));
+            }
+
+            yield return fadeSequence.WaitForCompletion();
+
+            foreach (var cardUI in removedCardUIs)
+            {
+                // Detach first, since Destroy is deferred and distribution looks for empty card holders
+                cardUI.transform.SetParent(cardContainer, false);
+                Destroy(cardUI.gameObject);
+            }
+
+            if (pendingCards.Count > 0)
+                yield return DestributeCardsIE();
+            else
+                CardDestributionEnded?.Invoke();
         }
 
         public void ToggleCardSelection(bool isOn)
@@ -140,6 +200,7 @@ namespace FunBoardGames.SET
         private void OnDestroy()
         {
             gameHandler.NewCardsReceived -= OnNewCardsReceived;
+            gameHandler.RoundTimedOut -= OnRoundTimedOut;
         }
     }
 }

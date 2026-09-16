@@ -20,6 +20,7 @@ namespace FunBoardGames.SET
         [SerializeField] SETVoteDialog voteDialog;
         [SerializeField] SETResultDialog resultDialog;
         [SerializeField] Timer timer;
+        [SerializeField] ProgressTimer roundTimer;
 
         Dictionary<ISETPlayer, PlayerUI> playerUIMap = new();
 
@@ -39,6 +40,9 @@ namespace FunBoardGames.SET
         List<ISETPlayer> playerResult;
         bool gameFinished = false;
 
+        // Start time of a round that begins once the cards on the table are settled
+        DateTimeOffset? pendingRoundStartTime = null;
+
         private void Awake()
         {
             Instance = this;
@@ -46,6 +50,7 @@ namespace FunBoardGames.SET
             setGameHandler = userGameHolder.GetGameHandler<ISETGameHandler>();
             cardDeckManager.RegisterGameHandler(setGameHandler, gameData);
             setGameHandler.SignalGameLoaded();
+            roundTimer.Clear();
             Subscribe();
             UpdatePlayerUIs();
         }
@@ -54,7 +59,7 @@ namespace FunBoardGames.SET
         {
             timer.StartCountdown(4);
             gameLogger.SetText("Wait For The Game To Start.");
-            cardDeckManager.CardDestributionEnded += OnCardDestributionEnded;
+            WaitForCardDestribution();
             DOVirtual.DelayedCall(4, () =>
             {
                 gameLogger.SetText("Destributing Cards");
@@ -70,6 +75,38 @@ namespace FunBoardGames.SET
             setGameHandler.PlayerGuessTimeout += OnPlayerGuessTimeout;
             setGameHandler.PlayerGuessReceived += OnPlayerGuessReceived;
             setGameHandler.GameEnded += OnGameFinished;
+            setGameHandler.RoundStarted += OnRoundStarted;
+            setGameHandler.RoundTimedOut += OnRoundTimedOut;
+        }
+
+        private void OnRoundStarted(DateTimeOffset roundStartTime)
+        {
+            pendingRoundStartTime = roundStartTime;
+        }
+
+        private void OnRoundTimedOut(IEnumerable<CardData> removedCards)
+        {
+            roundTimer.Clear();
+            gameLogger.Toast("Time's up! Nobody found the SET.");
+            RefreshBtns(SETGameState.Destribute);
+            WaitForCardDestribution();
+        }
+
+        void StartPendingRound()
+        {
+            if (pendingRoundStartTime == null)
+                return;
+
+            float elapsed = (float)(DateTimeOffset.UtcNow - pendingRoundStartTime.Value).TotalSeconds;
+            roundTimer.StartTimer(gameData.RoundTime, elapsed);
+            pendingRoundStartTime = null;
+        }
+
+        void WaitForCardDestribution()
+        {
+            // Unsubscribe first so overlapping flows, like a wrong guess followed by a round timeout, only subscribe once
+            cardDeckManager.CardDestributionEnded -= OnCardDestributionEnded;
+            cardDeckManager.CardDestributionEnded += OnCardDestributionEnded;
         }
 
         private void OnGameStarted()
@@ -80,6 +117,7 @@ namespace FunBoardGames.SET
         private void OnGameFinished(IEnumerable<ISETPlayer> players)
         {
             gameFinished = true;
+            roundTimer.Clear();
             playerResult = new(players);
         }
 
@@ -87,10 +125,14 @@ namespace FunBoardGames.SET
         {
             gameLogger.SetText("");
             timer.Stop();
+
+            if (isCorrect)
+                roundTimer.Clear();
+
             playerUIMap[player].UpdateScores(); 
             playerUIMap[player].ToggleGuess(false);
             StartCoroutine(DisplayResult(isCorrect, player));
-            cardDeckManager.CardDestributionEnded += OnCardDestributionEnded;
+            WaitForCardDestribution();
         }
 
         private void OnPlayerGuessTimeout(ISETPlayer player)
@@ -135,6 +177,8 @@ namespace FunBoardGames.SET
             setGameHandler.PlayerGuessTimeout -= OnPlayerGuessTimeout;
             setGameHandler.PlayerGuessReceived -= OnPlayerGuessReceived;
             setGameHandler.GameEnded -= OnGameFinished;
+            setGameHandler.RoundStarted -= OnRoundStarted;
+            setGameHandler.RoundTimedOut -= OnRoundTimedOut;
         }
 
         private void OnDestroy()
@@ -157,6 +201,7 @@ namespace FunBoardGames.SET
 
             gameLogger.SetText("");
             RefreshBtns(SETGameState.Normal);
+            StartPendingRound();
         }
 
         void RefreshBtns(SETGameState state)

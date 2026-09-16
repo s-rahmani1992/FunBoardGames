@@ -23,14 +23,16 @@ namespace FunBoardGames.Network
     {
         public float GuessTime {  get; private set; }
 
-        public SETGameData(uint id, float guessTime, string name = null, int numberofPlayers = 0, int attributes = 0)
+        public SETGameData(uint id, float guessTime, string name = null, int numberofPlayers = 0, int attributes = 0, int roundTime = 0)
             : base(id, BoardGame.SET, name, numberofPlayers)
         {
             GuessTime = guessTime;
             AttributeCount = attributes;
+            RoundTime = roundTime;
         }
 
         public int AttributeCount { get; private set; }
+        public int RoundTime { get; private set; }
     }
 
     public class CantStopGameData : BoardGameData

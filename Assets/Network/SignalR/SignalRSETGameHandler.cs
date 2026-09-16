@@ -21,6 +21,8 @@ namespace FunBoardGames.Network.SignalR
         public event Action<ISETPlayer> PlayerGuessTimeout;
         public event Action<ISETPlayer, IEnumerable<CardData>, bool> PlayerGuessReceived;
         public event Action<IEnumerable<ISETPlayer>> GameEnded;
+        public event Action<DateTimeOffset> RoundStarted;
+        public event Action<IEnumerable<CardData>> RoundTimedOut;
 
         List<SignalRSETPlayer> playerList = new();
         HubConnection _connection;
@@ -64,12 +66,32 @@ namespace FunBoardGames.Network.SignalR
             {
                 unityContext.Post(_ => OnPlayerGuessResultReceived(guessMsg), null);
             }));
+
+            connectionHooks.Add(_connection.On<RoundTimeoutMessage>(SETGameMessageNames.RoundTimeout, (timeoutMsg) =>
+            {
+                unityContext.Post(_ => OnRoundTimeoutReceived(timeoutMsg), null);
+            }));
         }
 
         private void OnGameBeginReceived(GameBeginMessage gameMsg)
         {
             OnNewCardsReceived(gameMsg.NewCards);
             GameStarted?.Invoke();
+            RoundStarted?.Invoke(gameMsg.RoundStartTime);
+        }
+
+        private void OnRoundTimeoutReceived(RoundTimeoutMessage timeoutMsg)
+        {
+            if (timeoutMsg.NewCards != null)
+                OnNewCardsReceived(timeoutMsg.NewCards);
+
+            RoundTimedOut?.Invoke(timeoutMsg.RemovedCards.Select(ToCardData));
+
+            if (timeoutMsg.RoundStartTime != null)
+                RoundStarted?.Invoke(timeoutMsg.RoundStartTime.Value);
+
+            if (timeoutMsg.FinalScores != null)
+                OnFinalScoresReceived(timeoutMsg.FinalScores);
         }
 
         private void OnPlayerGuessResultReceived(GuessResultResponse guessMsg)
@@ -88,21 +110,27 @@ namespace FunBoardGames.Network.SignalR
 
             player.SetCorrectScore(guessMsg.CorrectScore);
             player.SetWrongScore(guessMsg.WrongScore);
-            PlayerGuessReceived?.Invoke(player, guessMsg.GuessedCards.Select(cardDTO => new CardData(cardDTO.Color, cardDTO.Shape, cardDTO.CountIndex, cardDTO.Shading)), guessMsg.GuessedCorrect);
+            PlayerGuessReceived?.Invoke(player, guessMsg.GuessedCards.Select(ToCardData), guessMsg.GuessedCorrect);
+
+            if (guessMsg.RoundStartTime != null)
+                RoundStarted?.Invoke(guessMsg.RoundStartTime.Value);
 
             if(guessMsg.FinalScores != null)
+                OnFinalScoresReceived(guessMsg.FinalScores);
+        }
+
+        private void OnFinalScoresReceived(List<SETPlayerResultDTO> finalScores)
+        {
+            List<SignalRSETPlayer> rankedPlayers = new();
+            foreach (var playerScore in finalScores)
             {
-                List<SignalRSETPlayer> rankedPlayers = new();
-                foreach (var playerScore in guessMsg.FinalScores)
-                {
-                    SignalRSETPlayer p = playerList.FirstOrDefault(p => p.ConnectionId == playerScore.ConnectionId);
-                    p.SetCorrectScore(playerScore.Corrects);
-                    p.SetWrongScore(playerScore.Wrongs);
-                    rankedPlayers.Add(p);
-                }
-                GameEnded?.Invoke(rankedPlayers);
-                Dispose();
+                SignalRSETPlayer p = playerList.FirstOrDefault(p => p.ConnectionId == playerScore.ConnectionId);
+                p.SetCorrectScore(playerScore.Corrects);
+                p.SetWrongScore(playerScore.Wrongs);
+                rankedPlayers.Add(p);
             }
+            GameEnded?.Invoke(rankedPlayers);
+            Dispose();
         }
 
         private void OnPlayerStartedGuess(PlayerGuessStartMessage guessMsg)
@@ -113,8 +141,10 @@ namespace FunBoardGames.Network.SignalR
 
         private void OnNewCardsReceived(List<SETCardDTO> cardMsg)
         {
-            NewCardsReceived?.Invoke(cardMsg.Select(cardDTO => new CardData(cardDTO.Color, cardDTO.Shape, cardDTO.CountIndex, cardDTO.Shading)));
+            NewCardsReceived?.Invoke(cardMsg.Select(ToCardData));
         }
+
+        static CardData ToCardData(SETCardDTO cardDTO) => new(cardDTO.Color, cardDTO.Shape, cardDTO.CountIndex, cardDTO.Shading);
 
         private void OnAllPlayerReady()
         {
