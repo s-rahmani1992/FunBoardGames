@@ -46,6 +46,8 @@ namespace FunBoardGames.SET
             gameHandler.PlayerStartedGuess += OnPlayerStartedGuess;
             gameHandler.PlayerGuessReceived += OnPlayerGuessReceived;
             gameHandler.RoundTimedOut += OnRoundTimedOut;
+            gameHandler.CardHintReceived += OnCardHintReceived;
+            gameHandler.RoundStarted += OnRoundStarted;
         }
 
         public void DestributePendingCards()
@@ -146,6 +148,19 @@ namespace FunBoardGames.SET
                 CardDestributionEnded?.Invoke();
         }
 
+        private void OnCardHintReceived(CardData hintCard)
+        {
+            var cardUI = placedCards.FirstOrDefault(cardUI => cardUI.info.Equals(hintCard));
+            if (cardUI != null)
+                cardUI.ToggleHint(true);
+        }
+
+        private void OnRoundStarted(DateTimeOffset _)
+        {
+            foreach (var cardUI in placedCards)
+                cardUI.ToggleHint(false);
+        }
+
         public void ToggleCardSelection(bool isOn)
         {
             block.SetActive(!isOn);
@@ -201,6 +216,8 @@ namespace FunBoardGames.SET
         {
             gameHandler.NewCardsReceived -= OnNewCardsReceived;
             gameHandler.RoundTimedOut -= OnRoundTimedOut;
+            gameHandler.CardHintReceived -= OnCardHintReceived;
+            gameHandler.RoundStarted -= OnRoundStarted;
         }
     }
 }

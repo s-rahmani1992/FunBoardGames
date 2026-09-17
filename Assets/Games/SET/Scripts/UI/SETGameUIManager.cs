@@ -40,6 +40,7 @@ namespace FunBoardGames.SET
         List<ISETPlayer> playerResult;
         bool gameFinished = false;
         bool isWaitingForCardDestribution = false;
+        bool hasUsedHintThisRound = false;
 
         // Start time of a round that begins once the cards on the table are settled
         DateTimeOffset? pendingRoundStartTime = null;
@@ -79,11 +80,37 @@ namespace FunBoardGames.SET
             setGameHandler.GameEnded += OnGameFinished;
             setGameHandler.RoundStarted += OnRoundStarted;
             setGameHandler.RoundTimedOut += OnRoundTimedOut;
+            setGameHandler.PlayerUsedHint += OnPlayerUsedHint;
         }
 
         private void OnRoundStarted(DateTimeOffset roundStartTime)
         {
             pendingRoundStartTime = roundStartTime;
+            hasUsedHintThisRound = false;
+
+            foreach (var playerUI in playerUIMap.Values)
+                playerUI.ResetRoundHint();
+        }
+
+        private void OnPlayerUsedHint(ISETPlayer player)
+        {
+            playerUIMap[player].UseHint();
+
+            if (player.IsMe)
+            {
+                hasUsedHintThisRound = true;
+                hintBtn.interactable = false;
+            }
+            else
+                gameLogger.Toast($"{player.Name} used a hint!");
+        }
+
+        bool CanUseHint()
+        {
+            if (hasUsedHintThisRound || selfPlayer == null)
+                return false;
+
+            return gameData.HintLimit == null || selfPlayer.UsedHintCount < gameData.HintLimit;
         }
 
         private void OnRoundTimedOut(IEnumerable<CardData> removedCards)
@@ -167,7 +194,7 @@ namespace FunBoardGames.SET
 
             foreach (var player in players)
             {
-                playerUIs[index].SetPlayer(player, gameData.WrongLimit);
+                playerUIs[index].SetPlayer(player, gameData.WrongLimit, gameData.HintLimit);
                 player.LeftGame += () => players.Remove(player);
                 playerUIMap.Add(player, playerUIs[index]);
 
@@ -196,6 +223,7 @@ namespace FunBoardGames.SET
             setGameHandler.GameEnded -= OnGameFinished;
             setGameHandler.RoundStarted -= OnRoundStarted;
             setGameHandler.RoundTimedOut -= OnRoundTimedOut;
+            setGameHandler.PlayerUsedHint -= OnPlayerUsedHint;
         }
 
         private void OnDestroy()
@@ -231,6 +259,7 @@ namespace FunBoardGames.SET
         {
             // A busted player can't guess for the rest of the game
             guessBtn.interactable = hintBtn.interactable = (state == SETGameState.Normal && selfPlayer?.IsBusted != true);
+            hintBtn.interactable &= CanUseHint();
             for (int i = 0; i < hints.Count; i++)
                 hints[i].Mark(false);
             hints.Clear();
@@ -259,7 +288,10 @@ namespace FunBoardGames.SET
 
         public void SendHint()
         {
-            //sessionManager.CmdHintRequest();
+            if (selfPlayer?.IsBusted == true || CanUseHint() == false)
+                return;
+
+            setGameHandler.RequestCardHint();
         }
 
         public void MarkHints(CardData[] cards)

@@ -14,11 +14,16 @@ namespace FunBoardGames.SET
         [SerializeField] Texture2D ledOn, ledOff;
         [SerializeField] Transform wrongHolder;
         [SerializeField] Texture2D wrongLedOn, wrongLedOff;
+        [SerializeField] Transform hintHolder;
+        [SerializeField] Color usedHintColor = Color.gray;
         [SerializeField] Color playingColor = new(0f, 1f, 0.1424f);
         [SerializeField] Color inactiveColor = Color.red;
 
         ISETPlayer networkPlayer;
         readonly List<RawImage> wrongLEDs = new();
+        readonly List<RawImage> hintIcons = new();
+        Color hintIconColor = Color.white;
+        int? hintLimit;
 
         public void UpdateScores()
         {
@@ -53,7 +58,33 @@ namespace FunBoardGames.SET
             RefreshStatus();
         }
 
-        public void SetPlayer(ISETPlayer player, int wrongLimit)
+        public void UseHint()
+        {
+            // The single icon of an unlimited game only shows the hint of the current round
+            SetUsedHintIcons(hintLimit == null ? 1 : networkPlayer.UsedHintCount);
+        }
+
+        /// <summary>
+        /// Frees the hint icon of an unlimited game, since the player can use a hint again in the new round.
+        /// </summary>
+        public void ResetRoundHint()
+        {
+            if (hintLimit == null)
+                SetUsedHintIcons(0);
+        }
+
+        void SetUsedHintIcons(int usedCount)
+        {
+            // Hint icons are used from left to right, one for each hint the player used
+            for (int i = 0; i < hintIcons.Count; i++)
+            {
+                bool isUsed = i < usedCount;
+                hintIcons[i].color = (isUsed ? usedHintColor : hintIconColor);
+                hintIcons[i].transform.GetChild(0).gameObject.SetActive(isUsed);
+            }
+        }
+
+        public void SetPlayer(ISETPlayer player, int wrongLimit, int? hintLimit)
         {
             if (networkPlayer != null)
                 UnSubscribe();
@@ -62,8 +93,10 @@ namespace FunBoardGames.SET
             playerTxt.color = (networkPlayer.IsMe ? Color.yellow : Color.cyan);
             playerTxt.text = networkPlayer.Name;
             CreateWrongLEDs(wrongLimit);
+            CreateHintIcons(hintLimit);
             gameObject.SetActive(true);
             UpdateScores();
+            SetUsedHintIcons(0);
             ToggleGuess(false);
             Subscribe();
         }
@@ -84,6 +117,31 @@ namespace FunBoardGames.SET
 
                 if (isUsed)
                     wrongLEDs.Add(led.GetComponent<RawImage>());
+            }
+        }
+
+        void CreateHintIcons(int? hintLimit)
+        {
+            this.hintLimit = hintLimit;
+            hintIcons.Clear();
+
+            var iconTemplate = hintHolder.GetChild(0).gameObject;
+            hintIconColor = iconTemplate.GetComponent<RawImage>().color;
+
+            // Without a limit, the one icon of the prefab shows whether the player used a hint in the current round
+            int iconCount = hintLimit ?? 1;
+
+            while (hintHolder.childCount < iconCount)
+                Instantiate(iconTemplate, hintHolder);
+
+            for (int i = 0; i < hintHolder.childCount; i++)
+            {
+                var icon = hintHolder.GetChild(i);
+                bool isUsed = i < iconCount;
+                icon.gameObject.SetActive(isUsed);
+
+                if (isUsed)
+                    hintIcons.Add(icon.GetComponent<RawImage>());
             }
         }
 

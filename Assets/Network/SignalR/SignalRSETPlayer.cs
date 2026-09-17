@@ -19,6 +19,8 @@ namespace FunBoardGames.Network.SignalR
 
         public bool IsBusted { get; private set; } = false;
 
+        public int UsedHintCount { get; private set; } = 0;
+
         public bool HasLeft { get; private set; } = false;
 
         public event Action<int, int> IndexChanged;
@@ -78,6 +80,11 @@ namespace FunBoardGames.Network.SignalR
             bool justBusted = isBusted && IsBusted == false;
             IsBusted = isBusted;
             return justBusted;
+        }
+
+        internal void AddUsedHint()
+        {
+            UsedHintCount++;
         }
 
         internal void SetVote(bool? vote)

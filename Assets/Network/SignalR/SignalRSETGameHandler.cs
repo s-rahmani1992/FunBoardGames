@@ -24,6 +24,8 @@ namespace FunBoardGames.Network.SignalR
         public event Action<IEnumerable<ISETPlayer>> GameEnded;
         public event Action<DateTimeOffset> RoundStarted;
         public event Action<IEnumerable<CardData>> RoundTimedOut;
+        public event Action<ISETPlayer> PlayerUsedHint;
+        public event Action<CardData> CardHintReceived;
 
         List<SignalRSETPlayer> playerList = new();
         // Players who left are not in the server's final scores, but still appear at the end of the results
@@ -73,6 +75,16 @@ namespace FunBoardGames.Network.SignalR
             connectionHooks.Add(_connection.On<RoundTimeoutMessage>(SETGameMessageNames.RoundTimeout, (timeoutMsg) =>
             {
                 unityContext.Post(_ => OnRoundTimeoutReceived(timeoutMsg), null);
+            }));
+
+            connectionHooks.Add(_connection.On<CardHintResponse>(SETGameMessageNames.CardHint, (hintMsg) =>
+            {
+                unityContext.Post(_ => OnCardHintReceived(hintMsg), null);
+            }));
+
+            connectionHooks.Add(_connection.On<PlayerUsedHintMessage>(SETGameMessageNames.PlayerUsedHint, (hintMsg) =>
+            {
+                unityContext.Post(_ => OnPlayerUsedHintReceived(hintMsg), null);
             }));
         }
 
@@ -152,6 +164,24 @@ namespace FunBoardGames.Network.SignalR
             Dispose();
         }
 
+        private void OnCardHintReceived(CardHintResponse hintMsg)
+        {
+            SignalRSETPlayer player = playerList.FirstOrDefault(player => player.IsMe);
+            player.AddUsedHint();
+            PlayerUsedHint?.Invoke(player);
+            CardHintReceived?.Invoke(ToCardData(hintMsg.Card));
+        }
+
+        private void OnPlayerUsedHintReceived(PlayerUsedHintMessage hintMsg)
+        {
+            SignalRSETPlayer player = playerList.FirstOrDefault(player => player.ConnectionId == hintMsg.ConnectionId);
+            if (player == null)
+                return;
+
+            player.AddUsedHint();
+            PlayerUsedHint?.Invoke(player);
+        }
+
         private void OnPlayerStartedGuess(PlayerGuessStartMessage guessMsg)
         {
             SignalRSETPlayer player = playerList.FirstOrDefault(player => player.ConnectionId == guessMsg.ConnectionId);
@@ -216,6 +246,11 @@ namespace FunBoardGames.Network.SignalR
         public void StartGuess()
         {
             _connection.InvokeAsync(SETGameMessageNames.PlayerGuessStart);
+        }
+
+        public void RequestCardHint()
+        {
+            _connection.InvokeAsync(SETGameMessageNames.CardHint);
         }
 
         public void GuessCards(IEnumerable<CardData> cards)

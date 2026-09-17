@@ -8,6 +8,8 @@ namespace FunBoardGames.SET
     public class CardUI : MonoBehaviour, IPoolable
     {
         [SerializeField] Image[] shapes;
+        [SerializeField] GameObject hintObject;
+        [SerializeField] Image cardImage;
 
         public string ObjectTag { get; set; }
         public CardData info { get; private set; }
@@ -42,6 +44,7 @@ namespace FunBoardGames.SET
         {
             info = cardData;
             this.cardHolder = cardHolder;
+            ToggleHint(false);
 
             foreach (var item in shapes) 
             { 
@@ -84,12 +87,17 @@ namespace FunBoardGames.SET
 
         public void Mark(bool isSelected) 
         {
-            GetComponent<Image>().color = (isSelected ? Color.yellow : Color.white);
+            cardImage.color = (isSelected ? Color.yellow : Color.white);
+        }
+
+        public void ToggleHint(bool isOn)
+        {
+            hintObject.SetActive(isOn);
         }
 
         public void MarkHint()
         {
-            GetComponent<Image>().color = new Color(0, 0.6135f, 1);
+            cardImage.color = new Color(0, 0.6135f, 1);
         }
 
         public void MoveBack(float delay = 0.0f)

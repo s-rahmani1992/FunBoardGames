@@ -10,6 +10,7 @@ namespace FunBoardGames.Network
         void SignalGameLoaded();
         void StartGuess();
         void GuessCards(IEnumerable<CardData> cards);
+        void RequestCardHint();
 
         event Action GameStarted;
         event Action<IEnumerable<CardData>> NewCardsReceived;
@@ -20,6 +21,8 @@ namespace FunBoardGames.Network
         event Action<IEnumerable<ISETPlayer>> GameEnded;
         event Action<DateTimeOffset> RoundStarted;
         event Action<IEnumerable<CardData>> RoundTimedOut;
+        event Action<ISETPlayer> PlayerUsedHint;
+        event Action<CardData> CardHintReceived;
 
         IEnumerable<ISETPlayer> Players { get; }
     }
