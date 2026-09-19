@@ -30,14 +30,14 @@ namespace FunBoardGames.Client
         public override void Show()
         {
             base.Show();
-            lobbyHandler.RoomListReceived += OnRoomListReceived;
+            //lobbyHandler.RoomListReceived += OnRoomListReceived;
             closeButon.onClick.AddListener(Close);
             SendRoomListRequest();
         }
 
         public override void OnClose()
         {
-            lobbyHandler.RoomListReceived -= OnRoomListReceived;
+            //lobbyHandler.RoomListReceived -= OnRoomListReceived;
             base.OnClose();
         }
 
@@ -63,7 +63,7 @@ namespace FunBoardGames.Client
         private void SendRoomListRequest()
         {
             waitingObject.SetActive(true);
-            lobbyHandler.GetRoomList(gameType);
+            //lobbyHandler.GetRoomList(gameType);
         }
     } 
 }

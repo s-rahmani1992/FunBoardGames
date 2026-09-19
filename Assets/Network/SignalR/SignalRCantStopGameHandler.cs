@@ -97,7 +97,7 @@ namespace FunBoardGames.Network.SignalR
 
             gameFinishedMsg.PlayerScores.ToList().ForEach(scoreData =>
             {
-                var player = playerList.FirstOrDefault(p => p.ConnectionId == scoreData.PlayerConnectionId);
+                var player = playerList.FirstOrDefault(p => p.UserId == scoreData.UserId);
                 if (player != null)
                 {
                     player.UpdateScore(scoreData.Score);
@@ -110,21 +110,21 @@ namespace FunBoardGames.Network.SignalR
 
         private void OnRoundCanceled(EndRoundResponseMessage endRoundMsg)
         {
-            var player  = playerList.FirstOrDefault(p => p.ConnectionId == endRoundMsg.PlayerConnectionId);
-            var nextplayer = playerList.FirstOrDefault(p => p.ConnectionId == endRoundMsg.NextPlayerConnectionId);
+            var player  = playerList.FirstOrDefault(p => p.UserId == endRoundMsg.UserId);
+            var nextplayer = playerList.FirstOrDefault(p => p.UserId == endRoundMsg.NextPlayerUserId);
             whiteConePositions.Clear();
             RoundCanceled?.Invoke(player, nextplayer);
         }
 
         private void OnPlayRoundReceived(PlayRoundResponseMessage playRoundMsg)
         {
-            var player = playerList.FirstOrDefault(player => player.ConnectionId == playRoundMsg.PlayerConnectionId);
-            var nextPlayer = playerList.FirstOrDefault(player => player.ConnectionId == playRoundMsg.NextPlayerConnectionId);
+            var player = playerList.FirstOrDefault(player => player.UserId == playRoundMsg.UserId);
+            var nextPlayer = playerList.FirstOrDefault(player => player.UserId == playRoundMsg.NextPlayerUserId);
             
             foreach (var cone in playRoundMsg.UpdatedColumns)
                 whiteConePositions[cone.Key] = cone.Value;
 
-            player.UpdateCones(playRoundMsg.playerCones);
+            player.UpdateCones(playRoundMsg.PlayerCones);
             player.UpdateScore(playRoundMsg.FinalScore);
             playerFinishPositions = new HashSet<int>(playRoundMsg.FinishedColumns);
             RoundPlayed?.Invoke(player, playRoundMsg.UpdatedColumns, playRoundMsg.DiceIndex1, playRoundMsg.DiceIndex2, nextPlayer);
@@ -133,7 +133,7 @@ namespace FunBoardGames.Network.SignalR
 
         private void OnPlaceWhiteConesReceived(PlaceWhiteConeResponseMessage placeConesMsg)
         {
-            var player = playerList.FirstOrDefault(player => player.ConnectionId == placeConesMsg.PlayerConnectionId);
+            var player = playerList.FirstOrDefault(player => player.UserId == placeConesMsg.UserId);
             
             foreach(var cone in placeConesMsg.UpdatedColumns)
                 whiteConePositions[cone.Key] = cone.Value;
@@ -156,7 +156,7 @@ namespace FunBoardGames.Network.SignalR
                 index++;
             }
 
-            GameDataReceived?.Invoke(new CantStopBoardData(gameDataMsg.BoardData.Columns), playerList.FirstOrDefault(player => player.ConnectionId == gameDataMsg.StartPlayerConnectionId));
+            GameDataReceived?.Invoke(new CantStopBoardData(gameDataMsg.BoardData.Columns), playerList.FirstOrDefault(player => player.UserId == gameDataMsg.StartPlayerUserId));
         }
 
         private void OnPlayerJoinedReceived(PlayerJoinRoomResponseMessage playerMsg)
@@ -168,7 +168,7 @@ namespace FunBoardGames.Network.SignalR
 
         private void OnPlayerLeft(PlayerLeaveRoomResponseMessage leaveMsg)
         {
-            SignalRCantStopPlayer player = playerList.FirstOrDefault(player => player.ConnectionId == leaveMsg.ConnectionId);
+            SignalRCantStopPlayer player = playerList.FirstOrDefault(player => player.UserId == leaveMsg.UserId);
             player.InvokeLeave();
             PlayerLeft?.Invoke(player);
             playerList.Remove(player);

@@ -14,6 +14,7 @@ namespace FunBoardGames.Network.SignalR
        
         HubConnection _connection;
         SynchronizationContext unityContext;
+        BoardGameData requestedGame;
 
         public SignalRLobbyHandler(HubConnection connection)
         {
@@ -26,40 +27,11 @@ namespace FunBoardGames.Network.SignalR
             });
         }
 
-        private void OnRoomListReceived(GetRoomListResponseMessage roomListMsg)
-        {
-            RoomListReceived?.Invoke(roomListMsg.Rooms.Select((roomDTO) => new RoomInfo{
-                GameType = (BoardGame)roomDTO.GameType,
-                Id = roomDTO.Id,
-                MaxPlayers = roomDTO.MaxPlayers,
-                Name = roomDTO.Name,
-                PlayerCount = roomDTO.PlayerCount,
-            }));
-        }
-
-        public void CreateRoom(BoardGame game, string roomName)
-        {
-            
-        }
-
-        public void GetRoomList(BoardGame gameType)
-        {
-            
-        }
-
-        public void JoinRoom(BoardGame game, int roomId)
-        {
-            _connection.InvokeAsync(LobbyMessageNames.JoinRoom, new JoinRoomRequestMessage() { 
-                Game = (BoardGameType)game, 
-                RoomId = roomId,
-            });
-        }
-
         void OnJoinRoomReceived(JoinRoomResponseMessage msg) 
         {
-            switch (msg.Game)
+            switch (requestedGame.Type)
             {
-                case BoardGameType.SET:
+                case BoardGame.SET:
                     List<SignalRSETPlayer> players = new();
                     foreach(var player in msg.JoinedPlayers)
                     {
@@ -70,7 +42,7 @@ namespace FunBoardGames.Network.SignalR
                     var setGame = new SignalRSETGameHandler(_connection, players);
                     JoinedGame?.Invoke(setGame, players);
                     break;
-                case BoardGameType.CantStop:
+                case BoardGame.CantStop:
                     List<SignalRCantStopPlayer> csPlayers = new();
                     foreach(var player in msg.JoinedPlayers)
                     {
@@ -90,10 +62,11 @@ namespace FunBoardGames.Network.SignalR
             });
         }
 
-        public void JoinGame(uint gameId)
+        public void JoinGame(BoardGameData gameData)
         {
+            requestedGame = gameData;
             _connection.InvokeAsync(LobbyMessageNames.JoinGame, new JoinGameRequestMessage() {
-                GameId = gameId,
+                GameId = gameData.Id,
             });
         }
     }

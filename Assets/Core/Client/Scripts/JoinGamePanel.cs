@@ -46,7 +46,7 @@ namespace FunBoardGames.Client
             waitingObject.SetActive(true);
 
             lobbyHandler.JoinedGame += OnJoinedGame;
-            lobbyHandler.JoinGame(gameData.Id);
+            lobbyHandler.JoinGame(gameData);
             userGameHolder.SetActiveGame(gameData);
         }
 

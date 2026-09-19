@@ -111,7 +111,7 @@ namespace FunBoardGames.Network.SignalR
 
         private void OnPlayerGuessResultReceived(GuessResultResponse guessMsg)
         {
-            SignalRSETPlayer player = playerList.FirstOrDefault(player => player.ConnectionId == guessMsg.ConnectionId);
+            SignalRSETPlayer player = playerList.FirstOrDefault(player => player.UserId == guessMsg.UserId);
 
             bool justBusted = player.SetBusted(guessMsg.IsBusted);
 
@@ -150,7 +150,7 @@ namespace FunBoardGames.Network.SignalR
             List<SignalRSETPlayer> rankedPlayers = new();
             foreach (var playerScore in finalScores)
             {
-                SignalRSETPlayer p = playerList.FirstOrDefault(p => p.ConnectionId == playerScore.ConnectionId);
+                SignalRSETPlayer p = playerList.FirstOrDefault(p => p.UserId == playerScore.UserId);
                 p.SetCorrectScore(playerScore.Corrects);
                 p.SetWrongScore(playerScore.Wrongs);
 
@@ -174,7 +174,7 @@ namespace FunBoardGames.Network.SignalR
 
         private void OnPlayerUsedHintReceived(PlayerUsedHintMessage hintMsg)
         {
-            SignalRSETPlayer player = playerList.FirstOrDefault(player => player.ConnectionId == hintMsg.ConnectionId);
+            SignalRSETPlayer player = playerList.FirstOrDefault(player => player.UserId == hintMsg.UserId);
             if (player == null)
                 return;
 
@@ -184,7 +184,7 @@ namespace FunBoardGames.Network.SignalR
 
         private void OnPlayerStartedGuess(PlayerGuessStartMessage guessMsg)
         {
-            SignalRSETPlayer player = playerList.FirstOrDefault(player => player.ConnectionId == guessMsg.ConnectionId);
+            SignalRSETPlayer player = playerList.FirstOrDefault(player => player.UserId == guessMsg.UserId);
             PlayerStartedGuess?.Invoke(player, guessMsg.GuessStartTime);
         }
 
@@ -202,7 +202,7 @@ namespace FunBoardGames.Network.SignalR
 
         private void OnPlayerLeft(PlayerLeaveRoomResponseMessage leaveMsg)
         {
-            SignalRSETPlayer player = playerList.FirstOrDefault(player => player.ConnectionId == leaveMsg.ConnectionId);
+            SignalRSETPlayer player = playerList.FirstOrDefault(player => player.UserId == leaveMsg.UserId);
             player.InvokeLeave();
             PlayerLeft?.Invoke(player);
             playerList.Remove(player);

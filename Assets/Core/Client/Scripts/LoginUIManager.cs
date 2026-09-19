@@ -59,7 +59,7 @@ namespace FunBoardGames.Client
             authHandler.LoginSuccess += OnLoginSuccess;
             authHandler.LoginFailed += OnLoginFailed;
 
-            if(PlayerPrefs.HasKey("username"))
+            if(PlayerPrefs.HasKey("user-id"))
             {
                 StartLogin();
             }
@@ -127,7 +127,7 @@ namespace FunBoardGames.Client
 
         private void StartLogin()
         {
-            authHandler.SignIn(new SignInData{ PlayerName = PlayerPrefs.GetString("username"), DeviceId = Utilities.DeviceId, Password = PlayerPrefs.GetString("password") });
+            authHandler.SignIn(new SignInData{ UserId = PlayerPrefs.GetInt("user-id"), DeviceId = Utilities.DeviceId, Password = PlayerPrefs.GetString("password") });
         }
 
         private void SignUp(string name)

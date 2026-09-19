@@ -35,13 +35,9 @@ namespace FunBoardGames.Network
 
     public interface ILobbyHandler
     {
-        void CreateRoom(BoardGame game, string roomName);
-        void JoinRoom(BoardGame game, int roomId);
-        void GetRoomList(BoardGame gameType);
         void JointTestGame(BoardGame game);
-        void JoinGame(uint gameId);
+        void JoinGame(BoardGameData gameData);
 
         event Action<IGameHandler, IEnumerable<IBoardGamePlayer>> JoinedGame;
-        event Action<IEnumerable<RoomInfo>> RoomListReceived;
     }
 }

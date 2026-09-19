@@ -36,13 +36,6 @@ namespace FunBoardGames.Client
             readyBtn.onClick.AddListener(OnReadyClicked);
             leaveBtn.onClick.AddListener(OnLeaveClicked);
             waitingObject.SetActive(true);
-
-            if (roomId == null)
-                lobbyManager.CreateRoom(gameType, roomName);
-            else if(roomId == -1)
-                lobbyManager.JointTestGame(gameType);
-            else
-                lobbyManager.JoinRoom(gameType, roomId.GetValueOrDefault());
         }
 
         private void OnRoomGenerated(IGameHandler handler, IEnumerable<IBoardGamePlayer> players)

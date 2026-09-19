@@ -33,7 +33,7 @@ namespace FunBoardGames.Network.SignalR
                     {
                         UserId = msg.ProfileDTO.UserId,
                         PlayerName = msg.ProfileDTO.PlayerName,
-                        ConnectionId = msg.ProfileDTO.ConnectionId,
+                        Avatar = msg.ProfileDTO.Avatar,
                     },
                     Token = msg.AuthToken,
                 });
@@ -57,7 +57,7 @@ namespace FunBoardGames.Network.SignalR
         {
             _connection.InvokeAsync(AuthenticationMessageNames.SignIn, new SignInRequestMessage()
             {
-                PlayerName = signInData.PlayerName,
+                UserId = signInData.UserId,
                 AuthToken = signInData.Password,
                 DeviceId = signInData.DeviceId,
             });

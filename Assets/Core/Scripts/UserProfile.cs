@@ -10,7 +10,7 @@ namespace FunBoardGames
 
         public Profile Profile { get; private set; }
 
-        public static string ConnectionId { get; private set; }
+        public static int UserId { get; private set; }
         
         public void Register(IAuthHandler authHandler)
         {
@@ -21,8 +21,8 @@ namespace FunBoardGames
         private void OnAuthReceived(SignInResponse profile)
         {
             Profile = profile.Profile;
-            ConnectionId = profile.Profile.ConnectionId;
-            PlayerPrefs.SetString("username", profile.Profile.PlayerName);
+            UserId = profile.Profile.UserId;
+            PlayerPrefs.SetInt("user-id", profile.Profile.UserId);
             PlayerPrefs.SetString("password", profile.Token);
         }
 
