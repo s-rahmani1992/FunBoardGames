@@ -1,3 +1,4 @@
+using FunBoardGames.Network.SignalR.Shared;
 using FunBoardGames.SignalR.Shared;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
@@ -19,6 +20,16 @@ namespace FunBoardGames.Network.SignalR
             _connection.On<GetUserDataResponseMessage>(UserMessageNames.GetUserData, (response) =>
             {
                 unityContext.Post(_ => OnUserDataReceived(response), null);
+            });
+
+            _connection.On<UserProfileDTO>(UserMessageNames.ProfileUpdate, (profile) =>
+            {
+                unityContext.Post(_ => ProfileUpdated?.Invoke(new Profile()
+                {
+                    UserId = profile.UserId,
+                    PlayerName = profile.PlayerName,
+                    Avatar = profile.Avatar,
+                }), null);
             });
         }
 
@@ -45,10 +56,16 @@ namespace FunBoardGames.Network.SignalR
         }
 
         public event Action<UserGameData> UserGameDataReceived;
+        public event Action<Profile> ProfileUpdated;
 
         public void GetUserData()
         {
             _connection.InvokeAsync(UserMessageNames.GetUserData);
+        }
+
+        public void ChangePlayerName(string newName)
+        {
+            _connection.InvokeAsync(UserMessageNames.ChangePlayerName, newName);
         }
     }
 }

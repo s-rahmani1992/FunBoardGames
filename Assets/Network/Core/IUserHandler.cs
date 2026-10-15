@@ -64,7 +64,9 @@ namespace FunBoardGames.Network
     public interface IUserHandler
     {
         void GetUserData();
+        void ChangePlayerName(string newName);
 
         event Action<UserGameData> UserGameDataReceived;
+        event Action<Profile> ProfileUpdated;
     }
 }

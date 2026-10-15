@@ -55,7 +55,7 @@ namespace FunBoardGames.Client
             SetProgress(0.3f, "Signing In .....");
 
             authHandler = networkManager.AuthHandler;
-            userProfile.Register(authHandler);
+            userProfile.Register(authHandler, networkManager.UserHandler);
             authHandler.LoginSuccess += OnLoginSuccess;
             authHandler.LoginFailed += OnLoginFailed;
 

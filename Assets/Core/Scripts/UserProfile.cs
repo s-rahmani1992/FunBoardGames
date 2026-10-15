@@ -6,16 +6,25 @@ namespace FunBoardGames
     public class UserProfile : ScriptableObject
     {
         IAuthHandler _authHandler;
+        IUserHandler _userHandler;
+
         public string PlayerName => Profile?.PlayerName;
 
         public Profile Profile { get; private set; }
 
         public static int UserId { get; private set; }
         
-        public void Register(IAuthHandler authHandler)
+        public void Register(IAuthHandler authHandler, IUserHandler userHandler)
         {
             _authHandler = authHandler;
+            _userHandler = userHandler;
             _authHandler.LoginSuccess += OnAuthReceived;
+            _userHandler.ProfileUpdated += OnProfileUpdated;
+        }
+
+        private void OnProfileUpdated(Profile profile)
+        {
+            Profile = profile;
         }
 
         private void OnAuthReceived(SignInResponse profile)
@@ -31,6 +40,11 @@ namespace FunBoardGames
             if (_authHandler != null)
             {
                 _authHandler.LoginSuccess -= OnAuthReceived;
+            }
+
+            if (_userHandler != null)
+            {
+                _userHandler.ProfileUpdated -= OnProfileUpdated;
             }
         }
     }
