@@ -67,5 +67,10 @@ namespace FunBoardGames.Network.SignalR
         {
             _connection.InvokeAsync(UserMessageNames.ChangePlayerName, newName);
         }
+
+        public void ChangeAvatar(int newAvatarId)
+        {
+            _connection.InvokeAsync(UserMessageNames.ChangePlayerAvatar, newAvatarId);
+        }
     }
 }

@@ -65,6 +65,7 @@ namespace FunBoardGames.Network
     {
         void GetUserData();
         void ChangePlayerName(string newName);
+        void ChangeAvatar(int newAvatarId);
 
         event Action<UserGameData> UserGameDataReceived;
         event Action<Profile> ProfileUpdated;
