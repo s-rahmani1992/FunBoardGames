@@ -41,7 +41,7 @@ namespace FunBoardGames
         {
             this.player = player;
             Subscribe();
-            RefreshUI(player.Name, player.IsReady);
+            RefreshUI(player.Profile.PlayerName, player.IsReady);
         }
 
         void Subscribe()

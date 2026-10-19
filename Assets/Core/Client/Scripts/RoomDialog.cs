@@ -94,7 +94,7 @@ namespace FunBoardGames.Client
         private void OnPlayerLeft(IBoardGamePlayer player)
         {
             if (!player.IsMe)
-                Log($"{player.Name} Left the room");
+                Log($"{player.Profile.PlayerName} Left the room");
             else
                 Close();
         }
@@ -102,7 +102,7 @@ namespace FunBoardGames.Client
         private void OnPlayerJoined(IBoardGamePlayer player)
         {
             OnPlayerAdded(player);
-            Log($"{(player.IsMe ? "you" : player.Name)} Joined the room");
+            Log($"{(player.IsMe ? "you" : player.Profile.PlayerName)} Joined the room");
         }
 
         public RoomPlayerUI GetUI(int number)

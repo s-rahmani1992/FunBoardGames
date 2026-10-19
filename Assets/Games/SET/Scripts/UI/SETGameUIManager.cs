@@ -102,7 +102,7 @@ namespace FunBoardGames.SET
                 hintBtn.interactable = false;
             }
             else
-                gameLogger.Toast($"{player.Name} used a hint!");
+                gameLogger.Toast($"{player.Profile.PlayerName} used a hint!");
         }
 
         bool CanUseHint()
@@ -158,7 +158,7 @@ namespace FunBoardGames.SET
         private void OnPlayerBusted(ISETPlayer player)
         {
             playerUIMap[player].RefreshStatus();
-            gameLogger.Toast(player.IsMe ? "You are busted! You can't guess anymore." : $"{player.Name} is busted!");
+            gameLogger.Toast(player.IsMe ? "You are busted! You can't guess anymore." : $"{player.Profile.PlayerName} is busted!");
 
             if (player.IsMe)
                 guessBtn.interactable = hintBtn.interactable = false;
@@ -180,7 +180,7 @@ namespace FunBoardGames.SET
 
         private void OnPlayerGuessTimeout(ISETPlayer player)
         {
-            gameLogger.Toast(player.IsMe ? "You didn't guess in time. You lost 1 point" : $"{player.Name} didn't guess in time. {player.Name} lost 1 point");
+            gameLogger.Toast(player.IsMe ? "You didn't guess in time. You lost 1 point" : $"{player.Profile.PlayerName} didn't guess in time. {player.Profile.PlayerName} lost 1 point");
             playerUIMap[player].ToggleGuess(false);
             playerUIMap[player].UpdateScores();
             RefreshBtns(SETGameState.Normal);
@@ -210,7 +210,7 @@ namespace FunBoardGames.SET
             RefreshBtns(SETGameState.Guess);
             playerUIMap[player].ToggleGuess(true);
             timer.StartCountdown((float)(DateTimeOffset.UtcNow - guessStartTime).TotalSeconds + 7.0f); //TODO sync with game data in future
-            gameLogger.SetText(player.IsMe ? "Your are guessing. Guess quickly" : $"{player.Name} is guessing");
+            gameLogger.SetText(player.IsMe ? "Your are guessing. Guess quickly" : $"{player.Profile.PlayerName} is guessing");
         }
 
         void UnSubscribe()
@@ -278,9 +278,9 @@ namespace FunBoardGames.SET
             yield return new WaitForSeconds(0.5f);
 
             if (isSet)
-                gameLogger.SetText(player.IsMe ? "You Guessed Right! You Got 1 point." : $"{player.Name} Guessed Right! He Got 1 point.");
+                gameLogger.SetText(player.IsMe ? "You Guessed Right! You Got 1 point." : $"{player.Profile.PlayerName} Guessed Right! He Got 1 point.");
             else
-                gameLogger.SetText(player.IsMe ? "Your Guess was Wrong! You lost 1 point." : $"{player.Name}'s Guess was Wrong! He lost 1 point.");
+                gameLogger.SetText(player.IsMe ? "Your Guess was Wrong! You lost 1 point." : $"{player.Profile.PlayerName}'s Guess was Wrong! He lost 1 point.");
 
             yield return new WaitForSeconds(6);
             DialogManager.Instance.CloseDialog<GuessResultDialog>();

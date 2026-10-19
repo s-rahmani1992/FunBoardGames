@@ -13,7 +13,7 @@ namespace FunBoardGames.SET {
         public void SETUI(ISETPlayer player, int rank)
         {
             rankText.text = rank.ToString();
-            nameText.text = player.Name;
+            nameText.text = player.Profile.PlayerName;
             statusText.text = GetStatus(player);
             scoreText.text = player.CorrectScore.ToString();
         }

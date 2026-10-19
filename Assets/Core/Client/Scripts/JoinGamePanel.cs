@@ -1,3 +1,4 @@
+using DG.Tweening;
 using FunBoardGames.Network;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,23 +12,26 @@ namespace FunBoardGames.Client
     [RequireComponent(typeof(Canvas), typeof(GraphicRaycaster))]
     public class JoinGamePanel : MonoBehaviour
     {
-        [SerializeField] RectTransform playersPanel;
-        [SerializeField] RoomPlayerUI roomPlyerUI;
+        [SerializeField] UserProfileItem playerProfileItem;
+        [SerializeField] UserProfileItem[] otherPlayerProfiles;
         [SerializeField] TMP_Text gameTxt;
         [SerializeField] TMP_Text logTxt;
-        [SerializeField] GameObject waitingObject;
         [SerializeField] SceneAssetMap sceneMap;
         [SerializeField] Button leaveBtn;
         [SerializeField] UserGameHolder userGameHolder;
+        [SerializeField] UserProfile userProfile;
 
-        Coroutine toast;
         ILobbyHandler lobbyHandler;
         IGameHandler gameHandler;
         BoardGame gameType;
 
+        IBoardGamePlayer[] players;
+
         private void Awake()
         {
             DontDestroyOnLoad(gameObject);
+            players = new IBoardGamePlayer[otherPlayerProfiles.Length];
+            leaveBtn.interactable = false;
             leaveBtn.onClick.AddListener(OnLeaveClicked);
         }
 
@@ -43,23 +47,48 @@ namespace FunBoardGames.Client
             this.gameType = gameData.Type;
 
             gameTxt.text = gameData.Name;
-            waitingObject.SetActive(true);
+
+            playerProfileItem.SetProfile(userProfile.Profile);
+
+            for (int i = 0; i < gameData.NumberofPlayers - 1; i++)
+            {
+                otherPlayerProfiles[i].gameObject.SetActive(true);
+                otherPlayerProfiles[i].SetSearching();
+            }
 
             lobbyHandler.JoinedGame += OnJoinedGame;
-            lobbyHandler.JoinGame(gameData);
             userGameHolder.SetActiveGame(gameData);
+
+            DOVirtual.DelayedCall(1, () => {
+                leaveBtn.interactable = true;
+                logTxt.text = "Searching for players...";
+                lobbyHandler.JoinGame(gameData);
+            });
         }
 
         private void OnJoinedGame(IGameHandler handler, IEnumerable<IBoardGamePlayer> players)
         {
             gameHandler = handler;
-            waitingObject.SetActive(false);
 
             foreach (var p in players)
                 OnPlayerAdded(p);
 
             gameHandler.PlayerJoined += OnPlayerJoined;
+            gameHandler.PlayerLeft += OnPlayerLeft;
             gameHandler.AllPlayersReady += OnAllPlayersReady;
+        }
+
+        private void OnPlayerLeft(IBoardGamePlayer player)
+        {
+            for (int i = 0; i < players.Length; i++)
+            {
+                if(players[i] == player)
+                {
+                    players[i] = null;
+                    otherPlayerProfiles[i].SetSearching();
+                    break;
+                }
+            }
         }
 
         private void OnAllPlayersReady()
@@ -70,34 +99,23 @@ namespace FunBoardGames.Client
 
         private void OnPlayerAdded(IBoardGamePlayer player)
         {
-            RoomPlayerUI uiPlayer = Instantiate(roomPlyerUI, playersPanel);
-            uiPlayer.SetPlayer(player);
+            if(player.IsMe)
+                return;
+
+            for (int i = 0; i < players.Length; i++)
+            {
+                if (players[i] != null)
+                    continue;
+
+                players[i] = player;
+                otherPlayerProfiles[i].SetProfile(player.Profile);
+                break;
+            }
         }
 
         private void OnPlayerJoined(IBoardGamePlayer player)
         {
             OnPlayerAdded(player);
-            Log($"{(player.IsMe ? "you" : player.Name)} Joined the game");
-        }
-
-        void Log(string str)
-        {
-            if (toast == null)
-                toast = StartCoroutine(Toast(str));
-            else
-            {
-                StopCoroutine(toast);
-                toast = StartCoroutine(Toast(str));
-            }
-        }
-
-        IEnumerator Toast(string str)
-        {
-            string currentTxt = logTxt.text;
-            logTxt.text = str;
-            yield return new WaitForSeconds(3);
-            logTxt.text = currentTxt;
-            toast = null;
         }
 
         void OnDestroy()
@@ -107,12 +125,15 @@ namespace FunBoardGames.Client
             if (gameHandler != null)
             {
                 gameHandler.PlayerJoined -= OnPlayerJoined;
+                gameHandler.PlayerLeft -= OnPlayerLeft;
                 gameHandler.AllPlayersReady -= OnAllPlayersReady;
             }
         }
 
         IEnumerator LoadGame()
         {
+            leaveBtn.interactable = false;
+            logTxt.text = "Loading game...";
             yield return new WaitForSeconds(0.5f);
             yield return SceneManager.LoadSceneAsync(sceneMap.GetScene(gameType));
             yield return new WaitForSeconds(0.2f);

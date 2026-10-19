@@ -7,7 +7,7 @@ namespace FunBoardGames.Network
     public interface IBoardGamePlayer
     {
         bool IsMe { get;}
-        string Name { get;}
+        Profile Profile { get; }
         bool IsReady { get;}
 
         event Action<int, int> IndexChanged;

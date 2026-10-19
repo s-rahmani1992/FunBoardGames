@@ -26,7 +26,7 @@ namespace FunBoardGames.CantStop
         public void RefreshUI()
         {
             nameText.color = (networkPlayer.IsMe ? Color.yellow : Color.cyan);
-            nameText.text = networkPlayer.Name;
+            nameText.text = networkPlayer.Profile.PlayerName;
             coneIcon.color = playerColor;
             scoreText.text = networkPlayer.Score.ToString();
             gameObject.SetActive(true);

@@ -39,7 +39,7 @@ public class PlayerVoteUI : MonoBehaviour
             UnSubscribe();
 
         networkPlayer = player; 
-        playerTxt.text = networkPlayer.Name;
+        playerTxt.text = networkPlayer.Profile.PlayerName;
         gameObject.SetActive(true);
         UpdateVoteUI(networkPlayer.Vote);
         Subscribe();

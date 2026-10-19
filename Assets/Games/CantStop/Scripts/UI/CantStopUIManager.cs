@@ -212,7 +212,7 @@ namespace FunBoardGames.CantStop
 
         private async void OnRoundCanceled(ICantStopPlayer player1, ICantStopPlayer nextPlayer)
         {
-            statText.text = (player1.IsMe ? "You" : player1.Name) + " Canceled the Round!";
+            statText.text = (player1.IsMe ? "You" : player1.Profile.PlayerName) + " Canceled the Round!";
             whiteConePanel.UpdateUI(CantStopRoomManager.whineConeLimit);
             boardController.RemoveWhiteCones();
             OnTurnStarted(nextPlayer);
@@ -307,7 +307,7 @@ namespace FunBoardGames.CantStop
             this.isbusted = isBusted;
             playButton.interactable = currentPlayer.IsMe && isbusted;
             if (isbusted)
-                statText.text = (currentPlayer.IsMe ? "You are Busted!" : $"{currentPlayer.Name} is Busted!");
+                statText.text = (currentPlayer.IsMe ? "You are Busted!" : $"{currentPlayer.Profile.PlayerName} is Busted!");
         }
 
         public void OnRollClicked()

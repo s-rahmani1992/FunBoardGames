@@ -91,7 +91,7 @@ namespace FunBoardGames.SET
 
             networkPlayer = player;
             playerTxt.color = (networkPlayer.IsMe ? Color.yellow : Color.cyan);
-            playerTxt.text = networkPlayer.Name;
+            playerTxt.text = networkPlayer.Profile.PlayerName;
             CreateWrongLEDs(wrongLimit);
             CreateHintIcons(hintLimit);
             gameObject.SetActive(true);

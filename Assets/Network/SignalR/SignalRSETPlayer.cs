@@ -9,7 +9,7 @@ namespace FunBoardGames.Network.SignalR
     {
         public bool IsMe => UserId == UserProfile.UserId;
 
-        public string Name { get; private set; }
+        public Profile Profile { get; private set; }
 
         public bool IsReady { get; private set; }
 
@@ -40,7 +40,12 @@ namespace FunBoardGames.Network.SignalR
         {
             _connection = connection;
             unityContext = SynchronizationContext.Current;
-            Name = playerInfo.UserProfile.PlayerName;
+            Profile = new Profile()
+            {
+                UserId = playerInfo.UserProfile.UserId,
+                PlayerName = playerInfo.UserProfile.PlayerName,
+                Avatar = playerInfo.UserProfile.Avatar,
+            };
             UserId = playerInfo.UserProfile.UserId;
         }
 
