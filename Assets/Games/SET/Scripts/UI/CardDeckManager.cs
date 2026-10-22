@@ -94,12 +94,14 @@ namespace FunBoardGames.SET
             }
 
             byte r = CardData.CheckSET(cards[0].info, cards[1].info, cards[2].info);
-            var guessDialog = GuessResultDialog.Show(cards.ToArray(), CardData.CheckSET(cards[0].info, cards[1].info, cards[2].info));
+            var gameUI = SETGameUIManager.Instance;
+            var guessDialog = GuessResultDialog.Show(cards.ToArray(), r, gameUI != null ? gameUI.GetPlayerPanel(player) : null,
+                () => gameUI?.OnGuessCardsArrived(player));
             isShowingGuessResult = true;
-            DOVirtual.DelayedCall(5, () =>
+
+            guessDialog.Closed += () =>
             {
                 block.SetActive(true);
-                guessDialog.Close();
                 isShowingGuessResult = false;
 
                 // The round timed out while the guessed cards were shown in the dialog
@@ -113,7 +115,7 @@ namespace FunBoardGames.SET
 
                 DestributePendingCards();
                 CardDestributionEnded?.Invoke();
-            });
+            };
         }
 
         private void OnRoundTimedOut(IEnumerable<CardData> removedCards)

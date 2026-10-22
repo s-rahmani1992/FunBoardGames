@@ -187,7 +187,6 @@ namespace FunBoardGames.SET
             if (isCorrect)
                 roundTimer.Clear();
 
-            playerUIMap[player].UpdateScores(); 
             playerUIMap[player].ToggleGuess(false);
             StartCoroutine(DisplayResult(isCorrect, player));
             WaitForCardDestribution();
@@ -300,8 +299,20 @@ namespace FunBoardGames.SET
             else
                 gameLogger.SetText(player.IsMe ? "Your Guess was Wrong! You lost 1 point." : $"{player.Profile.PlayerName}'s Guess was Wrong! He lost 1 point.");
 
-            yield return new WaitForSeconds(6);
-            DialogManager.Instance.CloseDialog<GuessResultDialog>();
+        }
+
+        public RectTransform GetPlayerPanel(ISETPlayer player)
+        {
+            return playerUIMap.TryGetValue(player, out var playerUI) ? (RectTransform)playerUI.transform : null;
+        }
+
+        public void OnGuessCardsArrived(ISETPlayer player)
+        {
+            if (playerUIMap.TryGetValue(player, out var playerUI) == false)
+                return;
+
+            playerUI.UpdateScores();
+            playerUI.transform.DOPunchScale(Vector3.one * 0.08f, 0.3f, 6);
         }
 
         public void SendHint()
