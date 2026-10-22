@@ -8,9 +8,32 @@ public class UserGameHolder : ScriptableObject
 
     public BoardGameData ActiveGame { get; private set; }
 
+    public bool IsTutorial { get; private set; }
+
     public void SetActiveGame(BoardGameData gameData)
     {
+        EndTutorial();
         ActiveGame = gameData;
+    }
+
+    public void StartTutorial(BoardGameData gameData, IGameHandler tutorialHandler)
+    {
+        if (_currentGameHandler != null)
+            _currentGameHandler.PlayerLeft -= OnPlayerLeft;
+
+        ActiveGame = gameData;
+        _currentGameHandler = tutorialHandler;
+        IsTutorial = true;
+    }
+
+    public void EndTutorial()
+    {
+        if (IsTutorial == false)
+            return;
+
+        IsTutorial = false;
+        ActiveGame = null;
+        _currentGameHandler = null;
     }
 
     public void Register(ILobbyHandler lobbyHandler)

@@ -61,6 +61,17 @@ namespace FunBoardGames.SET
             gameHandler.RoundStarted += OnRoundStarted;
         }
 
+
+        public CardUI GetCardUI(CardData data)
+        {
+            return placedCards.FirstOrDefault(cardUI => cardUI != null && cardUI.info.Equals(data));
+        }
+
+        public bool IsSelected(CardData data)
+        {
+            return selectedCards.Any(cardUI => cardUI.info.Equals(data));
+        }
+
         public void DestributePendingCards()
         {
             if (pendingCards != null && pendingCards.Count > 0)

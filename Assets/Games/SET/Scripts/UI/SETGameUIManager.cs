@@ -58,6 +58,10 @@ namespace FunBoardGames.SET
             UpdatePlayerUIs();
         }
 
+        public void HideRoundTimer() => roundTimer.gameObject.SetActive(false);
+
+        public bool IsReadyForInput { get; private set; }
+
         void BeginGameCountDown()
         {
             timer.StartCountdown(4);
@@ -273,6 +277,7 @@ namespace FunBoardGames.SET
 
         void RefreshBtns(SETGameState state)
         {
+            IsReadyForInput = state == SETGameState.Normal;
             // A busted player can't guess for the rest of the game
             guessBtn.interactable = hintBtn.interactable = (state == SETGameState.Normal && selfPlayer?.IsBusted != true);
             hintBtn.interactable &= CanUseHint();

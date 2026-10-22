@@ -469,6 +469,58 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 151693787}
   m_CullTransparentMesh: 1
+--- !u!1 &183848229
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 183848231}
+  - component: {fileID: 183848230}
+  m_Layer: 0
+  m_Name: SETTutorial
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &183848230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 183848229}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc7cca4dbee64fe46b9bcd230f5a592e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FunBoardGames.SET.SETTutorialFlow
+  ui: {fileID: 1860178641}
+  deck: {fileID: 653066760}
+  userGameHolder: {fileID: 11400000, guid: 024728347846f934e9cf6f23e7599d80, type: 2}
+  style: {fileID: 11400000, guid: a709cc492601e124ea27b965393da3bd, type: 2}
+  overlayPrefab: {fileID: 4410975248593177243, guid: 93516f933c0d3b84488c414c778c7dc7, type: 3}
+  cardAreaRect: {fileID: 1451519506}
+  guessButtonRect: {fileID: 225719867}
+  hintButton: {fileID: 2146534537}
+--- !u!4 &183848231
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 183848229}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &225719866
 GameObject:
   m_ObjectHideFlags: 0
@@ -3476,3 +3528,4 @@ SceneRoots:
   - {fileID: 1291177963}
   - {fileID: 1860178642}
   - {fileID: 1012325239}
+  - {fileID: 183848231}
