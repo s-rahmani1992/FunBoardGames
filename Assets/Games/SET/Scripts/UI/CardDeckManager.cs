@@ -12,12 +12,13 @@ namespace FunBoardGames.SET
     {
         [SerializeField] Transform cardContainer;
         [SerializeField] Transform deckHolder;
-        [SerializeField] Transform[] cardHolders;
+        [SerializeField] Transform cardHolder;
         [SerializeField] GameObject block;
         [SerializeField] TMPro.TMP_Text remainTxt;
         [SerializeField] CardUI cardUIPrefab;
         [SerializeField] float timeoutFadeDuration = 0.5f;
 
+        List<Transform> cardHolders;
         ISETGameHandler gameHandler;
         SETGameData gameData;
 
@@ -35,6 +36,16 @@ namespace FunBoardGames.SET
         {
             this.gameHandler = gameHandler;
             this.gameData = gameData;
+
+            cardHolders = new()
+            {
+                cardHolder
+            };
+            for (int i = 1; i < gameData.StartCardCount; i++)
+            {
+                var holder = Instantiate(cardHolder, cardContainer);
+                cardHolders.Add(holder);
+            }
 
             remained = 1;
 

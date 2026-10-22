@@ -21,9 +21,7 @@ namespace FunBoardGames.Network
 
     public class SETGameData : BoardGameData
     {
-        public float GuessTime {  get; private set; }
-
-        public SETGameData(uint id, float guessTime, string name = null, int numberofPlayers = 0, int attributes = 0, int roundTime = 0, int wrongLimit = 0, int? hintLimit = null)
+        public SETGameData(uint id, float guessTime, string name = null, int numberofPlayers = 0, int attributes = 0, int roundTime = 0, int wrongLimit = 0, int? hintLimit = null, int startCardCount = 12)
             : base(id, BoardGame.SET, name, numberofPlayers)
         {
             GuessTime = guessTime;
@@ -31,12 +29,14 @@ namespace FunBoardGames.Network
             RoundTime = roundTime;
             WrongLimit = wrongLimit;
             HintLimit = hintLimit;
+            StartCardCount = startCardCount;
         }
 
+        public int StartCardCount { get; private set; }
+        public float GuessTime { get; private set; }
         public int AttributeCount { get; private set; }
         public int RoundTime { get; private set; }
         public int WrongLimit { get; private set; }
-        // Maximum hints a player can use in the game, null when there is no total limit
         public int? HintLimit { get; private set; }
     }
 

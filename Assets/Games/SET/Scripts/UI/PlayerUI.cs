@@ -1,3 +1,4 @@
+using FunBoardGames.Client;
 using FunBoardGames.Network;
 using System.Collections.Generic;
 using TMPro;
@@ -18,6 +19,12 @@ namespace FunBoardGames.SET
         [SerializeField] Color usedHintColor = Color.gray;
         [SerializeField] Color playingColor = new(0f, 1f, 0.1424f);
         [SerializeField] Color inactiveColor = Color.red;
+        [SerializeField] AvatarAssetManager avatarAssets;
+        [SerializeField] Image avatarImage;
+        [SerializeField] Image namePlate;
+        [SerializeField] Color nameTextColor = new(0.13f, 0.07f, 0f);
+        [SerializeField] Color myPlateColor = Color.white;
+        [SerializeField] Color otherPlateColor = new(0.8f, 0.86f, 0.95f);
 
         ISETPlayer networkPlayer;
         readonly List<RawImage> wrongLEDs = new();
@@ -43,11 +50,13 @@ namespace FunBoardGames.SET
             else if (networkPlayer.IsBusted)
                 SetStatus("Busted", inactiveColor);
             else
-                SetStatus("Playing", playingColor);
+                SetStatus(null, playingColor);
         }
 
+        // Only Busted and Left are worth showing; a playing player has no status badge
         void SetStatus(string status, Color color)
         {
+            statusTxt.gameObject.SetActive(!string.IsNullOrEmpty(status));
             statusTxt.text = status;
             statusTxt.color = color;
         }
@@ -90,8 +99,15 @@ namespace FunBoardGames.SET
                 UnSubscribe();
 
             networkPlayer = player;
-            playerTxt.color = (networkPlayer.IsMe ? Color.yellow : Color.cyan);
+            playerTxt.color = nameTextColor;
             playerTxt.text = networkPlayer.Profile.PlayerName;
+
+            if (namePlate != null)
+                namePlate.color = networkPlayer.IsMe ? myPlateColor : otherPlateColor;
+
+            if (avatarImage != null && avatarAssets != null)
+                avatarImage.sprite = avatarAssets.GetAvatar(networkPlayer.Profile.Avatar);
+
             CreateWrongLEDs(wrongLimit);
             CreateHintIcons(hintLimit);
             gameObject.SetActive(true);

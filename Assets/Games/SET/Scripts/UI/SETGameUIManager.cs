@@ -14,6 +14,7 @@ namespace FunBoardGames.SET
         [SerializeField] CardDeckManager cardDeckManager;
         [SerializeField] ObjectPoolManager pool;
         [SerializeField] Button guessBtn, hintBtn;
+        [SerializeField] TMPro.TMP_Text hintCountText;
         [SerializeField] GameLogger gameLogger;
         [SerializeField] UserGameHolder userGameHolder;
         [SerializeField] PlayerUI[] playerUIs;
@@ -95,6 +96,7 @@ namespace FunBoardGames.SET
         private void OnPlayerUsedHint(ISETPlayer player)
         {
             playerUIMap[player].UseHint();
+            UpdateHintBadge();
 
             if (player.IsMe)
             {
@@ -103,6 +105,19 @@ namespace FunBoardGames.SET
             }
             else
                 gameLogger.Toast($"{player.Profile.PlayerName} used a hint!");
+        }
+
+        // Badge on the hint button showing the hints the player has left; hidden when hints are unlimited
+        void UpdateHintBadge()
+        {
+            if (hintCountText == null)
+                return;
+
+            bool limited = gameData != null && gameData.HintLimit != null && selfPlayer != null;
+            hintCountText.transform.parent.gameObject.SetActive(limited);
+
+            if (limited)
+                hintCountText.text = $"{Mathf.Max(gameData.HintLimit.Value - selfPlayer.UsedHintCount, 0)} left";
         }
 
         bool CanUseHint()
@@ -203,6 +218,8 @@ namespace FunBoardGames.SET
 
                 index++;
             }
+
+            UpdateHintBadge();
         }
 
         private void OnPlayerStartedGuess(ISETPlayer player, DateTimeOffset guessStartTime)
@@ -260,6 +277,7 @@ namespace FunBoardGames.SET
             // A busted player can't guess for the rest of the game
             guessBtn.interactable = hintBtn.interactable = (state == SETGameState.Normal && selfPlayer?.IsBusted != true);
             hintBtn.interactable &= CanUseHint();
+            UpdateHintBadge();
             for (int i = 0; i < hints.Count; i++)
                 hints[i].Mark(false);
             hints.Clear();

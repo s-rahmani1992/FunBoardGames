@@ -87,7 +87,7 @@ namespace FunBoardGames.SET
 
         public void Mark(bool isSelected) 
         {
-            cardImage.color = (isSelected ? Color.yellow : Color.white);
+            cardImage.color = (isSelected ? new Color(1f, 0.82f, 0.3f) : Color.white);
         }
 
         public void ToggleHint(bool isOn)
@@ -97,7 +97,7 @@ namespace FunBoardGames.SET
 
         public void MarkHint()
         {
-            cardImage.color = new Color(0, 0.6135f, 1);
+            cardImage.color = new Color(0.55f, 0.8f, 1f);
         }
 
         public void MoveBack(float delay = 0.0f)
