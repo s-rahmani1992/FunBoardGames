@@ -9,6 +9,8 @@ namespace FunBoardGames.CantStop
 {
     public class CantStopUIManager : MonoBehaviour
     {
+        const int DefaultWinConeCount = 3;
+
         [SerializeField] UserGameHolder userGameHolder;
 
         [SerializeField] CantStopPlayerUI[] playerUis;
@@ -72,10 +74,11 @@ namespace FunBoardGames.CantStop
             boardData = data;
             boardController.Initialize(data);
             int index = 0;
+            int winConeCount = (userGameHolder.ActiveGame as CantStopGameData)?.WinConeCount ?? DefaultWinConeCount;
 
             foreach (var player in gameHandler.Players)
             {
-                playerUis[index].SetPlayer(player);
+                playerUis[index].SetPlayer(player, winConeCount);
                 playerUiDict[player] = playerUis[index];
 
                 if(player.IsMe)

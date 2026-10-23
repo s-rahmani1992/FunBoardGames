@@ -43,11 +43,19 @@ namespace FunBoardGames.Network
     public class CantStopGameData : BoardGameData
     {
         public CantStopBoardData BoardData { get; private set; }
+        public int MarkerConeCount { get; private set; }
+        public int WinConeCount { get; private set; }
+        public int RoundTime { get; private set; }
+        public int TimeoutLimit { get; private set; }
 
-        public CantStopGameData(uint id, CantStopBoardData boardData, string name = null, int numberofPlayers = 0)
+        public CantStopGameData(uint id, CantStopBoardData boardData, string name, int numberofPlayers, int markerConeCount, int winConeCount, int roundTime, int timeoutLimit)
             : base(id, BoardGame.CantStop, name, numberofPlayers)
         {
             BoardData = boardData;
+            MarkerConeCount = markerConeCount;
+            WinConeCount = winConeCount;
+            RoundTime = roundTime;
+            TimeoutLimit = timeoutLimit;
         }
     }
 
