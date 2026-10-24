@@ -14,8 +14,9 @@ namespace FunBoardGames.Network
 
         public int this[int index] => columns[index];
 
-        public IDictionary<int, int> GetColumns() => columns;
+        public bool HasColumn(int number) => columns.ContainsKey(number);
 
+        public IDictionary<int, int> GetColumns() => columns;
 
         public int ColumnCount => columns.Count;
     }

@@ -10,6 +10,7 @@ namespace FunBoardGames.CantStop
     public class CantStopUIManager : MonoBehaviour
     {
         const int DefaultWinConeCount = 3;
+        const string ChooseColumnMessage = "Pick one column for the marker";
 
         [SerializeField] UserGameHolder userGameHolder;
 
@@ -54,6 +55,12 @@ namespace FunBoardGames.CantStop
                 {
                     UpdatePossibleMoves(v1.Value, v2.Value);
                     bool allWrong = possibleMoves.All(m => m.Value.Item2 == MarkMode.Wrong);
+
+                    if (mustSelectMoves && !allWrong)
+                        statText.text = ChooseColumnMessage;
+                    else
+                        ClearChooseColumnMessage();
+
                     placeButton.interactable = !allWrong && !isbusted && !mustSelectMoves;
                     playButton.interactable =  isbusted || (!allWrong && !mustSelectMoves);
                     boardController.PreviewColumn(v1.Value, possibleMoves[v1.Value].Item1, possibleMoves[v1.Value].Item2);
@@ -63,6 +70,7 @@ namespace FunBoardGames.CantStop
                 {
                     placeButton.interactable = false;
                     playButton.interactable = isbusted;
+                    ClearChooseColumnMessage();
                     boardController.ClearMarks();
                 }
             };
@@ -94,9 +102,17 @@ namespace FunBoardGames.CantStop
             OnTurnStarted(startPlayer);
         }
 
+        // The message is only shown while a choice is pending, so other messages are never wiped
+        void ClearChooseColumnMessage()
+        {
+            if (statText.text == ChooseColumnMessage)
+                statText.text = "";
+        }
+
         void UpdatePossibleMoves(int v1, int v2)
         {
             possibleMoves.Clear();
+            mustSelectMoves = false;
 
             if (v1 == v2)
             {
@@ -137,6 +153,10 @@ namespace FunBoardGames.CantStop
 
         (int pos, int cone)? GetPosibleMove(int columnNumber)
         {
+            // A dormant column is not part of the game, so no marker can ever move there
+            if (!boardData.HasColumn(columnNumber))
+                return null;
+
             if (gameHandler.FinishedColumns.Contains(columnNumber))
                 return null;
 
@@ -176,6 +196,7 @@ namespace FunBoardGames.CantStop
 
             placeButton.interactable = false;
             playButton.interactable = false;
+            ClearChooseColumnMessage();
             if(isbusted)
                  gameHandler.CancelRound();
             else
@@ -326,6 +347,7 @@ namespace FunBoardGames.CantStop
         {
             placeButton.interactable = false;
             playButton.interactable = false;
+            ClearChooseColumnMessage();
             gameHandler.PlaceWhiteCones(diceController.SelectedIndices.ElementAtOrDefault(0), diceController.SelectedIndices.ElementAtOrDefault(1), selectedNumbers.Count() == 0 ? null : selectedNumbers.ElementAt(0));
 
             diceController.Block(true);

@@ -1,6 +1,7 @@
 using FunBoardGames.Network;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,12 +9,12 @@ namespace FunBoardGames.CantStop
 {
     public class GameBoardUI : MonoBehaviour
     {
-        [SerializeField] GameBoardColumn column;
+        [SerializeField] GameBoardColumn[] boardColumns;
         [SerializeField] Transform holder;
         [SerializeField] ToggleGroup toggleGroup;
 
         SortedDictionary<int, GameBoardColumn> columnList;
-
+        readonly Dictionary<int, GameBoardColumn> dormantList = new();
         HashSet<GameBoardColumn> selectedColumns = new();
 
         public event Action<IEnumerable<GameBoardColumn>> SelectedChanged;
@@ -21,13 +22,23 @@ namespace FunBoardGames.CantStop
         public void Initialize(CantStopBoardData board)
         {
             columnList = new();
+            dormantList.Clear();
 
-            foreach(var pair in board.GetColumns())
+            var columns = board.GetColumns();
+
+            for(int i = 2; i <= 12; i++)
             {
-                var c = Instantiate(column, holder);
-                c.Initalize(pair.Key, pair.Value, toggleGroup);
-                c.SelectChanged += OnSelectChanged;
-                columnList.Add(pair.Key, c);
+                if(columns.TryGetValue(i, out int count))
+                {
+                    boardColumns[i - 2].Initalize(i, count, toggleGroup);
+                    boardColumns[i - 2].SelectChanged += OnSelectChanged;
+                    columnList.Add(i, boardColumns[i - 2]);
+                }
+                else
+                {
+                    boardColumns[i - 2].InitializeDormant(i);
+                    dormantList.Add(i, boardColumns[i - 2]);
+                }
             }
         }
 
@@ -41,28 +52,39 @@ namespace FunBoardGames.CantStop
             SelectedChanged?.Invoke(selectedColumns);
         }
 
+        bool TryGetColumn(int number, out GameBoardColumn column) => columnList.TryGetValue(number, out column) || dormantList.TryGetValue(number, out column);
+
         public void MarkColumn(int c1, MarkMode canSelect)
         {
-            columnList[c1].Mark(canSelect);
+            if (!TryGetColumn(c1, out var column))
+                return;
+
+            column.Mark(column.IsDormant ? MarkMode.Wrong : canSelect);
         }
 
         public void PreviewColumn(int c1, int pos, MarkMode selectMode)
         {
-            columnList[c1].Mark(selectMode);
+            if (!TryGetColumn(c1, out var column))
+                return;
+
+            if (column.IsDormant && selectMode != MarkMode.Clear)
+                selectMode = MarkMode.Wrong;
+
+            column.Mark(selectMode);
 
             if (selectMode == MarkMode.Correct)
             {
-                columnList[c1].PreviewCone(pos);
+                column.PreviewCone(pos);
             }
             else if(selectMode == MarkMode.Select)
             {
-                columnList[c1].SetPreviewPosition(pos);
+                column.SetPreviewPosition(pos);
             }
         }
 
         public void ClearMarks()
         {
-            foreach(var column in columnList.Values)
+            foreach(var column in columnList.Values.Concat(dormantList.Values))
             {
                 column.Mark(MarkMode.Clear);
                 column.ResetToggle();
@@ -79,9 +101,14 @@ namespace FunBoardGames.CantStop
 
         public void PlaceCone(int column, PlayerColor color, int? cellNumber)
         {
-            columnList[column].PlaceCone(color, cellNumber);
+            if (columnList.TryGetValue(column, out var c))
+                c.PlaceCone(color, cellNumber);
         }
 
-        public void PreviewColumn(int number, int? pos) => columnList[number].PreviewCone(pos);
+        public void PreviewColumn(int number, int? pos)
+        {
+            if (columnList.TryGetValue(number, out var c))
+                c.PreviewCone(pos);
+        }
     }
 }
