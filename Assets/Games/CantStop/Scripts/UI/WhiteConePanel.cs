@@ -1,17 +1,27 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class WhiteConePanel : MonoBehaviour
 {
-    [SerializeField] GameObject[] cones;
-    
+    [SerializeField] Transform holder;
+
+    readonly List<GameObject> cones = new();
+    GameObject template;
+
+    void Awake()
+    {
+        template = holder.GetChild(0).gameObject;
+        cones.Add(template);
+    }
+
     public void UpdateUI(int coneCount)
     {
-        coneCount = Mathf.Clamp(coneCount, 0, cones.Length);
+        coneCount = Mathf.Max(coneCount, 0);
 
-        for (int i = 0; i < coneCount; i++)
-            cones[i].SetActive(true);
+        while (cones.Count < coneCount)
+            cones.Add(Instantiate(template, holder));
 
-        for (int i = coneCount; i < cones.Length; i++)
-            cones[i].SetActive(false);
+        for (int i = 0; i < cones.Count; i++)
+            cones[i].SetActive(i < coneCount);
     }
 }

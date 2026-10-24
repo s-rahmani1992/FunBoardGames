@@ -29,6 +29,7 @@ namespace FunBoardGames.CantStop
         SortedDictionary<int, (int, MarkMode)> possibleMoves = new();
         bool mustSelectMoves;
 
+        CantStopGameData game;
         CantStopBoardData boardData;
         IEnumerable<int> selectedNumbers = new HashSet<int>();
 
@@ -71,6 +72,7 @@ namespace FunBoardGames.CantStop
 
         private void OnGameReceived(CantStopBoardData data, ICantStopPlayer startPlayer)
         {
+            game = userGameHolder.ActiveGame as CantStopGameData;
             boardData = data;
             boardController.Initialize(data);
             int index = 0;
@@ -120,7 +122,7 @@ namespace FunBoardGames.CantStop
             }
             int newWhiteCones = (c1 != null ? c1.Value.cone : 0) + (c2 != null ? c2.Value.cone : 0);
 
-            mustSelectMoves = newWhiteCones + gameHandler.WhiteConePositions.Count() > CantStopRoomManager.whineConeLimit;
+            mustSelectMoves = newWhiteCones + gameHandler.WhiteConePositions.Count() > game.MarkerConeCount;
 
             if (c1 == null)
                 possibleMoves[v1] = (-1, MarkMode.Wrong);
@@ -143,7 +145,7 @@ namespace FunBoardGames.CantStop
 
             if (gameHandler.WhiteConePositions.TryGetValue(columnNumber, out whiteConePos) == false) // new white cone required
             {
-                if (gameHandler.WhiteConePositions.Count() >= CantStopRoomManager.whineConeLimit) // Check if we run out of white cones
+                if (gameHandler.WhiteConePositions.Count() >= game.MarkerConeCount) // Check if we run out of white cones
                     return null;
 
                 newCone = 1;
@@ -216,7 +218,7 @@ namespace FunBoardGames.CantStop
         private async void OnRoundCanceled(ICantStopPlayer player1, ICantStopPlayer nextPlayer)
         {
             statText.text = (player1.IsMe ? "You" : player1.Profile.PlayerName) + " Canceled the Round!";
-            whiteConePanel.UpdateUI(CantStopRoomManager.whineConeLimit);
+            whiteConePanel.UpdateUI(game.MarkerConeCount);
             boardController.RemoveWhiteCones();
             OnTurnStarted(nextPlayer);
             await System.Threading.Tasks.Task.Delay(2000);
@@ -228,7 +230,7 @@ namespace FunBoardGames.CantStop
             foreach (var p in dictionary)
                 boardController.PlaceCone(p.Key, PlayerColor.None, p.Value);
 
-            whiteConePanel.UpdateUI(CantStopRoomManager.whineConeLimit - gameHandler.WhiteConePositions.Count());
+            whiteConePanel.UpdateUI(game.MarkerConeCount - gameHandler.WhiteConePositions.Count());
 
             if (player != selfPlayer)
             {
@@ -245,7 +247,7 @@ namespace FunBoardGames.CantStop
             foreach (var p in updatedWhitecones)
                 boardController.PlaceCone(p.Key, PlayerColor.None, p.Value);
 
-            whiteConePanel.UpdateUI(CantStopRoomManager.whineConeLimit - gameHandler.WhiteConePositions.Count());
+            whiteConePanel.UpdateUI(game.MarkerConeCount - gameHandler.WhiteConePositions.Count());
 
             if (player != selfPlayer)
             {
@@ -297,7 +299,7 @@ namespace FunBoardGames.CantStop
             rollButton.interactable = player.IsMe;
             placeButton.interactable = false;
             playButton.interactable = false;
-            whiteConePanel.UpdateUI(CantStopRoomManager.whineConeLimit);
+            whiteConePanel.UpdateUI(game.MarkerConeCount);
             diceController.Reset();
             boardController.RemoveWhiteCones();
             boardController.ClearMarks();

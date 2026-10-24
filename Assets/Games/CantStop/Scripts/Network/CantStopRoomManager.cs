@@ -26,8 +26,6 @@ namespace FunBoardGames.CantStop
         readonly SyncDictionary<int, CantStopPlayer> playerFinishPositions = new();
         public IDictionary<int, CantStopPlayer> PlayerFinishPositions => playerFinishPositions;
 
-        public const int whineConeLimit = 3;
-
         [SerializeField] GameBoard board;
 
         private void OnTurnStarted(CantStopPlayer _, CantStopPlayer player, bool __)
