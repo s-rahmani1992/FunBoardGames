@@ -316,6 +316,7 @@ namespace FunBoardGames.CantStop
         public void OnRollClicked()
         {
             rollButton.interactable = false;
+            diceController.StartRoll();
             gameHandler.RollDice();
         }
 

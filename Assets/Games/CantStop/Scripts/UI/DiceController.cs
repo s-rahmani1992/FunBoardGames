@@ -35,7 +35,7 @@ namespace FunBoardGames.CantStop
         {
             unselectedDices = new(dices);
             selectedDices.Clear();
-            number1Text.text = number2Text.text = "";
+            SetSums(null, null);
             ClearDices();
         }
 
@@ -43,7 +43,6 @@ namespace FunBoardGames.CantStop
         {
             if (selectedDices.Contains(dice))
             {
-                dice.Highlight(false);
                 selectedDices.Remove(dice);
                 unselectedDices.Add(dice);
             }
@@ -52,12 +51,23 @@ namespace FunBoardGames.CantStop
                 if (selectedDices.Count == 2)
                     return;
 
-                dice.Highlight(true);
                 unselectedDices.Remove(dice);
                 selectedDices.Add(dice);
             }
 
+            RefreshDiceStates();
             CheckSelectedDices();
+        }
+
+        void RefreshDiceStates()
+        {
+            foreach (var dice in dices)
+            {
+                if (selectedDices.Contains(dice))
+                    dice.SetState(DiceVisualState.Selected);
+                else
+                    dice.SetState(selectedDices.Count == 2 ? DiceVisualState.Partner : DiceVisualState.None);
+            }
         }
 
         void CheckSelectedDices()
@@ -66,15 +76,26 @@ namespace FunBoardGames.CantStop
             {
                 int p1 = selectedDices[0].Value + selectedDices[1].Value;
                 int p2 = unselectedDices[0].Value + unselectedDices[1].Value;
-                number1Text.text = p1.ToString();
-                number2Text.text = p2.ToString();
+                SetSums(p1, p2);
                 PairSelected?.Invoke(p1, p2);
             }
             else
             {
-                number1Text.text = number2Text.text = "";
+                SetSums(null, null);
                 PairSelected?.Invoke(null, null);
             }
+        }
+
+        void SetSums(int? sum1, int? sum2)
+        {
+            number1Text.text = sum1?.ToString() ?? "-";
+            number2Text.text = sum2?.ToString() ?? "-";
+        }
+
+        public void StartRoll()
+        {
+            foreach (var dice in dices)
+                dice.StartRoll();
         }
 
         public void SetDiceValues(int[] diceData)
@@ -102,8 +123,8 @@ namespace FunBoardGames.CantStop
 
         public void PickDices(int index1, int index2)
         {
-            dices[index1].Highlight(true);
-            dices[index2].Highlight(true);
+            for (int i = 0; i < dices.Length; i++)
+                dices[i].SetState(i == index1 || i == index2 ? DiceVisualState.Selected : DiceVisualState.Partner);
         }
 
         public void Block(bool block) => blockObject.SetActive(block);
