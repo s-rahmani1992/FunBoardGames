@@ -17,8 +17,8 @@ namespace FunBoardGames.CantStop
         [SerializeField] CantStopPlayerUI[] playerUis;
         [SerializeField] CantStopAssetManager playerColors;
         [SerializeField] Button rollButton;
-        [SerializeField] Button placeButton;
         [SerializeField] Button playButton;
+        [SerializeField] Button resetRoundButton;
         [SerializeField] DiceController diceController;
         [SerializeField] GameBoardUI boardController;
         [SerializeField] WhiteConePanel whiteConePanel;
@@ -38,13 +38,14 @@ namespace FunBoardGames.CantStop
         ICantStopPlayer currentPlayer;
         ICantStopPlayer selfPlayer;
         bool isbusted;
+        bool isFirstRoll = true;
+        bool resetRoundUsed = false;
 
         private void Awake()
         {
             gameHandler = userGameHolder.GetGameHandler<ICantStopGameHandler>();
 
             rollButton.interactable = false;
-            placeButton.interactable = false;
             playButton.interactable = false;
 
             gameHandler.SignalGameLoaded();
@@ -61,14 +62,13 @@ namespace FunBoardGames.CantStop
                     else
                         ClearChooseColumnMessage();
 
-                    placeButton.interactable = !allWrong && !isbusted && !mustSelectMoves;
+                    rollButton.interactable = !isbusted && !mustSelectMoves && !allWrong;
                     playButton.interactable =  isbusted || (!allWrong && !mustSelectMoves);
                     boardController.PreviewColumn(v1.Value, possibleMoves[v1.Value].Item1, possibleMoves[v1.Value].Item2);
                     boardController.PreviewColumn(v2.Value, possibleMoves[v2.Value].Item1, possibleMoves[v2.Value].Item2);
                 }
                 else
                 {
-                    placeButton.interactable = false;
                     playButton.interactable = isbusted;
                     ClearChooseColumnMessage();
                     boardController.ClearMarks();
@@ -185,8 +185,8 @@ namespace FunBoardGames.CantStop
         private void Start()
         {
             rollButton.onClick.AddListener(OnRollClicked);
-            placeButton.onClick.AddListener(OnPlaceClicked);
             playButton.onClick.AddListener(OnPlayClicked);
+            resetRoundButton.onClick.AddListener(OnResetRoundClicked);
             boardController.SelectedChanged += OnSelectedChanged;
         }
 
@@ -194,7 +194,6 @@ namespace FunBoardGames.CantStop
         {
             var g = diceController.SelectedIndices.ToArray();
 
-            placeButton.interactable = false;
             playButton.interactable = false;
             ClearChooseColumnMessage();
             if(isbusted)
@@ -213,7 +212,7 @@ namespace FunBoardGames.CantStop
 
             if (columns.Count() == 1)
             {
-                placeButton.interactable = true;
+                rollButton.interactable = true;
                 playButton.interactable = true;
                 return;
             }
@@ -227,7 +226,21 @@ namespace FunBoardGames.CantStop
             gameHandler.WhiteConesPlaced += OnWhiteConePlaced;
             gameHandler.RoundPlayed += OnRoundPlayed;
             gameHandler.RoundCanceled += OnRoundCanceled;
+            gameHandler.ResetRoundReceived += OnResetRoundReceived;
             gameHandler.GameFinished += OnGameFinished;
+        }
+
+        private void OnResetRoundReceived()
+        {
+            if(currentPlayer.IsMe == false)
+            {
+                statText.text = (currentPlayer.IsMe ? "You" : currentPlayer.Profile.PlayerName) + " Reset the Round!";
+                whiteConePanel.UpdateUI(game.MarkerConeCount);
+                boardController.RemoveWhiteCones();
+                OnTurnStarted(currentPlayer);
+            }
+            else
+                rollButton.interactable = true;
         }
 
         private async void OnGameFinished(IEnumerable<ICantStopPlayer> players)
@@ -305,6 +318,7 @@ namespace FunBoardGames.CantStop
             gameHandler.WhiteConesPlaced -= OnWhiteConePlaced;
             gameHandler.RoundPlayed -= OnRoundPlayed;
             gameHandler.RoundCanceled -= OnRoundCanceled;
+            gameHandler.ResetRoundReceived -= OnResetRoundReceived;
             gameHandler.GameFinished -= OnGameFinished;
         }
 
@@ -315,11 +329,13 @@ namespace FunBoardGames.CantStop
                 playerUiDict[currentPlayer].ToggleTurn(false);
             }
 
+            isFirstRoll = true;
+            resetRoundUsed = false;
             currentPlayer = player;
             playerUiDict[player].ToggleTurn(true);
             rollButton.interactable = player.IsMe;
-            placeButton.interactable = false;
             playButton.interactable = false;
+            resetRoundButton.interactable = false;
             whiteConePanel.UpdateUI(game.MarkerConeCount);
             diceController.Reset();
             boardController.RemoveWhiteCones();
@@ -332,27 +348,46 @@ namespace FunBoardGames.CantStop
             diceController.SetDiceValues(dices);
             this.isbusted = isBusted;
             playButton.interactable = currentPlayer.IsMe && isbusted;
+            resetRoundButton.interactable = currentPlayer.IsMe && !resetRoundUsed && !isbusted;
             if (isbusted)
                 statText.text = (currentPlayer.IsMe ? "You are Busted!" : $"{currentPlayer.Profile.PlayerName} is Busted!");
         }
 
-        public void OnRollClicked()
+        void OnRollClicked()
         {
             rollButton.interactable = false;
             diceController.StartRoll();
-            gameHandler.RollDice();
+
+            if(isFirstRoll)
+            {
+                isFirstRoll = false;
+                gameHandler.RollDice();
+            }
+            else
+            {
+                playButton.interactable = false;
+                ClearChooseColumnMessage();
+                gameHandler.PlaceWhiteCones(diceController.SelectedIndices.ElementAtOrDefault(0), diceController.SelectedIndices.ElementAtOrDefault(1), selectedNumbers.Count() == 0 ? null : selectedNumbers.ElementAt(0));
+
+                diceController.Block(true);
+                diceController.Reset();
+                boardController.ClearMarks();
+            }
         }
 
-        public void OnPlaceClicked()
+        void OnResetRoundClicked()
         {
-            placeButton.interactable = false;
-            playButton.interactable = false;
-            ClearChooseColumnMessage();
-            gameHandler.PlaceWhiteCones(diceController.SelectedIndices.ElementAtOrDefault(0), diceController.SelectedIndices.ElementAtOrDefault(1), selectedNumbers.Count() == 0 ? null : selectedNumbers.ElementAt(0));
+            if(resetRoundUsed || currentPlayer.IsMe == false || isbusted)
+                return;
 
-            diceController.Block(true);
-            diceController.Reset();
+            resetRoundButton.interactable = false;
+            playButton.interactable = false;
+            gameHandler.ResetRound();
+            diceController.ClearSelection();
+            boardController.RemoveWhiteCones();
             boardController.ClearMarks();
+            whiteConePanel.UpdateUI(game.MarkerConeCount);
+            resetRoundUsed = true;
         }
 
         private void OnDestroy()

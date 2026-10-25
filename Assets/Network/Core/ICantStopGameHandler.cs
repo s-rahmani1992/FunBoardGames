@@ -12,12 +12,14 @@ namespace FunBoardGames.Network
         event Action<ICantStopPlayer, IDictionary<int, int>, int, int, ICantStopPlayer> RoundPlayed;
         event Action<ICantStopPlayer, ICantStopPlayer> RoundCanceled;
         event Action<IEnumerable<ICantStopPlayer>> GameFinished;
+        event Action ResetRoundReceived;
 
         void SignalGameLoaded();
         void RollDice();
         void PlaceWhiteCones(int diceIndex1, int diceIndex2, int? columnIndex1);
         void PlayRound(int diceIndex1, int diceIndex2, int? columnIndex1);
         void CancelRound();
+        void ResetRound();
 
         IEnumerable<ICantStopPlayer> Players { get; }
 

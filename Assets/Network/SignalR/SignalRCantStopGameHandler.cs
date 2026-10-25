@@ -38,6 +38,7 @@ namespace FunBoardGames.Network.SignalR
         public event Action<ICantStopPlayer, IDictionary<int, int>, int, int, ICantStopPlayer> RoundPlayed;
         public event Action<ICantStopPlayer, ICantStopPlayer> RoundCanceled;
         public event Action<IEnumerable<ICantStopPlayer>> GameFinished;
+        public event Action ResetRoundReceived;
 
         public SignalRCantStopGameHandler(HubConnection connection, IEnumerable<SignalRCantStopPlayer> players)
         {
@@ -70,7 +71,7 @@ namespace FunBoardGames.Network.SignalR
                 unityContext.Post(_ => OnDiceReceived(diceMsg), null);
             }));
 
-            connectionHooks.Add(_connection.On<PlaceWhiteConeResponseMessage>(CantStopGameMessageNames.PlaceWhiteCone, (placeConesMsg) =>
+            connectionHooks.Add(_connection.On<PlaceWhiteConeResponseMessage>(CantStopGameMessageNames.PlaceMarkerCone, (placeConesMsg) =>
             {
                 unityContext.Post(_ => OnPlaceWhiteConesReceived(placeConesMsg), null);
             }));
@@ -88,6 +89,11 @@ namespace FunBoardGames.Network.SignalR
             connectionHooks.Add(_connection.On<GameFinishedResponseMessage>(CantStopGameMessageNames.GameFinished, (gameFinishedMsg) =>
             {
                 unityContext.Post(_ => OnGameFinished(gameFinishedMsg), null);
+            }));
+
+            connectionHooks.Add(_connection.On(CantStopGameMessageNames.ResetRound, () =>
+            {
+                unityContext.Post(_ => ResetRoundReceived?.Invoke(), null);
             }));
         }
 
@@ -213,7 +219,7 @@ namespace FunBoardGames.Network.SignalR
 
         public void PlaceWhiteCones(int diceIndex1, int diceIndex2, int? columnIndex1)
         {
-            _connection.InvokeAsync(CantStopGameMessageNames.PlaceWhiteCone, new PlaceWhiteConeRequestMessage()
+            _connection.InvokeAsync(CantStopGameMessageNames.PlaceMarkerCone, new PlaceWhiteConeRequestMessage()
             {
                 DiceIndex1 = diceIndex1,
                 DiceIndex2 = diceIndex2,
@@ -234,6 +240,12 @@ namespace FunBoardGames.Network.SignalR
         public void CancelRound()
         {
             _connection.InvokeAsync(CantStopGameMessageNames.EndRound);
+        }
+
+        public void ResetRound()
+        {
+            whiteConePositions.Clear();
+            _connection.InvokeAsync(CantStopGameMessageNames.ResetRound);
         }
     }
 }
