@@ -235,12 +235,16 @@ namespace FunBoardGames.CantStop
             if(currentPlayer.IsMe == false)
             {
                 statText.text = (currentPlayer.IsMe ? "You" : currentPlayer.Profile.PlayerName) + " Reset the Round!";
-                whiteConePanel.UpdateUI(game.MarkerConeCount);
+                diceController.ClearSelection();
+                diceController.Reset();
                 boardController.RemoveWhiteCones();
-                OnTurnStarted(currentPlayer);
+                boardController.ClearMarks();
+                whiteConePanel.UpdateUI(game.MarkerConeCount);
             }
             else
                 rollButton.interactable = true;
+
+            isFirstRoll = true;
         }
 
         private async void OnGameFinished(IEnumerable<ICantStopPlayer> players)
@@ -384,6 +388,7 @@ namespace FunBoardGames.CantStop
             playButton.interactable = false;
             gameHandler.ResetRound();
             diceController.ClearSelection();
+            diceController.Reset();
             boardController.RemoveWhiteCones();
             boardController.ClearMarks();
             whiteConePanel.UpdateUI(game.MarkerConeCount);
