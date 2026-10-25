@@ -24,7 +24,7 @@ namespace FunBoardGames.Network
         public int MaxPlayers { get; set; }
     }
 
-    public interface IGameHandler
+    public interface IGameHandler : IDisposable
     {
         event Action<IBoardGamePlayer> PlayerJoined;
         event Action<IBoardGamePlayer> PlayerLeft;

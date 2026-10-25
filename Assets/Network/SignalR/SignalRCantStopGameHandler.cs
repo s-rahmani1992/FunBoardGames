@@ -195,6 +195,8 @@ namespace FunBoardGames.Network.SignalR
         {
             foreach (var d in connectionHooks)
                 d.Dispose();
+
+            connectionHooks.Clear();
         }
 
         public void LeaveGame()

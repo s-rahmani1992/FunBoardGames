@@ -70,5 +70,8 @@ public class UserGameHolder : ScriptableObject
     {
         if(_lobbyHandler != null)
             _lobbyHandler.JoinedGame -= OnJoinedGame;
+
+        if (_currentGameHandler != null)
+            _currentGameHandler.Dispose();
     }
 }
