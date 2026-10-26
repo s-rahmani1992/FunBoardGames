@@ -11,6 +11,8 @@ namespace FunBoardGames.Network.SignalR
 {
     public class SignalRCantStopGameHandler : ICantStopGameHandler, IDisposable
     {
+        const int NoDice = -1;
+
         static PlayerColor[] playerColors = new PlayerColor[] { PlayerColor.Red, PlayerColor.Green, PlayerColor.Blue, PlayerColor.Yellow };
 
         public event Action<IBoardGamePlayer> PlayerJoined;
@@ -39,6 +41,7 @@ namespace FunBoardGames.Network.SignalR
         public event Action<ICantStopPlayer, ICantStopPlayer> RoundCanceled;
         public event Action<IEnumerable<ICantStopPlayer>> GameFinished;
         public event Action ResetRoundReceived;
+        public event Action BustSaverReceived;
 
         public SignalRCantStopGameHandler(HubConnection connection, IEnumerable<SignalRCantStopPlayer> players)
         {
@@ -83,7 +86,7 @@ namespace FunBoardGames.Network.SignalR
 
             connectionHooks.Add(_connection.On<EndRoundResponseMessage>(CantStopGameMessageNames.EndRound, (endRoundMsg) =>
             {
-                unityContext.Post(_ => OnRoundCanceled(endRoundMsg), null);
+                unityContext.Post(_ => OnEndRoundReceived(endRoundMsg), null);
             }));
 
             connectionHooks.Add(_connection.On<GameFinishedResponseMessage>(CantStopGameMessageNames.GameFinished, (gameFinishedMsg) =>
@@ -94,6 +97,11 @@ namespace FunBoardGames.Network.SignalR
             connectionHooks.Add(_connection.On(CantStopGameMessageNames.ResetRound, () =>
             {
                 unityContext.Post(_ => ResetRoundReceived?.Invoke(), null);
+            }));
+
+            connectionHooks.Add(_connection.On(CantStopGameMessageNames.BustSaver, () =>
+            {
+                unityContext.Post(_ => BustSaverReceived?.Invoke(), null);
             }));
         }
 
@@ -114,12 +122,24 @@ namespace FunBoardGames.Network.SignalR
             GameFinished?.Invoke(finishedPlayers);
         }
 
-        private void OnRoundCanceled(EndRoundResponseMessage endRoundMsg)
+        private void OnEndRoundReceived(EndRoundResponseMessage endRoundMsg)
         {
-            var player  = playerList.FirstOrDefault(p => p.UserId == endRoundMsg.UserId);
-            var nextplayer = playerList.FirstOrDefault(p => p.UserId == endRoundMsg.NextPlayerUserId);
+            var player = playerList.FirstOrDefault(p => p.UserId == endRoundMsg.UserId);
+            var nextPlayer = playerList.FirstOrDefault(p => p.UserId == endRoundMsg.NextPlayerUserId);
+
+            if (endRoundMsg.IsBust)
+            {
+                whiteConePositions.Clear();
+                RoundCanceled?.Invoke(player, nextPlayer);
+                return;
+            }
+
+            // The round was played after a saved bust, so there is no pair to place: the markers placed so far replace the player's cones
+            player.UpdateCones(endRoundMsg.PlayerCones);
+            player.UpdateScore(endRoundMsg.FinalScore);
+            playerFinishPositions = new HashSet<int>(endRoundMsg.FinishedColumns);
+            RoundPlayed?.Invoke(player, endRoundMsg.UpdatedColumns ?? new SortedDictionary<int, int>(), NoDice, NoDice, nextPlayer);
             whiteConePositions.Clear();
-            RoundCanceled?.Invoke(player, nextplayer);
         }
 
         private void OnPlayRoundReceived(PlayRoundResponseMessage playRoundMsg)
@@ -239,7 +259,7 @@ namespace FunBoardGames.Network.SignalR
             });
         }
 
-        public void CancelRound()
+        public void EndRound()
         {
             _connection.InvokeAsync(CantStopGameMessageNames.EndRound);
         }
@@ -248,6 +268,11 @@ namespace FunBoardGames.Network.SignalR
         {
             whiteConePositions.Clear();
             _connection.InvokeAsync(CantStopGameMessageNames.ResetRound);
+        }
+
+        public void UseBustSaver()
+        {
+            _connection.InvokeAsync(CantStopGameMessageNames.BustSaver);
         }
     }
 }

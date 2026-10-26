@@ -11,6 +11,7 @@ namespace FunBoardGames.CantStop
     {
         const int DefaultWinConeCount = 3;
         const string ChooseColumnMessage = "Pick one column for the marker";
+        const string BustSaverUsedMessage = "Bust Saver used. That roll doesn't count.";
 
         [SerializeField] UserGameHolder userGameHolder;
 
@@ -19,6 +20,7 @@ namespace FunBoardGames.CantStop
         [SerializeField] Button rollButton;
         [SerializeField] Button playButton;
         [SerializeField] Button resetRoundButton;
+        [SerializeField] Button bustSaverButton;
         [SerializeField] DiceController diceController;
         [SerializeField] GameBoardUI boardController;
         [SerializeField] WhiteConePanel whiteConePanel;
@@ -40,6 +42,10 @@ namespace FunBoardGames.CantStop
         bool isbusted;
         bool isFirstRoll = true;
         bool resetRoundUsed = false;
+        bool bustSaverUsed = false;
+
+        // After a saved bust the round is played with the markers that are already placed, so the next Play ends the round without a pair
+        bool playsSavedBust;
 
         private void Awake()
         {
@@ -187,6 +193,7 @@ namespace FunBoardGames.CantStop
             rollButton.onClick.AddListener(OnRollClicked);
             playButton.onClick.AddListener(OnPlayClicked);
             resetRoundButton.onClick.AddListener(OnResetRoundClicked);
+            bustSaverButton.onClick.AddListener(OnBustSaverClicked);
             boardController.SelectedChanged += OnSelectedChanged;
         }
 
@@ -195,9 +202,10 @@ namespace FunBoardGames.CantStop
             var g = diceController.SelectedIndices.ToArray();
 
             playButton.interactable = false;
+            playsSavedBust = false;
             ClearChooseColumnMessage();
-            if(isbusted)
-                 gameHandler.CancelRound();
+            if(isbusted || playsSavedBust)
+                 gameHandler.EndRound();
             else
                 gameHandler.PlayRound(diceController.SelectedIndices.ElementAtOrDefault(0), diceController.SelectedIndices.ElementAtOrDefault(1), selectedNumbers.Count() == 0 ? null : selectedNumbers.ElementAt(0));
 
@@ -227,6 +235,7 @@ namespace FunBoardGames.CantStop
             gameHandler.RoundPlayed += OnRoundPlayed;
             gameHandler.RoundCanceled += OnRoundCanceled;
             gameHandler.ResetRoundReceived += OnResetRoundReceived;
+            gameHandler.BustSaverReceived += OnBustSaverReceived;
             gameHandler.GameFinished += OnGameFinished;
         }
 
@@ -289,7 +298,9 @@ namespace FunBoardGames.CantStop
 
             if (player != selfPlayer)
             {
-                diceController.PickDices(dice1, dice2);
+                if (dice1 >= 0 && dice2 >= 0) // no pair was placed when the round is played after a saved bust
+                    diceController.PickDices(dice1, dice2);
+
                 await System.Threading.Tasks.Task.Delay(2000);
                 diceController.ClearSelection();
 
@@ -323,6 +334,7 @@ namespace FunBoardGames.CantStop
             gameHandler.RoundPlayed -= OnRoundPlayed;
             gameHandler.RoundCanceled -= OnRoundCanceled;
             gameHandler.ResetRoundReceived -= OnResetRoundReceived;
+            gameHandler.BustSaverReceived -= OnBustSaverReceived;
             gameHandler.GameFinished -= OnGameFinished;
         }
 
@@ -335,11 +347,14 @@ namespace FunBoardGames.CantStop
 
             isFirstRoll = true;
             resetRoundUsed = false;
+            bustSaverUsed = false;
+            playsSavedBust = false;
             currentPlayer = player;
             playerUiDict[player].ToggleTurn(true);
             rollButton.interactable = player.IsMe;
             playButton.interactable = false;
             resetRoundButton.interactable = false;
+            bustSaverButton.interactable = false;
             whiteConePanel.UpdateUI(game.MarkerConeCount);
             diceController.Reset();
             boardController.RemoveWhiteCones();
@@ -352,13 +367,16 @@ namespace FunBoardGames.CantStop
             diceController.SetDiceValues(dices);
             this.isbusted = isBusted;
             playButton.interactable = currentPlayer.IsMe && isbusted;
+            rollButton.interactable = false;
             resetRoundButton.interactable = currentPlayer.IsMe && !resetRoundUsed && !isbusted;
+            bustSaverButton.interactable = currentPlayer.IsMe && !bustSaverUsed && isbusted;
             if (isbusted)
                 statText.text = (currentPlayer.IsMe ? "You are Busted!" : $"{currentPlayer.Profile.PlayerName} is Busted!");
         }
 
         void OnRollClicked()
         {
+            playsSavedBust = false;
             rollButton.interactable = false;
             diceController.StartRoll();
 
@@ -377,6 +395,53 @@ namespace FunBoardGames.CantStop
                 diceController.Reset();
                 boardController.ClearMarks();
             }
+        }
+
+        void OnBustSaverClicked()
+        {
+            if (bustSaverUsed || currentPlayer.IsMe == false || !isbusted)
+                return;
+
+            bustSaverUsed = true;
+            bustSaverButton.interactable = false;
+            playButton.interactable = false;
+
+            // The busted roll does not count: the dice go back to unrolled and the player waits for the server's answer
+            isbusted = false;
+            diceController.ClearSelection();
+            diceController.Reset();
+            boardController.ClearMarks();
+            gameHandler.UseBustSaver();
+        }
+
+        private async void OnBustSaverReceived()
+        {
+            isbusted = false;
+            bustSaverButton.interactable = false;
+
+            if (currentPlayer.IsMe)
+            {
+                // The busted roll does not count, so the screen is back to just before it: the markers stay where they were
+                // placed and the player is about to roll again, or to play them
+                statText.text = BustSaverUsedMessage;
+                isFirstRoll = true; // the next roll places nothing, so it is a plain roll
+                playsSavedBust = true;
+                rollButton.interactable = true;
+                playButton.interactable = gameHandler.WhiteConePositions.Any();
+            }
+            else
+            {
+                diceController.ClearSelection();
+                diceController.Reset();
+                boardController.ClearMarks();
+                statText.text = currentPlayer.Profile.PlayerName + " used Bust Saver!";
+            }
+
+            string shown = statText.text;
+            await System.Threading.Tasks.Task.Delay(2500);
+
+            if (statText != null && statText.text == shown)
+                statText.text = "";
         }
 
         void OnResetRoundClicked()

@@ -13,13 +13,15 @@ namespace FunBoardGames.Network
         event Action<ICantStopPlayer, ICantStopPlayer> RoundCanceled;
         event Action<IEnumerable<ICantStopPlayer>> GameFinished;
         event Action ResetRoundReceived;
+        event Action BustSaverReceived;
 
         void SignalGameLoaded();
         void RollDice();
         void PlaceWhiteCones(int diceIndex1, int diceIndex2, int? columnIndex1);
         void PlayRound(int diceIndex1, int diceIndex2, int? columnIndex1);
-        void CancelRound();
+        void EndRound();
         void ResetRound();
+        void UseBustSaver();
 
         IEnumerable<ICantStopPlayer> Players { get; }
 
