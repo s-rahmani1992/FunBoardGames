@@ -20,6 +20,8 @@ namespace FunBoardGames.CantStop
 
         public event Action<int?, int?> PairSelected;
 
+        public RectTransform GetDiceRect(int index) => dices[index].transform as RectTransform;
+
         private void Start()
         {
             foreach(var dice in dices)

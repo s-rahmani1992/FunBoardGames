@@ -1,3 +1,4 @@
+using FunBoardGames.CantStop;
 using FunBoardGames.Network;
 using FunBoardGames.SET;
 using TMPro;
@@ -29,13 +30,16 @@ namespace FunBoardGames.Client
             playerCountText.text = $"{gameData.NumberofPlayers} Players";
             joinRandomButton.onClick.AddListener(OnJoinRandomClicked);
 
-            howToPlayButton.gameObject.SetActive(gameData.Type == BoardGame.SET);
+            howToPlayButton.gameObject.SetActive(gameData.Type == BoardGame.SET || gameData.Type == BoardGame.CantStop);
             howToPlayButton.onClick.AddListener(OnHowToPlayClicked);
         }
 
         private void OnHowToPlayClicked()
         {
-            SETTutorialFlow.Launch(userGameHolder, userProfile.Profile, sceneMap.GetScene(BoardGame.SET));
+            if (gameData.Type == BoardGame.CantStop)
+                CantStopTutorialFlow.Launch(userGameHolder, userProfile.Profile, sceneMap.GetScene(BoardGame.CantStop));
+            else
+                SETTutorialFlow.Launch(userGameHolder, userProfile.Profile, sceneMap.GetScene(BoardGame.SET));
         }
 
         private void OnJoinRandomClicked()
