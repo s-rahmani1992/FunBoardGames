@@ -210,6 +210,7 @@ namespace FunBoardGames.Network.SignalR
             var player = playerList.FirstOrDefault(p => p.UserId == timeoutMsg.UserId);
             var nextPlayer = playerList.FirstOrDefault(p => p.UserId == timeoutMsg.NextUserId);
             whiteConePositions.Clear();
+            player.SetTimeout(timeoutMsg.TimeoutCount);
             TimedOut?.Invoke(player, nextPlayer);
             StartRoundTimer(timeoutMsg.RoundStartTime, nextPlayer);
         }

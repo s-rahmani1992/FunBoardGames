@@ -19,6 +19,8 @@ namespace FunBoardGames.Network.SignalR
 
         public PlayerColor ConeColor { get; private set; }
 
+        public int TimeoutCount { get; private set; }
+
         public IDictionary<int, int> ConePositions => conePositions;
 
         public int Score { get; private set; }
@@ -70,6 +72,11 @@ namespace FunBoardGames.Network.SignalR
         internal void UpdateScore(int score)
         {
             Score = score;
+        }
+
+        internal void SetTimeout(int timeout)
+        {
+            TimeoutCount = timeout;
         }
     }
 }

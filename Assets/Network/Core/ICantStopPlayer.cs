@@ -11,5 +11,7 @@ namespace FunBoardGames.Network
         IDictionary<int, int> ConePositions { get; }
 
         int Score { get; }
+
+        int TimeoutCount { get; }
     }
 }

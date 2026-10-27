@@ -98,7 +98,7 @@ namespace FunBoardGames.CantStop
 
             foreach (var player in gameHandler.Players)
             {
-                playerUis[index].SetPlayer(player, winConeCount);
+                playerUis[index].SetPlayer(player, winConeCount, game.TimeoutLimit);
                 playerUiDict[player] = playerUis[index];
 
                 if(player.IsMe)
@@ -265,6 +265,7 @@ namespace FunBoardGames.CantStop
 
         private async void OnTimedOut(ICantStopPlayer player, ICantStopPlayer nextPlayer)
         {
+            playerUiDict[player].UpdateTimeouts();
             statText.text = (player.IsMe ? "You" : player.Profile.PlayerName) + " ran out of time!";
             whiteConePanel.UpdateUI(game.MarkerConeCount);
             boardController.RemoveWhiteCones();

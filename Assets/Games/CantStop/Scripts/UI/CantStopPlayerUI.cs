@@ -12,6 +12,9 @@ namespace FunBoardGames.CantStop
         [SerializeField] Image coneIcon;
         [SerializeField] Transform finishHolder;
         [SerializeField] ProgressTimer timer;
+        [SerializeField] Transform timeoutHolder;
+        [SerializeField] Sprite timeoutActiveSprite;
+        [SerializeField] Sprite timeoutInactiveSprite;
         [SerializeField] Color emptyConeColor = new(1f, 1f, 1f, 0.25f);
         [SerializeField] RawImage turnLED;
         [SerializeField] Texture2D onTex, offTex;
@@ -26,12 +29,14 @@ namespace FunBoardGames.CantStop
         ICantStopPlayer networkPlayer;
         Color playerColor;
         readonly List<Image> finishCones = new();
+        readonly List<Image> timeoutIcons = new();
 
-        public void SetPlayer(ICantStopPlayer player, int winConeCount)
+        public void SetPlayer(ICantStopPlayer player, int winConeCount, int timeoutLimit)
         {
             playerColor = assetManager.GetPlayerColor(player.ConeColor);
             networkPlayer = player;
             CreateFinishCones(winConeCount);
+            CreateTimeoutIcons(timeoutLimit);
             RefreshUI();
         }
 
@@ -48,6 +53,7 @@ namespace FunBoardGames.CantStop
 
             coneIcon.color = playerColor;
             UpdateScore(networkPlayer.Score);
+            UpdateTimeouts();
             gameObject.SetActive(true);
         }
 
@@ -70,11 +76,38 @@ namespace FunBoardGames.CantStop
             timer.gameObject.SetActive(false);
         }
 
+        internal void UpdateTimeouts()
+        {
+            int left = timeoutIcons.Count - networkPlayer.TimeoutCount;
+
+            for (int i = 0; i < timeoutIcons.Count; i++)
+                timeoutIcons[i].sprite = (i < left ? timeoutActiveSprite : timeoutInactiveSprite);
+        }
+
         // Cones light up from left to right, one for each finished column
         internal void UpdateScore(int score)
         {
             for (int i = 0; i < finishCones.Count; i++)
                 finishCones[i].color = (i < score ? playerColor : emptyConeColor);
+        }
+
+        void CreateTimeoutIcons(int timeoutLimit)
+        {
+            timeoutIcons.Clear();
+            var template = timeoutHolder.GetChild(0).gameObject;
+
+            while (timeoutHolder.childCount < timeoutLimit)
+                Instantiate(template, timeoutHolder);
+
+            for (int i = 0; i < timeoutHolder.childCount; i++)
+            {
+                var icon = timeoutHolder.GetChild(i);
+                bool isUsed = i < timeoutLimit;
+                icon.gameObject.SetActive(isUsed);
+
+                if (isUsed)
+                    timeoutIcons.Add(icon.GetComponent<Image>());
+            }
         }
 
         void CreateFinishCones(int winConeCount)
