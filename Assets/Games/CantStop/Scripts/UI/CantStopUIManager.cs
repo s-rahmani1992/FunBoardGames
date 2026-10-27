@@ -1,4 +1,5 @@
 using FunBoardGames.Network;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -44,6 +45,9 @@ namespace FunBoardGames.CantStop
         bool resetRoundUsed = false;
         bool bustSaverUsed = false;
 
+        // A round timer that started for a player whose turn has not begun on this screen yet, e.g. while the last round is still being shown
+        (ICantStopPlayer player, DateTimeOffset startTime)? pendingTimer;
+
         // After a saved bust the round is played with the markers that are already placed, so the next Play ends the round without a pair
         bool playsSavedBust;
 
@@ -84,11 +88,11 @@ namespace FunBoardGames.CantStop
             Subscribe();
         }
 
-        private void OnGameReceived(CantStopBoardData data, ICantStopPlayer startPlayer)
+        private void OnGameReceived(ICantStopPlayer startPlayer)
         {
             game = userGameHolder.ActiveGame as CantStopGameData;
-            boardData = data;
-            boardController.Initialize(data);
+            boardData = game.BoardData;
+            boardController.Initialize(boardData);
             int index = 0;
             int winConeCount = (userGameHolder.ActiveGame as CantStopGameData)?.WinConeCount ?? DefaultWinConeCount;
 
@@ -203,6 +207,7 @@ namespace FunBoardGames.CantStop
 
             playButton.interactable = false;
             playsSavedBust = false;
+            playerUiDict[currentPlayer].StopTimer();
             ClearChooseColumnMessage();
             if(isbusted || playsSavedBust)
                  gameHandler.EndRound();
@@ -236,7 +241,36 @@ namespace FunBoardGames.CantStop
             gameHandler.RoundCanceled += OnRoundCanceled;
             gameHandler.ResetRoundReceived += OnResetRoundReceived;
             gameHandler.BustSaverReceived += OnBustSaverReceived;
+            gameHandler.TimedOut += OnTimedOut;
+            gameHandler.RoundStarted += OnRoundStarted;
             gameHandler.GameFinished += OnGameFinished;
+        }
+
+        private void OnRoundStarted(DateTimeOffset startTime, ICantStopPlayer player)
+        {
+            player ??= currentPlayer;
+
+            if (player == currentPlayer)
+                StartTurnTimer(player, startTime);
+            else
+                pendingTimer = (player, startTime); // started when that player's turn begins on this screen
+        }
+
+        void StartTurnTimer(ICantStopPlayer player, DateTimeOffset startTime)
+        {
+            pendingTimer = null;
+            float elapsed = (float)(DateTimeOffset.UtcNow - startTime).TotalSeconds;
+            playerUiDict[player].StartTimer(game.RoundTime, elapsed);
+        }
+
+        private async void OnTimedOut(ICantStopPlayer player, ICantStopPlayer nextPlayer)
+        {
+            statText.text = (player.IsMe ? "You" : player.Profile.PlayerName) + " ran out of time!";
+            whiteConePanel.UpdateUI(game.MarkerConeCount);
+            boardController.RemoveWhiteCones();
+            OnTurnStarted(nextPlayer);
+            await System.Threading.Tasks.Task.Delay(2000);
+            statText.text = "";
         }
 
         private void OnResetRoundReceived()
@@ -335,6 +369,8 @@ namespace FunBoardGames.CantStop
             gameHandler.RoundCanceled -= OnRoundCanceled;
             gameHandler.ResetRoundReceived -= OnResetRoundReceived;
             gameHandler.BustSaverReceived -= OnBustSaverReceived;
+            gameHandler.TimedOut -= OnTimedOut;
+            gameHandler.RoundStarted -= OnRoundStarted;
             gameHandler.GameFinished -= OnGameFinished;
         }
 
@@ -344,6 +380,9 @@ namespace FunBoardGames.CantStop
             {
                 playerUiDict[currentPlayer].ToggleTurn(false);
             }
+
+            foreach (var playerUi in playerUiDict.Values)
+                playerUi.HideTimer();
 
             isFirstRoll = true;
             resetRoundUsed = false;
@@ -359,6 +398,9 @@ namespace FunBoardGames.CantStop
             diceController.Reset();
             boardController.RemoveWhiteCones();
             boardController.ClearMarks();
+
+            if (pendingTimer != null && pendingTimer.Value.player == player)
+                StartTurnTimer(player, pendingTimer.Value.startTime);
         }
 
         private void OnRollChanged(int[] dices, bool isBusted)
@@ -377,6 +419,7 @@ namespace FunBoardGames.CantStop
         void OnRollClicked()
         {
             playsSavedBust = false;
+            playerUiDict[currentPlayer].StopTimer();
             rollButton.interactable = false;
             diceController.StartRoll();
 

@@ -11,6 +11,7 @@ namespace FunBoardGames.CantStop
         [SerializeField] Text nameText;
         [SerializeField] Image coneIcon;
         [SerializeField] Transform finishHolder;
+        [SerializeField] ProgressTimer timer;
         [SerializeField] Color emptyConeColor = new(1f, 1f, 1f, 0.25f);
         [SerializeField] RawImage turnLED;
         [SerializeField] Texture2D onTex, offTex;
@@ -53,6 +54,20 @@ namespace FunBoardGames.CantStop
         public void ToggleTurn(bool isTurn)
         {
             turnLED.texture = (isTurn ? onTex : offTex);
+        }
+
+        public void StartTimer(float duration, float elapsed)
+        {
+            timer.gameObject.SetActive(true);
+            timer.StartTimer(duration, elapsed);
+        }
+
+        public void StopTimer() => timer.Stop();
+
+        public void HideTimer()
+        {
+            timer.Clear();
+            timer.gameObject.SetActive(false);
         }
 
         // Cones light up from left to right, one for each finished column

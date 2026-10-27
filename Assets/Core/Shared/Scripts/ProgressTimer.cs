@@ -28,6 +28,12 @@ namespace FunBoardGames
             UpdateUI();
         }
 
+        /// <summary>Stops counting down and leaves the bar as it is.</summary>
+        public void Stop()
+        {
+            isRunning = false;
+        }
+
         public void Clear()
         {
             isRunning = false;

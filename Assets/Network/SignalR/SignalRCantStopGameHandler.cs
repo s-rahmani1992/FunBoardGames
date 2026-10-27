@@ -34,7 +34,7 @@ namespace FunBoardGames.Network.SignalR
 
         public IEnumerable<int> FinishedColumns => playerFinishPositions;
 
-        public event Action<CantStopBoardData, ICantStopPlayer> GameDataReceived;
+        public event Action<ICantStopPlayer> GameDataReceived;
         public event Action<int[], bool> DiceRolled;
         public event Action<ICantStopPlayer, IDictionary<int, int>, int, int> WhiteConesPlaced;
         public event Action<ICantStopPlayer, IDictionary<int, int>, int, int, ICantStopPlayer> RoundPlayed;
@@ -42,6 +42,8 @@ namespace FunBoardGames.Network.SignalR
         public event Action<IEnumerable<ICantStopPlayer>> GameFinished;
         public event Action ResetRoundReceived;
         public event Action BustSaverReceived;
+        public event Action<ICantStopPlayer, ICantStopPlayer> TimedOut;
+        public event Action<DateTimeOffset, ICantStopPlayer> RoundStarted;
 
         public SignalRCantStopGameHandler(HubConnection connection, IEnumerable<SignalRCantStopPlayer> players)
         {
@@ -103,6 +105,11 @@ namespace FunBoardGames.Network.SignalR
             {
                 unityContext.Post(_ => BustSaverReceived?.Invoke(), null);
             }));
+
+            connectionHooks.Add(_connection.On<TimeoutMessage>(CantStopGameMessageNames.Timeout, (timeoutMsg) =>
+            {
+                unityContext.Post(_ => OnTimeoutReceived(timeoutMsg), null);
+            }));
         }
 
         private void OnGameFinished(GameFinishedResponseMessage gameFinishedMsg)
@@ -131,6 +138,7 @@ namespace FunBoardGames.Network.SignalR
             {
                 whiteConePositions.Clear();
                 RoundCanceled?.Invoke(player, nextPlayer);
+                StartRoundTimer(endRoundMsg.StartTime, nextPlayer);
                 return;
             }
 
@@ -139,6 +147,7 @@ namespace FunBoardGames.Network.SignalR
             player.UpdateScore(endRoundMsg.FinalScore);
             playerFinishPositions = new HashSet<int>(endRoundMsg.FinishedColumns);
             RoundPlayed?.Invoke(player, endRoundMsg.UpdatedColumns ?? new SortedDictionary<int, int>(), NoDice, NoDice, nextPlayer);
+            StartRoundTimer(endRoundMsg.StartTime, nextPlayer);
             whiteConePositions.Clear();
         }
 
@@ -154,6 +163,7 @@ namespace FunBoardGames.Network.SignalR
             player.UpdateScore(playRoundMsg.FinalScore);
             playerFinishPositions = new HashSet<int>(playRoundMsg.FinishedColumns);
             RoundPlayed?.Invoke(player, playRoundMsg.UpdatedColumns, playRoundMsg.DiceIndex1, playRoundMsg.DiceIndex2, nextPlayer);
+            StartRoundTimer(playRoundMsg.StartTime, nextPlayer);
             whiteConePositions.Clear();
         }
 
@@ -171,6 +181,7 @@ namespace FunBoardGames.Network.SignalR
         {
             dices = diceMsg.diceValues;
             DiceRolled?.Invoke(dices, diceMsg.IsBusted);
+            StartRoundTimer(diceMsg.StartTime, null);
         }
 
         private void OnGameDataReceived(GameDataMessage gameDataMsg)
@@ -182,7 +193,25 @@ namespace FunBoardGames.Network.SignalR
                 index++;
             }
 
-            GameDataReceived?.Invoke(new CantStopBoardData(gameDataMsg.BoardData.Columns), playerList.FirstOrDefault(player => player.UserId == gameDataMsg.StartPlayerUserId));
+            var startPlayer = playerList.FirstOrDefault(player => player.UserId == gameDataMsg.StartPlayerUserId);
+            GameDataReceived?.Invoke(startPlayer);
+            StartRoundTimer(gameDataMsg.StartTime, startPlayer);
+        }
+
+        // A message without a start time (the default value) did not start the server's round timer
+        void StartRoundTimer(DateTimeOffset startTime, ICantStopPlayer player)
+        {
+            if (startTime.Year > 1)
+                RoundStarted?.Invoke(startTime, player);
+        }
+
+        private void OnTimeoutReceived(TimeoutMessage timeoutMsg)
+        {
+            var player = playerList.FirstOrDefault(p => p.UserId == timeoutMsg.UserId);
+            var nextPlayer = playerList.FirstOrDefault(p => p.UserId == timeoutMsg.NextUserId);
+            whiteConePositions.Clear();
+            TimedOut?.Invoke(player, nextPlayer);
+            StartRoundTimer(timeoutMsg.RoundStartTime, nextPlayer);
         }
 
         private void OnPlayerJoinedReceived(PlayerJoinRoomResponseMessage playerMsg)

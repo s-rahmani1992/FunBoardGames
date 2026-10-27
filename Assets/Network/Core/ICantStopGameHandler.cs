@@ -6,7 +6,7 @@ namespace FunBoardGames.Network
 {
     public interface ICantStopGameHandler : IGameHandler
     {
-        event Action<CantStopBoardData, ICantStopPlayer> GameDataReceived;
+        event Action<ICantStopPlayer> GameDataReceived;
         event Action<int[], bool> DiceRolled;
         event Action<ICantStopPlayer, IDictionary<int, int>, int, int> WhiteConesPlaced;
         event Action<ICantStopPlayer, IDictionary<int, int>, int, int, ICantStopPlayer> RoundPlayed;
@@ -14,6 +14,8 @@ namespace FunBoardGames.Network
         event Action<IEnumerable<ICantStopPlayer>> GameFinished;
         event Action ResetRoundReceived;
         event Action BustSaverReceived;
+        event Action<ICantStopPlayer, ICantStopPlayer> TimedOut;
+        event Action<DateTimeOffset, ICantStopPlayer> RoundStarted;
 
         void SignalGameLoaded();
         void RollDice();
