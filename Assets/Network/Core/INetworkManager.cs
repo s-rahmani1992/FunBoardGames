@@ -9,13 +9,11 @@ namespace FunBoardGames.Network
         ILobbyHandler LobbyHandler { get; }
         IUserHandler UserHandler { get; }
 
-        event Action OnInitialized;
         event Action Connected;
         event Action Disconnected;
         event Action<string> ConnectionFailed;
 
-        void Initialize();
-        void Connect();
+        void Initialize(string serverUrl);
         void Disconnect();
     }
 }

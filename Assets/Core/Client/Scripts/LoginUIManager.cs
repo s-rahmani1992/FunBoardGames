@@ -18,6 +18,7 @@ namespace FunBoardGames.Client
         [SerializeField] Image progressFillImage;
         [SerializeField] TMP_Text progressText;
         [SerializeField] TournamentGameHolder tournamentGameHolder;
+        [SerializeField] string serverUrl = "http://localhost:5020/game";
 
         INetworkManager networkManager;
         IAuthHandler authHandler;
@@ -30,7 +31,7 @@ namespace FunBoardGames.Client
             networkManager.ConnectionFailed += OnConnectionFailed;
 
             SetProgress(0f, "Connecting ....");
-            networkManager.Connect();
+            networkManager.Initialize(serverUrl);
         }
 
         private void OnDestroy()
@@ -86,7 +87,7 @@ namespace FunBoardGames.Client
         private void OnRetryConnectionClicked()
         {
             SetProgress(0f, "Connecting ....");
-            networkManager.Connect();
+            networkManager.Initialize(serverUrl);
         }
 
         private void OnQuitClicked()

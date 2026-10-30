@@ -12,17 +12,7 @@ namespace FunBoardGames
         void Start()
         {
             Application.runInBackground = true;
-            signalRNetworkManager.OnInitialized += OnNetworkInitialized;
             NetworkSingleton.SetNetworkManager(signalRNetworkManager);
-        }
-
-        private void OnDestroy()
-        {
-            signalRNetworkManager.OnInitialized -= OnNetworkInitialized;
-        }
-
-        private void OnNetworkInitialized()
-        {
             SceneManager.LoadScene("Login");
         }
     }

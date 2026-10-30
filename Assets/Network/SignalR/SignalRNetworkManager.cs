@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,52 +12,73 @@ namespace FunBoardGames.Network.SignalR
     [CreateAssetMenu(fileName = "SignalRNetworkManager", menuName = "Scriptable Objects/SignalRNetworkManager")]
     public class SignalRNetworkManager : ScriptableObject, INetworkManager
     {
+        [Header("Connection Settings")]
+        [SerializeField] float reconnectTimeoutSeconds = 2f;
+        [SerializeField] float reconnectIntervalSeconds = 1f;
+        [SerializeField] float serverTimeoutSeconds = 6f;
+
         SignalRAuthHandler _authHandler;
         SignalRLobbyHandler _lobbyHandler;
         SignalRUserHandler _userHandler;
         HubConnection _connection;
         SynchronizationContext unityContext;
-        [SerializeField]
-        [Tooltip("Editor/Standalone default: http://localhost:5020/game. " +
-                 "On a physical Android device or emulator, 'localhost' means the device itself, not this PC. " +
-                 "Override this per-build/per-test with your PC's LAN IP, e.g. http://192.168.1.23:5020/game " +
-                 "(the exact host address depends on the emulator's network mode).")]
-        string serverUrl = "http://localhost:5020/game";
 
         public IAuthHandler AuthHandler => _authHandler;
         public ILobbyHandler LobbyHandler => _lobbyHandler;
         public IUserHandler UserHandler => _userHandler;
 
-        public event Action OnInitialized;
         public event Action Connected;
         public event Action Disconnected;
         public event Action<string> ConnectionFailed;
 
         public void Dispose()
         {
-            _connection.DisposeAsync();
+            _connection?.DisposeAsync();
         }
 
-        public void Initialize()
+        public void Initialize(string serverUrl)
         {
             unityContext = SynchronizationContext.Current;
 
-            _connection = new HubConnectionBuilder()
-                .WithUrl(serverUrl)
-                .WithAutomaticReconnect()
-                .Build();
+            if (_connection != null)
+            {
+                _connection.Closed -= OnConnectionClosed;
+                _connection.DisposeAsync();
+                _connection = null;
+            }
 
+            var builder = new HubConnectionBuilder()
+                .WithUrl(serverUrl)
+                .WithAutomaticReconnect(BuildReconnectDelays());
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            builder.Services.AddSingleton<IHubProtocol>(new LogProtocal(new JsonHubProtocol()));
+#endif
+            try
+            {
+                _connection = builder.Build();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                ConnectionFailed?.Invoke(ex.Message);
+                return;
+            }
+
+            _connection.ServerTimeout = TimeSpan.FromSeconds(serverTimeoutSeconds);
+            _connection.KeepAliveInterval = TimeSpan.FromSeconds(serverTimeoutSeconds / 3f);
+
+            _connection.Reconnecting += ex =>
+            {
+                Debug.Log("Connection lost, reconnecting... " + ex?.Message);
+                return Task.CompletedTask;
+            };
             _connection.Closed += OnConnectionClosed;
 
             _authHandler = new SignalRAuthHandler(_connection);
             _lobbyHandler = new SignalRLobbyHandler(_connection);
             _userHandler = new SignalRUserHandler(_connection);
 
-            OnInitialized?.Invoke();
-        }
-
-        public void Connect()
-        {
             _connection.StartAsync().ContinueWith(task =>
             {
                 if (task.IsFaulted)
@@ -76,6 +99,16 @@ namespace FunBoardGames.Network.SignalR
                     }, null);
                 }
             });
+        }
+
+        TimeSpan[] BuildReconnectDelays()
+        {
+            float interval = Mathf.Max(0.1f, reconnectIntervalSeconds);
+            int attempts = Mathf.CeilToInt(Mathf.Max(0f, reconnectTimeoutSeconds) / interval);
+            var delays = new TimeSpan[attempts];
+            for (int i = 0; i < attempts; i++)
+                delays[i] = TimeSpan.FromSeconds(interval);
+            return delays;
         }
 
         public void Disconnect()
