@@ -48,7 +48,7 @@ namespace FunBoardGames.Client
             base.OnClose();
         }
 
-        private void OnProfileUpdated(Profile _)
+        private void OnProfileUpdated(ProfileData _)
         {
             Close();
         }

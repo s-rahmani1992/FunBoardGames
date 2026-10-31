@@ -9,7 +9,7 @@ namespace FunBoardGames.CantStop
         readonly SortedDictionary<int, int> conePositions = new();
 
         public bool IsMe => true;
-        public Profile Profile { get; }
+        public ProfileData Profile { get; }
         public bool IsReady => true;
         public PlayerColor ConeColor => PlayerColor.Red;
         public IDictionary<int, int> ConePositions => conePositions;
@@ -22,9 +22,9 @@ namespace FunBoardGames.CantStop
         public event Action<bool> ReadyStatusChanged;
 #pragma warning restore CS0067
 
-        public TutorialCantStopPlayer(Profile profile)
+        public TutorialCantStopPlayer(ProfileData profile)
         {
-            Profile = profile ?? new Profile { PlayerName = "You" };
+            Profile = profile ?? new ProfileData { PlayerName = "You" };
         }
     }
 }

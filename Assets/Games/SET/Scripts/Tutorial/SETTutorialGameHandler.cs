@@ -57,7 +57,7 @@ namespace FunBoardGames.SET
             return new SETGameData(0, 7f, "Tutorial", 1, 4, 0, WrongLimit, HintLimit, StartCardCount);
         }
 
-        public SETTutorialGameHandler(Profile profile)
+        public SETTutorialGameHandler(ProfileData profile)
         {
             player = new TutorialSETPlayer(profile);
         }

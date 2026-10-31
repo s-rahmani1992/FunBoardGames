@@ -29,11 +29,11 @@ namespace FunBoardGames.Network.SignalR
             {
                 LoginSuccess?.Invoke(new SignInResponse()
                 {
-                    Profile = new Profile()
+                    Profile = new ProfileData()
                     {
-                        UserId = msg.ProfileDTO.UserId,
-                        PlayerName = msg.ProfileDTO.PlayerName,
-                        Avatar = msg.ProfileDTO.Avatar,
+                        UserId = msg.Profile.UserId,
+                        PlayerName = msg.Profile.PlayerName,
+                        Avatar = msg.Profile.Avatar,
                     },
                     Token = msg.AuthToken,
                 });

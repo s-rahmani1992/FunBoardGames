@@ -57,7 +57,7 @@ namespace FunBoardGames.SET
             SceneManager.LoadScene(MenuScene);
         }
 
-        public static void Launch(UserGameHolder userGameHolder, Profile profile, string gameScene)
+        public static void Launch(UserGameHolder userGameHolder, ProfileData profile, string gameScene)
         {
             userGameHolder.StartTutorial(SETTutorialGameHandler.CreateGameData(), new SETTutorialGameHandler(profile));
             SceneManager.LoadScene(gameScene);

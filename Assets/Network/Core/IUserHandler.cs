@@ -76,6 +76,6 @@ namespace FunBoardGames.Network
         void ChangeAvatar(int newAvatarId);
 
         event Action<UserGameData> UserGameDataReceived;
-        event Action<Profile> ProfileUpdated;
+        event Action<ProfileData> ProfileUpdated;
     }
 }

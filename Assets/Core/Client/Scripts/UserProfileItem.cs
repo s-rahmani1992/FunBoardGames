@@ -13,7 +13,7 @@ namespace FunBoardGames.Client
         [SerializeField] TMP_Text nameText;
         [SerializeField] Sprite anonymousAvatar;
 
-        public void SetProfile(Profile profile)
+        public void SetProfile(ProfileData profile)
         {
             avatarImage.sprite = avatarAssets.GetAvatar(profile.Avatar);
             nameText.text = profile.PlayerName;

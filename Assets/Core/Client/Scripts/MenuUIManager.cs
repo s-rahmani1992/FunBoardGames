@@ -45,7 +45,7 @@ namespace FunBoardGames.Client
             userHandler.ProfileUpdated -= OnProfileUpdated;
         }
 
-        private void OnProfileUpdated(Profile profile)
+        private void OnProfileUpdated(ProfileData profile)
         {
             playerNameText.text = profile.PlayerName;
             playerAvatarImage.sprite = avatarAssets.GetAvatar(profile.Avatar);

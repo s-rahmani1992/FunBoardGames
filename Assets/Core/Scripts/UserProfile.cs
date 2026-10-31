@@ -10,7 +10,7 @@ namespace FunBoardGames
 
         public string PlayerName => Profile?.PlayerName;
 
-        public Profile Profile { get; private set; }
+        public ProfileData Profile { get; private set; }
 
         public static int UserId { get; private set; }
         
@@ -22,7 +22,7 @@ namespace FunBoardGames
             _userHandler.ProfileUpdated += OnProfileUpdated;
         }
 
-        private void OnProfileUpdated(Profile profile)
+        private void OnProfileUpdated(ProfileData profile)
         {
             Profile = profile;
         }

@@ -16,7 +16,7 @@ namespace FunBoardGames.Network
 
     public class SignInResponse
     {
-        public Profile Profile { get; set; }
+        public ProfileData Profile { get; set; }
         public string Token { get; set; }
     }
 

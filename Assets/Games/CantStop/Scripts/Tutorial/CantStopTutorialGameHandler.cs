@@ -74,7 +74,7 @@ namespace FunBoardGames.CantStop
             return new CantStopGameData(0, new CantStopBoardData(Columns), "Tutorial", 1, MarkerConeCount, WinConeCount, 0, 0);
         }
 
-        public CantStopTutorialGameHandler(Profile profile)
+        public CantStopTutorialGameHandler(ProfileData profile)
         {
             player = new TutorialCantStopPlayer(profile);
         }

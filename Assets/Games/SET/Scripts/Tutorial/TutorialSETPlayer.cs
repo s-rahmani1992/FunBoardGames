@@ -6,7 +6,7 @@ namespace FunBoardGames.SET
     public class TutorialSETPlayer : ISETPlayer
     {
         public bool IsMe => true;
-        public Profile Profile { get; }
+        public ProfileData Profile { get; }
         public bool IsReady => true;
         public int WrongScore { get; internal set; }
         public int CorrectScore { get; internal set; }
@@ -21,9 +21,9 @@ namespace FunBoardGames.SET
         public event Action<bool> ReadyStatusChanged;
 #pragma warning restore CS0067
 
-        public TutorialSETPlayer(Profile profile)
+        public TutorialSETPlayer(ProfileData profile)
         {
-            Profile = profile ?? new Profile { PlayerName = "You" };
+            Profile = profile ?? new ProfileData { PlayerName = "You" };
         }
     }
 }

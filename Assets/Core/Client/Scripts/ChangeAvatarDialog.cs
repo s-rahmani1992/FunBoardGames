@@ -71,7 +71,7 @@ namespace FunBoardGames.Client
             changeButton.interactable = selectedAvatar != currentAvatar;
         }
 
-        private void OnProfileUpdated(Profile _)
+        private void OnProfileUpdated(ProfileData _)
         {
             Close();
         }

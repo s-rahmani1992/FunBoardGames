@@ -22,9 +22,9 @@ namespace FunBoardGames.Network.SignalR
                 unityContext.Post(_ => OnUserDataReceived(response), null);
             });
 
-            _connection.On<UserProfileDTO>(UserMessageNames.ProfileUpdate, (profile) =>
+            _connection.On<Profile>(UserMessageNames.ProfileUpdate, (profile) =>
             {
-                unityContext.Post(_ => ProfileUpdated?.Invoke(new Profile()
+                unityContext.Post(_ => ProfileUpdated?.Invoke(new ProfileData()
                 {
                     UserId = profile.UserId,
                     PlayerName = profile.PlayerName,
@@ -56,7 +56,7 @@ namespace FunBoardGames.Network.SignalR
         }
 
         public event Action<UserGameData> UserGameDataReceived;
-        public event Action<Profile> ProfileUpdated;
+        public event Action<ProfileData> ProfileUpdated;
 
         public void GetUserData()
         {
