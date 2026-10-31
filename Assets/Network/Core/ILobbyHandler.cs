@@ -36,7 +36,7 @@ namespace FunBoardGames.Network
     public interface ILobbyHandler
     {
         void JointTestGame(BoardGame game);
-        void JoinGame(BoardGameData gameData);
+        void JoinGame(GameData gameData);
 
         event Action<IGameHandler, IEnumerable<IBoardGamePlayer>> JoinedGame;
     }

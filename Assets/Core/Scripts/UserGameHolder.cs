@@ -6,17 +6,17 @@ public class UserGameHolder : ScriptableObject
     IGameHandler _currentGameHandler;
     ILobbyHandler _lobbyHandler;
 
-    public BoardGameData ActiveGame { get; private set; }
+    public GameData ActiveGame { get; private set; }
 
     public bool IsTutorial { get; private set; }
 
-    public void SetActiveGame(BoardGameData gameData)
+    public void SetActiveGame(GameData gameData)
     {
         EndTutorial();
         ActiveGame = gameData;
     }
 
-    public void StartTutorial(BoardGameData gameData, IGameHandler tutorialHandler)
+    public void StartTutorial(GameData gameData, IGameHandler tutorialHandler)
     {
         if (_currentGameHandler != null)
             _currentGameHandler.PlayerLeft -= OnPlayerLeft;

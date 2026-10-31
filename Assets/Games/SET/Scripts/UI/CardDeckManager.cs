@@ -20,7 +20,7 @@ namespace FunBoardGames.SET
 
         List<Transform> cardHolders;
         ISETGameHandler gameHandler;
-        SETGameData gameData;
+        SETGame gameData;
 
         public event Action CardDestributionEnded;
 
@@ -32,7 +32,7 @@ namespace FunBoardGames.SET
         bool isShowingGuessResult = false;
         List<CardData> pendingTimeoutCards = null;
 
-        public void RegisterGameHandler(ISETGameHandler gameHandler, SETGameData gameData)
+        public void RegisterGameHandler(ISETGameHandler gameHandler, SETGame gameData)
         {
             this.gameHandler = gameHandler;
             this.gameData = gameData;

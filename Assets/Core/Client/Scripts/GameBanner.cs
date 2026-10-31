@@ -19,9 +19,9 @@ namespace FunBoardGames.Client
         [SerializeField] SceneAssetMap sceneMap;
 
         ILobbyHandler lobbyHandler;
-        BoardGameData gameData;
+        GameData gameData;
 
-        public void Initialize(BoardGameData gameData)
+        public void Initialize(GameData gameData)
         {
             this.gameData = gameData;
 

@@ -14,7 +14,7 @@ namespace FunBoardGames.Network.SignalR
        
         HubConnection _connection;
         SynchronizationContext unityContext;
-        BoardGameData requestedGame;
+        GameData requestedGame;
 
         public SignalRLobbyHandler(HubConnection connection)
         {
@@ -62,7 +62,7 @@ namespace FunBoardGames.Network.SignalR
             });
         }
 
-        public void JoinGame(BoardGameData gameData)
+        public void JoinGame(GameData gameData)
         {
             requestedGame = gameData;
             _connection.InvokeAsync(LobbyMessageNames.JoinGame, new JoinGameRequestMessage() {

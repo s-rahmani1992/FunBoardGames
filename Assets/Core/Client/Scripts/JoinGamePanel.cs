@@ -41,7 +41,7 @@ namespace FunBoardGames.Client
             Destroy(gameObject);
         }
 
-        public void Initialize(ILobbyHandler lobbyHandler, BoardGameData gameData)
+        public void Initialize(ILobbyHandler lobbyHandler, GameData gameData)
         {
             this.lobbyHandler = lobbyHandler;
             this.gameType = gameData.Type;

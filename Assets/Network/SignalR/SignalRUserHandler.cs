@@ -39,19 +39,44 @@ namespace FunBoardGames.Network.SignalR
                 .Select(ConvertGameDto)
                 .ToList();
 
-            UserGameDataReceived?.Invoke(new UserGameData(games));
+            UserGameDataReceived?.Invoke(new UserGameData()
+            {
+                Games = games,
+            });
         }
 
-        private static BoardGameData ConvertGameDto(GameDTO gameDto)
+        private static GameData ConvertGameDto(BoardGameData gameDto)
         {
-            string name = gameDto.Name;
-            int playerCount = (int)gameDto.PlayerCount;
-
             return gameDto switch
             {
-                SETGameDTO setGameDto => new SETGameData(setGameDto.Id, setGameDto.GuessTime, name, playerCount, setGameDto.AttributeCount, setGameDto.RoundTime, setGameDto.WrongLimit, setGameDto.HintLimit, setGameDto.BeginCardCount),
-                CantStopGameDTO cantStopGameDto => new CantStopGameData(cantStopGameDto.Id, new CantStopBoardData(cantStopGameDto.BoardData), name, playerCount, cantStopGameDto.MarkerConeCount, cantStopGameDto.WinConeCount, cantStopGameDto.RoundTime, cantStopGameDto.TimeoutLimit),
-                _ => new BoardGameData(gameDto.Id, (BoardGame)(int)gameDto.GameType, name, playerCount),
+                SETGameData setGameDto => new SETGame()
+                {
+                    Id = gameDto.Id,
+                    Name = gameDto.Name,
+                    Type = BoardGame.SET,
+                    NumberofPlayers = gameDto.PlayerCount,
+                    StartCardCount = setGameDto.VisibleCardCount,
+                    HintLimit = setGameDto.HintLimit,
+                    RoundTime = setGameDto.RoundTime,
+                    WrongLimit = setGameDto.WrongLimit,
+                    AttributeCount = (setGameDto.ShapeAttribute != null ? 0 : 1) +
+                                     (setGameDto.ColorAttribute != null ? 0 : 1) +
+                                     (setGameDto.CountAttribute != null ? 0 : 1) +
+                                     (setGameDto.ShadingAttribute != null ? 0 : 1)
+                },
+                CantStopGameData cantStopGameDto => new CantStopGame()
+                {
+                    Id = gameDto.Id,
+                    Name = gameDto.Name,
+                    Type = BoardGame.CantStop,
+                    NumberofPlayers = gameDto.PlayerCount,
+                    BoardData = new CantStopBoardData(cantStopGameDto.BoardData),
+                    MarkerConeCount = cantStopGameDto.MarkerConeCount,
+                    RoundTime = cantStopGameDto.RoundTime,
+                    TimeoutLimit = cantStopGameDto.TimeoutLimit,
+                    WinConeCount = cantStopGameDto.WinConeCount,
+                },
+                _ => new GameData(),
             };
         }
 

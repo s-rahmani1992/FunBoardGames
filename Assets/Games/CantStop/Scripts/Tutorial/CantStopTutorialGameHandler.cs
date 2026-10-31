@@ -69,9 +69,20 @@ namespace FunBoardGames.CantStop
         public int ResetCount { get; private set; }
         public int BustSaverCount { get; private set; }
 
-        public static CantStopGameData CreateGameData()
+        public static CantStopGame CreateGameData()
         {
-            return new CantStopGameData(0, new CantStopBoardData(Columns), "Tutorial", 1, MarkerConeCount, WinConeCount, 0, 0);
+            return new CantStopGame()
+            {
+                Id = 0,
+                Name = "Tutorial",
+                Type = BoardGame.CantStop,
+                NumberofPlayers = 1,
+                MarkerConeCount = MarkerConeCount,
+                WinConeCount = WinConeCount,
+                BoardData = new CantStopBoardData(Columns),
+                RoundTime = 0,
+                TimeoutLimit = 3,
+            };
         }
 
         public CantStopTutorialGameHandler(ProfileData profile)

@@ -8,7 +8,7 @@ namespace FunBoardGames
     {
         IUserHandler _userHandler;
 
-        public List<BoardGameData> Games { get; private set; }
+        public List<GameData> Games { get; private set; }
 
         public void Register(IUserHandler userHandler)
         {

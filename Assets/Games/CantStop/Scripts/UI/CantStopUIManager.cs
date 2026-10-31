@@ -33,7 +33,7 @@ namespace FunBoardGames.CantStop
         SortedDictionary<int, (int, MarkMode)> possibleMoves = new();
         bool mustSelectMoves;
 
-        CantStopGameData game;
+        CantStopGame game;
         CantStopBoardData boardData;
         IEnumerable<int> selectedNumbers = new HashSet<int>();
 
@@ -90,11 +90,11 @@ namespace FunBoardGames.CantStop
 
         private void OnGameReceived(ICantStopPlayer startPlayer)
         {
-            game = userGameHolder.ActiveGame as CantStopGameData;
+            game = userGameHolder.ActiveGame as CantStopGame;
             boardData = game.BoardData;
             boardController.Initialize(boardData);
             int index = 0;
-            int winConeCount = (userGameHolder.ActiveGame as CantStopGameData)?.WinConeCount ?? DefaultWinConeCount;
+            int winConeCount = (userGameHolder.ActiveGame as CantStopGame)?.WinConeCount ?? DefaultWinConeCount;
 
             foreach (var player in gameHandler.Players)
             {

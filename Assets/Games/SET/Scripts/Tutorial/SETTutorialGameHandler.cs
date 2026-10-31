@@ -52,9 +52,20 @@ namespace FunBoardGames.SET
 
         public ISETPlayer Me => player;
 
-        public static SETGameData CreateGameData()
+        public static SETGame CreateGameData()
         {
-            return new SETGameData(0, 7f, "Tutorial", 1, 4, 0, WrongLimit, HintLimit, StartCardCount);
+            return new SETGame()
+            {
+                Id = 0,
+                Name = "Tutorial",
+                Type = BoardGame.SET,
+                NumberofPlayers = 1,
+                WrongLimit = WrongLimit,
+                HintLimit = HintLimit,
+                StartCardCount = StartCardCount,
+                AttributeCount = 4,
+                RoundTime = 0,
+            };
         }
 
         public SETTutorialGameHandler(ProfileData profile)

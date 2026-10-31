@@ -25,7 +25,7 @@ namespace FunBoardGames.SET
 
         Dictionary<ISETPlayer, PlayerUI> playerUIMap = new();
 
-        SETGameData gameData;
+        SETGame gameData;
 
         public static SETGameUIManager Instance { get; private set; }
 
@@ -49,7 +49,7 @@ namespace FunBoardGames.SET
         private void Awake()
         {
             Instance = this;
-            gameData = userGameHolder.ActiveGame as SETGameData;
+            gameData = userGameHolder.ActiveGame as SETGame;
             setGameHandler = userGameHolder.GetGameHandler<ISETGameHandler>();
             cardDeckManager.RegisterGameHandler(setGameHandler, gameData);
             setGameHandler.SignalGameLoaded();
