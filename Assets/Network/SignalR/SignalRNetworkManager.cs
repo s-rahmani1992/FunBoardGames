@@ -1,3 +1,4 @@
+using FunBoardGames.Network.SignalR.Shared;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +31,7 @@ namespace FunBoardGames.Network.SignalR
         public event Action Connected;
         public event Action Disconnected;
         public event Action<string> ConnectionFailed;
+        public event Action<string> UnexpectedError;
 
         public void Dispose()
         {
@@ -74,6 +76,14 @@ namespace FunBoardGames.Network.SignalR
                 return Task.CompletedTask;
             };
             _connection.Closed += OnConnectionClosed;
+
+            _connection.On<ErrorMessage>(ErrorMessageNames.Error, error =>
+            {
+                unityContext.Post(_ =>
+                {
+                    UnexpectedError?.Invoke(error.Text);
+                }, null);
+            });
 
             _authHandler = new SignalRAuthHandler(_connection);
             _lobbyHandler = new SignalRLobbyHandler(_connection);

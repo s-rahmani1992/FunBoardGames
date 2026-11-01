@@ -16,6 +16,7 @@ namespace FunBoardGames.Network
         static NetworkSingleton instance;
         INetworkManager _networkManager;
         bool _disconnectDialogShown;
+        bool _errorDialogShown;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void CreateSingleton()
@@ -34,10 +35,14 @@ namespace FunBoardGames.Network
         void Register(INetworkManager networkManager)
         {
             if (_networkManager != null)
+            {
                 _networkManager.Disconnected -= OnDisconnected;
+                _networkManager.UnexpectedError -= OnUnexpectedError;
+            }
 
             _networkManager = networkManager;
             _networkManager.Disconnected += OnDisconnected;
+            _networkManager.UnexpectedError += OnUnexpectedError;
         }
 
         void OnDisconnected()
@@ -55,9 +60,25 @@ namespace FunBoardGames.Network
             DialogManager.Instance.ShowDialog(messageDialog, DialogShowOptions.OverAll, data);
         }
 
+        void OnUnexpectedError(string message)
+        {
+            if (_errorDialogShown || DialogManager.Instance == null)
+                return;
+
+            _errorDialogShown = true;
+
+            var data = new MessageData("Error", "Unexpected server error occured!", new List<ButtonData>
+            {
+                new ButtonData("Reload", OnReloadClicked),
+                new ButtonData("Quit", OnQuitClicked)
+            });
+            DialogManager.Instance.ShowDialog(messageDialog, DialogShowOptions.OverAll, data);
+        }
+
         void OnReloadClicked()
         {
             _disconnectDialogShown = false;
+            _errorDialogShown = false;
             SceneManager.LoadScene(LoginSceneName);
         }
 
@@ -72,6 +93,7 @@ namespace FunBoardGames.Network
                 return;
 
             _networkManager.Disconnected -= OnDisconnected;
+            _networkManager.UnexpectedError -= OnUnexpectedError;
             _networkManager.Dispose();
         }
 

@@ -80,10 +80,7 @@ namespace FunBoardGames
         {
             if (option == DialogShowOptions.OverAll)
             {
-                if (opendialogs.Count == 0)
-                    opendialogs.Add(dialog);
-                else
-                    opendialogs.Insert(0, dialog);
+                opendialogs.Add(dialog);
                 StartCoroutine(ShowAsync(dialog));
             }
 
@@ -101,7 +98,6 @@ namespace FunBoardGames
                     StartCoroutine(CloseShowAsync(d, dialog));
                 }
             }
-            dialog.canvas.sortingOrder = opendialogs.Count;
         }
 
         public void CloseDialog(BaseDialog dialog)
