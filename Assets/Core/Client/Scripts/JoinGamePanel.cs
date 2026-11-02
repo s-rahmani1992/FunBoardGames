@@ -1,5 +1,5 @@
-using DG.Tweening;
 using FunBoardGames.Network;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -12,6 +12,10 @@ namespace FunBoardGames.Client
     [RequireComponent(typeof(Canvas), typeof(GraphicRaycaster))]
     public class JoinGamePanel : MonoBehaviour
     {
+        const string MenuScene = "Menu";
+        const float LeaveButtonDelay = 5f;
+        const float JoinFailedDelay = 1.5f;
+
         [SerializeField] UserProfileItem playerProfileItem;
         [SerializeField] UserProfileItem[] otherPlayerProfiles;
         [SerializeField] TMP_Text gameTxt;
@@ -21,9 +25,9 @@ namespace FunBoardGames.Client
         [SerializeField] UserGameHolder userGameHolder;
         [SerializeField] UserProfile userProfile;
 
-        ILobbyHandler lobbyHandler;
         IGameHandler gameHandler;
-        BoardGame gameType;
+        Action unsubscribe;
+        GameData gameData;
 
         IBoardGamePlayer[] players;
 
@@ -35,19 +39,10 @@ namespace FunBoardGames.Client
             leaveBtn.onClick.AddListener(OnLeaveClicked);
         }
 
-        private void OnLeaveClicked()
+        public void Initialize(GameData gameData)
         {
-            gameHandler?.LeaveGame();
-            Destroy(gameObject);
-        }
-
-        public void Initialize(ILobbyHandler lobbyHandler, GameData gameData)
-        {
-            this.lobbyHandler = lobbyHandler;
-            this.gameType = gameData.Type;
-
+            this.gameData = gameData;
             gameTxt.text = gameData.Name;
-
             playerProfileItem.SetProfile(userProfile.Profile);
 
             for (int i = 0; i < gameData.NumberofPlayers - 1; i++)
@@ -56,26 +51,110 @@ namespace FunBoardGames.Client
                 otherPlayerProfiles[i].SetSearching();
             }
 
-            lobbyHandler.JoinedGame += OnJoinedGame;
-            userGameHolder.SetActiveGame(gameData);
-
-            DOVirtual.DelayedCall(1, () => {
-                leaveBtn.interactable = true;
-                logTxt.text = "Searching for players...";
-                lobbyHandler.JoinGame(gameData);
-            });
+            gameHandler = CreateGameHandler(gameData.Type);
+            userGameHolder.SetActiveGame(gameData, gameHandler);
+            StartCoroutine(LoadGameAndJoin());
         }
 
-        private void OnJoinedGame(IGameHandler handler, IEnumerable<IBoardGamePlayer> players)
+        IEnumerator LoadGameAndJoin()
         {
-            gameHandler = handler;
+            logTxt.text = "Searching for players...";
+            yield return SceneManager.LoadSceneAsync(sceneMap.GetScene(gameData.Type));
+            yield return new WaitForSeconds(1);
+            gameHandler.JoinGame(gameData);
+            yield return EnableLeaveButton();
+        }
 
-            foreach (var p in players)
+        IGameHandler CreateGameHandler(BoardGame gameType)
+        {
+            var networkManager = NetworkSingleton.NetworkManager;
+
+            switch (gameType)
+            {
+                case BoardGame.SET:
+                    var setHandler = networkManager.CreateGameHandler<ISETGameHandler>();
+                    Subscribe(setHandler);
+                    return setHandler;
+                case BoardGame.CantStop:
+                    var cantStopHandler = networkManager.CreateGameHandler<ICantStopGameHandler>();
+                    Subscribe(cantStopHandler);
+                    return cantStopHandler;
+                default:
+                    throw new NotSupportedException($"{gameType} cannot be joined.");
+            }
+        }
+
+        void Subscribe<TPlayer>(IGameHandlerT<TPlayer> handler) where TPlayer : IBoardGamePlayer
+        {
+            Action<IEnumerable<TPlayer>> joinedGame = OnJoinedGame;
+            Action<TPlayer> playerJoined = player => OnPlayerAdded(player);
+            Action<TPlayer> playerLeft = player => OnPlayerLeft(player);
+
+            handler.JoinedGame += joinedGame;
+            handler.PlayerJoined += playerJoined;
+            handler.PlayerLeft += playerLeft;
+            handler.JoinFailed += OnJoinFailed;
+            handler.GameBegan += OnGameBegan;
+            handler.LeftGame += OnLeftGame;
+
+            unsubscribe = () =>
+            {
+                handler.JoinedGame -= joinedGame;
+                handler.PlayerJoined -= playerJoined;
+                handler.PlayerLeft -= playerLeft;
+                handler.JoinFailed -= OnJoinFailed;
+                handler.GameBegan -= OnGameBegan;
+                handler.LeftGame -= OnLeftGame;
+            };
+        }
+
+        private void OnJoinedGame<TPlayer>(IEnumerable<TPlayer> joinedPlayers) where TPlayer : IBoardGamePlayer
+        {
+            foreach (var p in joinedPlayers)
                 OnPlayerAdded(p);
+        }
 
-            gameHandler.PlayerJoined += OnPlayerJoined;
-            gameHandler.PlayerLeft += OnPlayerLeft;
-            gameHandler.AllPlayersReady += OnAllPlayersReady;
+        IEnumerator EnableLeaveButton()
+        {
+            yield return new WaitForSeconds(LeaveButtonDelay);
+            leaveBtn.interactable = true;
+        }
+
+        private void OnLeaveClicked()
+        {
+            leaveBtn.interactable = false;
+            logTxt.text = "Leaving...";
+            gameHandler.LeaveGame();
+        }
+
+        private void OnLeftGame()
+        {
+            StartCoroutine(LoadMenuAndClose(0f));
+        }
+
+        private void OnJoinFailed()
+        {
+            logTxt.text = "Unable to join the game.";
+            StartCoroutine(LoadMenuAndClose(JoinFailedDelay));
+        }
+
+        IEnumerator LoadMenuAndClose(float delay)
+        {
+            leaveBtn.interactable = false;
+
+            if (delay > 0)
+                yield return new WaitForSeconds(delay);
+
+            yield return SceneManager.LoadSceneAsync(MenuScene);
+            Destroy(gameObject);
+        }
+
+        private void OnGameBegan()
+        {
+            leaveBtn.interactable = false; 
+            logTxt.text = "Loading game...";
+            StopAllCoroutines();
+            Destroy(gameObject, 2);
         }
 
         private void OnPlayerLeft(IBoardGamePlayer player)
@@ -89,12 +168,6 @@ namespace FunBoardGames.Client
                     break;
                 }
             }
-        }
-
-        private void OnAllPlayersReady()
-        {
-            logTxt.text = "All players are ready. Loading game...";
-            StartCoroutine(LoadGame());
         }
 
         private void OnPlayerAdded(IBoardGamePlayer player)
@@ -113,31 +186,9 @@ namespace FunBoardGames.Client
             }
         }
 
-        private void OnPlayerJoined(IBoardGamePlayer player)
-        {
-            OnPlayerAdded(player);
-        }
-
         void OnDestroy()
         {
-            if (lobbyHandler != null)
-                lobbyHandler.JoinedGame -= OnJoinedGame;
-            if (gameHandler != null)
-            {
-                gameHandler.PlayerJoined -= OnPlayerJoined;
-                gameHandler.PlayerLeft -= OnPlayerLeft;
-                gameHandler.AllPlayersReady -= OnAllPlayersReady;
-            }
-        }
-
-        IEnumerator LoadGame()
-        {
-            leaveBtn.interactable = false;
-            logTxt.text = "Loading game...";
-            yield return new WaitForSeconds(0.5f);
-            yield return SceneManager.LoadSceneAsync(sceneMap.GetScene(gameType));
-            yield return new WaitForSeconds(0.2f);
-            Destroy(gameObject);
+            unsubscribe?.Invoke();
         }
     }
 }

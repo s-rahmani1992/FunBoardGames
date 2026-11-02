@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace FunBoardGames.Network
 {
-    public interface ISETGameHandler: IGameHandler
+    public interface ISETGameHandler: IGameHandlerT<ISETPlayer>
     {
         void SignalGameLoaded();
         void StartGuess();

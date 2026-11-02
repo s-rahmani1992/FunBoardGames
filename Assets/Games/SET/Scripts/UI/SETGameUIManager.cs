@@ -18,7 +18,6 @@ namespace FunBoardGames.SET
         [SerializeField] GameLogger gameLogger;
         [SerializeField] UserGameHolder userGameHolder;
         [SerializeField] PlayerUI[] playerUIs;
-        [SerializeField] SETVoteDialog voteDialog;
         [SerializeField] SETResultDialog resultDialog;
         [SerializeField] Timer timer;
         [SerializeField] ProgressTimer roundTimer;
@@ -55,7 +54,6 @@ namespace FunBoardGames.SET
             setGameHandler.SignalGameLoaded();
             roundTimer.Clear();
             Subscribe();
-            UpdatePlayerUIs();
         }
 
         public void HideRoundTimer() => roundTimer.gameObject.SetActive(false);
@@ -160,6 +158,7 @@ namespace FunBoardGames.SET
 
         private void OnGameStarted()
         {
+            UpdatePlayerUIs();
             BeginGameCountDown();
         }
 

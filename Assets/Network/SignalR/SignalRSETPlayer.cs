@@ -1,18 +1,10 @@
 using FunBoardGames.Network.SignalR.Shared;
 using Microsoft.AspNetCore.SignalR.Client;
-using System;
-using System.Threading;
 
 namespace FunBoardGames.Network.SignalR
 {
-    public class SignalRSETPlayer : ISETPlayer, IDisposable
+    public class SignalRSETPlayer : SignalRPlayer, ISETPlayer
     {
-        public bool IsMe => UserId == UserProfile.UserId;
-
-        public ProfileData Profile { get; private set; }
-
-        public bool IsReady { get; private set; }
-
         public int WrongScore { get; private set; } = 0;
 
         public int CorrectScore { get; private set; } = 0;
@@ -21,38 +13,15 @@ namespace FunBoardGames.Network.SignalR
 
         public int UsedHintCount { get; private set; } = 0;
 
-        public bool HasLeft { get; private set; } = false;
-
-        public event Action<int, int> IndexChanged;
-        public event Action LeftGame;
-        public event Action<bool> ReadyStatusChanged;
-
-        public int UserId { get; private set; }
-
-        public bool? Vote { get; private set; } = null;
-
-        HubConnection _connection;
-        SynchronizationContext unityContext;
-
-        IDisposable connectionHooks;
-
         public SignalRSETPlayer(HubConnection connection, PlayerInfoDTO playerInfo)
+            : base(connection)
         {
-            _connection = connection;
-            unityContext = SynchronizationContext.Current;
             Profile = new ProfileData()
             {
                 UserId = playerInfo.UserProfile.UserId,
                 PlayerName = playerInfo.UserProfile.PlayerName,
                 Avatar = playerInfo.UserProfile.Avatar,
             };
-            UserId = playerInfo.UserProfile.UserId;
-        }
-
-        internal void InvokeLeave()
-        {
-            HasLeft = true;
-            LeftGame?.Invoke();
         }
 
         internal void SetWrongScore(int score)
@@ -75,16 +44,6 @@ namespace FunBoardGames.Network.SignalR
         internal void AddUsedHint()
         {
             UsedHintCount++;
-        }
-
-        internal void SetVote(bool? vote)
-        {
-            Vote = vote;
-        }
-
-        public void Dispose()
-        {
-            connectionHooks?.Dispose();
         }
     }
 }

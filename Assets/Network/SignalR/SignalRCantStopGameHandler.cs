@@ -9,25 +9,15 @@ using System.Threading;
 
 namespace FunBoardGames.Network.SignalR
 {
-    public class SignalRCantStopGameHandler : ICantStopGameHandler, IDisposable
+    public class SignalRCantStopGameHandler : SignalRGameHandler<SignalRCantStopPlayer, ICantStopPlayer, GameDataMessage>, ICantStopGameHandler
     {
         const int NoDice = -1;
 
         static PlayerColor[] playerColors = new PlayerColor[] { PlayerColor.Red, PlayerColor.Green, PlayerColor.Blue, PlayerColor.Yellow };
 
-        public event Action<IBoardGamePlayer> PlayerJoined;
-        public event Action<IBoardGamePlayer> PlayerLeft;
-        public event Action AllPlayersReady;
-
-        List<SignalRCantStopPlayer> playerList = new();
-
         int[] dices = new int[4];
         SortedDictionary<int, int> whiteConePositions = new();
         HashSet<int> playerFinishPositions = new();
-        HubConnection _connection;
-        SynchronizationContext unityContext;
-        List<IDisposable> connectionHooks = new();
-
         public IEnumerable<ICantStopPlayer> Players => playerList;
 
         public IDictionary<int, int> WhiteConePositions => whiteConePositions;
@@ -45,68 +35,44 @@ namespace FunBoardGames.Network.SignalR
         public event Action<ICantStopPlayer, ICantStopPlayer> TimedOut;
         public event Action<DateTimeOffset, ICantStopPlayer> RoundStarted;
 
-        public SignalRCantStopGameHandler(HubConnection connection, IEnumerable<SignalRCantStopPlayer> players)
+        public SignalRCantStopGameHandler(HubConnection connection) : base(connection)
         {
-            playerList = new(players);
-            unityContext = SynchronizationContext.Current;
-            _connection = connection;
-
-            connectionHooks.Add(_connection.On<PlayerJoinRoomResponseMessage>(LobbyMessageNames.PlayerJoinRoom, (playerMsg) =>
-            {
-                unityContext.Post(_ => OnPlayerJoinedReceived(playerMsg), null);
-            }));
-
-            connectionHooks.Add(_connection.On<PlayerLeaveRoomResponseMessage>(LobbyMessageNames.PlayerLeave, (leaveMsg) =>
-            {
-                unityContext.Post(_ => OnPlayerLeft(leaveMsg), null);
-            }));
-
-            connectionHooks.Add(_connection.On(LobbyMessageNames.AllPlayersReady, () =>
-            {
-                unityContext.Post(_ => OnAllPlayerReady(), null);
-            }));
-
-            connectionHooks.Add(_connection.On<GameDataMessage>(CantStopGameMessageNames.SendGameData, (gameDataMsg) =>
-            {
-                unityContext.Post(_ => OnGameDataReceived(gameDataMsg), null);
-            }));
-
-            connectionHooks.Add(_connection.On<RollDiceMessage>(CantStopGameMessageNames.RollDice, (diceMsg) =>
+            connectionHooks.Add(connection.On<RollDiceMessage>(CantStopGameMessageNames.RollDice, (diceMsg) =>
             {
                 unityContext.Post(_ => OnDiceReceived(diceMsg), null);
             }));
 
-            connectionHooks.Add(_connection.On<PlaceWhiteConeResponseMessage>(CantStopGameMessageNames.PlaceMarkerCone, (placeConesMsg) =>
+            connectionHooks.Add(connection.On<PlaceWhiteConeResponseMessage>(CantStopGameMessageNames.PlaceMarkerCone, (placeConesMsg) =>
             {
                 unityContext.Post(_ => OnPlaceWhiteConesReceived(placeConesMsg), null);
             }));
 
-            connectionHooks.Add(_connection.On<PlayRoundResponseMessage>(CantStopGameMessageNames.PlayRound, (playRoundMsg) =>
+            connectionHooks.Add(connection.On<PlayRoundResponseMessage>(CantStopGameMessageNames.PlayRound, (playRoundMsg) =>
             {
                 unityContext.Post(_ => OnPlayRoundReceived(playRoundMsg), null);
             }));
 
-            connectionHooks.Add(_connection.On<EndRoundResponseMessage>(CantStopGameMessageNames.EndRound, (endRoundMsg) =>
+            connectionHooks.Add(connection.On<EndRoundResponseMessage>(CantStopGameMessageNames.EndRound, (endRoundMsg) =>
             {
                 unityContext.Post(_ => OnEndRoundReceived(endRoundMsg), null);
             }));
 
-            connectionHooks.Add(_connection.On<GameFinishedResponseMessage>(CantStopGameMessageNames.GameFinished, (gameFinishedMsg) =>
+            connectionHooks.Add(connection.On<GameFinishedResponseMessage>(CantStopGameMessageNames.GameFinished, (gameFinishedMsg) =>
             {
                 unityContext.Post(_ => OnGameFinished(gameFinishedMsg), null);
             }));
 
-            connectionHooks.Add(_connection.On(CantStopGameMessageNames.ResetRound, () =>
+            connectionHooks.Add(connection.On(CantStopGameMessageNames.ResetRound, () =>
             {
                 unityContext.Post(_ => ResetRoundReceived?.Invoke(), null);
             }));
 
-            connectionHooks.Add(_connection.On(CantStopGameMessageNames.BustSaver, () =>
+            connectionHooks.Add(connection.On(CantStopGameMessageNames.BustSaver, () =>
             {
                 unityContext.Post(_ => BustSaverReceived?.Invoke(), null);
             }));
 
-            connectionHooks.Add(_connection.On<TimeoutMessage>(CantStopGameMessageNames.Timeout, (timeoutMsg) =>
+            connectionHooks.Add(connection.On<TimeoutMessage>(CantStopGameMessageNames.Timeout, (timeoutMsg) =>
             {
                 unityContext.Post(_ => OnTimeoutReceived(timeoutMsg), null);
             }));
@@ -184,7 +150,9 @@ namespace FunBoardGames.Network.SignalR
             StartRoundTimer(diceMsg.StartTime, null);
         }
 
-        private void OnGameDataReceived(GameDataMessage gameDataMsg)
+        protected override SignalRCantStopPlayer CreatePlayer(PlayerInfoDTO playerInfo) => new(connection, playerInfo);
+
+        protected override void OnGameBegin(GameDataMessage gameDataMsg)
         {
             int index = 0;
             foreach(var player in playerList)
@@ -215,63 +183,19 @@ namespace FunBoardGames.Network.SignalR
             StartRoundTimer(timeoutMsg.RoundStartTime, nextPlayer);
         }
 
-        private void OnPlayerJoinedReceived(PlayerJoinRoomResponseMessage playerMsg)
-        {
-            SignalRCantStopPlayer player = new(_connection, playerMsg.NewPlayer);
-            playerList.Add(player);
-            PlayerJoined?.Invoke(player);
-        }
-
-        private void OnPlayerLeft(PlayerLeaveRoomResponseMessage leaveMsg)
-        {
-            SignalRCantStopPlayer player = playerList.FirstOrDefault(player => player.UserId == leaveMsg.UserId);
-            player.InvokeLeave();
-            PlayerLeft?.Invoke(player);
-            playerList.Remove(player);
-            player.Dispose();
-
-            if (player.IsMe)
-            {
-                Dispose();
-            }
-        }
-
-        private void OnAllPlayerReady()
-        {
-            AllPlayersReady?.Invoke();
-        }
-
-        public void Dispose()
-        {
-            foreach (var d in connectionHooks)
-                d.Dispose();
-
-            connectionHooks.Clear();
-        }
-
-        public void LeaveGame()
-        {
-            _connection.InvokeAsync(LobbyMessageNames.PlayerLeave);
-        }
-
-        public void ReadyUp()
-        {
-            _connection.InvokeAsync(LobbyMessageNames.PlayerReady);
-        }
-
+        // The game scene is loaded before the join request is sent, so the UI is already listening when the game begins
         public void SignalGameLoaded()
         {
-            _connection.InvokeAsync(CantStopGameMessageNames.GameLoaded);
         }
 
         public void RollDice()
         {
-            _connection.InvokeAsync(CantStopGameMessageNames.RollDice);
+            connection.InvokeAsync(CantStopGameMessageNames.RollDice);
         }
 
         public void PlaceWhiteCones(int diceIndex1, int diceIndex2, int? columnIndex1)
         {
-            _connection.InvokeAsync(CantStopGameMessageNames.PlaceMarkerCone, new PlaceWhiteConeRequestMessage()
+            connection.InvokeAsync(CantStopGameMessageNames.PlaceMarkerCone, new PlaceWhiteConeRequestMessage()
             {
                 DiceIndex1 = diceIndex1,
                 DiceIndex2 = diceIndex2,
@@ -281,7 +205,7 @@ namespace FunBoardGames.Network.SignalR
 
         public void PlayRound(int diceIndex1, int diceIndex2, int? columnIndex1)
         {
-            _connection.InvokeAsync(CantStopGameMessageNames.PlayRound, new PlaceWhiteConeRequestMessage()
+            connection.InvokeAsync(CantStopGameMessageNames.PlayRound, new PlaceWhiteConeRequestMessage()
             {
                 DiceIndex1 = diceIndex1,
                 DiceIndex2 = diceIndex2,
@@ -291,18 +215,18 @@ namespace FunBoardGames.Network.SignalR
 
         public void EndRound()
         {
-            _connection.InvokeAsync(CantStopGameMessageNames.EndRound);
+            connection.InvokeAsync(CantStopGameMessageNames.EndRound);
         }
 
         public void ResetRound()
         {
             whiteConePositions.Clear();
-            _connection.InvokeAsync(CantStopGameMessageNames.ResetRound);
+            connection.InvokeAsync(CantStopGameMessageNames.ResetRound);
         }
 
         public void UseBustSaver()
         {
-            _connection.InvokeAsync(CantStopGameMessageNames.BustSaver);
+            connection.InvokeAsync(CantStopGameMessageNames.BustSaver);
         }
     }
 }

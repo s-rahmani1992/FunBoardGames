@@ -9,12 +9,8 @@ using System.Threading;
 
 namespace FunBoardGames.Network.SignalR
 {
-    public class SignalRSETGameHandler : ISETGameHandler, IDisposable
+    public class SignalRSETGameHandler : SignalRGameHandler<SignalRSETPlayer, ISETPlayer, GameBeginMessage>, ISETGameHandler
     {
-        public event Action<IBoardGamePlayer> PlayerJoined;
-        public event Action<IBoardGamePlayer> PlayerLeft;
-        public event Action AllPlayersReady;
-
         public event Action<IEnumerable<CardData>> NewCardsReceived;
         public event Action GameStarted;
         public event Action<ISETPlayer, DateTimeOffset> PlayerStartedGuess;
@@ -27,68 +23,44 @@ namespace FunBoardGames.Network.SignalR
         public event Action<ISETPlayer> PlayerUsedHint;
         public event Action<CardData> CardHintReceived;
 
-        List<SignalRSETPlayer> playerList = new();
         // Players who left are not in the server's final scores, but still appear at the end of the results
         List<SignalRSETPlayer> leftPlayers = new();
-        HubConnection _connection;
-        SynchronizationContext unityContext;
-        List<IDisposable> connectionHooks = new();
 
         public IEnumerable<ISETPlayer> Players => playerList;
 
-        public SignalRSETGameHandler(HubConnection connection, IEnumerable<SignalRSETPlayer> players)
+        public SignalRSETGameHandler(HubConnection connection) : base(connection)
         {
-            playerList = new(players);
-            unityContext = SynchronizationContext.Current;
-            _connection = connection;
-
-            connectionHooks.Add(_connection.On<PlayerJoinRoomResponseMessage>(LobbyMessageNames.PlayerJoinRoom, (playerMsg) =>
-            {
-                unityContext.Post(_ => OnPlayerJoinedReceived(playerMsg), null);
-            }));
-
-            connectionHooks.Add(_connection.On<PlayerLeaveRoomResponseMessage>(LobbyMessageNames.PlayerLeave, (leaveMsg) =>
-            {
-                unityContext.Post(_ => OnPlayerLeft(leaveMsg), null);
-            }));
-
-            connectionHooks.Add(_connection.On(LobbyMessageNames.AllPlayersReady, () =>
-            {
-                unityContext.Post(_ => OnAllPlayerReady(), null);
-            }));
-
-            connectionHooks.Add(_connection.On<GameBeginMessage>(SETGameMessageNames.GameStarted, (gameMsg) =>
-            {
-                unityContext.Post(_ => OnGameBeginReceived(gameMsg), null);
-            }));
-
-            connectionHooks.Add(_connection.On<PlayerGuessStartMessage>(SETGameMessageNames.PlayerGuessStart, (guessMsg) =>
+            connectionHooks.Add(connection.On<PlayerGuessStartMessage>(SETGameMessageNames.PlayerGuessStart, (guessMsg) =>
             {
                 unityContext.Post(_ => OnPlayerStartedGuess(guessMsg), null);
             }));
 
-            connectionHooks.Add(_connection.On<GuessResultResponse>(SETGameMessageNames.PlayerGuess, (guessMsg) =>
+            connectionHooks.Add(connection.On<GuessResultResponse>(SETGameMessageNames.PlayerGuess, (guessMsg) =>
             {
                 unityContext.Post(_ => OnPlayerGuessResultReceived(guessMsg), null);
             }));
 
-            connectionHooks.Add(_connection.On<RoundTimeoutMessage>(SETGameMessageNames.RoundTimeout, (timeoutMsg) =>
+            connectionHooks.Add(connection.On<RoundTimeoutMessage>(SETGameMessageNames.RoundTimeout, (timeoutMsg) =>
             {
                 unityContext.Post(_ => OnRoundTimeoutReceived(timeoutMsg), null);
             }));
 
-            connectionHooks.Add(_connection.On<CardHintResponse>(SETGameMessageNames.CardHint, (hintMsg) =>
+            connectionHooks.Add(connection.On<CardHintResponse>(SETGameMessageNames.CardHint, (hintMsg) =>
             {
                 unityContext.Post(_ => OnCardHintReceived(hintMsg), null);
             }));
 
-            connectionHooks.Add(_connection.On<PlayerUsedHintMessage>(SETGameMessageNames.PlayerUsedHint, (hintMsg) =>
+            connectionHooks.Add(connection.On<PlayerUsedHintMessage>(SETGameMessageNames.PlayerUsedHint, (hintMsg) =>
             {
                 unityContext.Post(_ => OnPlayerUsedHintReceived(hintMsg), null);
             }));
         }
 
-        private void OnGameBeginReceived(GameBeginMessage gameMsg)
+        protected override SignalRSETPlayer CreatePlayer(PlayerInfoDTO playerInfo) => new(connection, playerInfo);
+
+        protected override void OnPlayerRemoved(SignalRSETPlayer player) => leftPlayers.Add(player);
+
+        protected override void OnGameBegin(GameBeginMessage gameMsg)
         {
             OnNewCardsReceived(gameMsg.NewCards);
             GameStarted?.Invoke();
@@ -195,67 +167,24 @@ namespace FunBoardGames.Network.SignalR
 
         static CardData ToCardData(SETCardDTO cardDTO) => new(cardDTO.Color, cardDTO.Shape, cardDTO.CountIndex, cardDTO.Shading);
 
-        private void OnAllPlayerReady()
-        {
-            AllPlayersReady?.Invoke();
-        }
-
-        private void OnPlayerLeft(PlayerLeaveRoomResponseMessage leaveMsg)
-        {
-            SignalRSETPlayer player = playerList.FirstOrDefault(player => player.UserId == leaveMsg.UserId);
-            player.InvokeLeave();
-            PlayerLeft?.Invoke(player);
-            playerList.Remove(player);
-            leftPlayers.Add(player);
-            player.Dispose();
-
-            if (player.IsMe)
-            {
-                Dispose();
-            }
-        }
-
-        public void Dispose()
-        {
-            foreach(var d in connectionHooks)
-                d.Dispose();
-        }
-
-        private void OnPlayerJoinedReceived(PlayerJoinRoomResponseMessage playerMsg)
-        {
-            SignalRSETPlayer player = new(_connection, playerMsg.NewPlayer);
-            playerList.Add(player);
-            PlayerJoined?.Invoke(player);
-        }
-
-        public void LeaveGame()
-        {
-            _connection.InvokeAsync(LobbyMessageNames.PlayerLeave);
-        }
-
-        public void ReadyUp()
-        {
-            _connection.InvokeAsync(LobbyMessageNames.PlayerReady);
-        }
-
+        // The game scene is loaded before the join request is sent, so the UI is already listening when the game begins
         public void SignalGameLoaded()
         {
-            _connection.InvokeAsync(SETGameMessageNames.GameStarted);
         }
 
         public void StartGuess()
         {
-            _connection.InvokeAsync(SETGameMessageNames.PlayerGuessStart);
+            connection.InvokeAsync(SETGameMessageNames.PlayerGuessStart);
         }
 
         public void RequestCardHint()
         {
-            _connection.InvokeAsync(SETGameMessageNames.CardHint);
+            connection.InvokeAsync(SETGameMessageNames.CardHint);
         }
 
         public void GuessCards(IEnumerable<CardData> cards)
         {
-            _connection.InvokeAsync(SETGameMessageNames.PlayerGuess, new PlayerCardGuessRequest
+            connection.InvokeAsync(SETGameMessageNames.PlayerGuess, new PlayerCardGuessRequest
             {
                 GuessedCards = cards.Select(card => new SETCardDTO
                 {

@@ -19,17 +19,14 @@ namespace FunBoardGames.Client
         [SerializeField] ChangeNameDialog changeNameDialog;
         [SerializeField] ChangeAvatarDialog changeAvatarDialog;
 
-        ILobbyHandler lobbyHandler;
         IUserHandler userHandler;
 
         // Start is called before the first frame update
         void Start()
         {
-            lobbyHandler = NetworkSingleton.NetworkManager.LobbyHandler;
             userHandler = NetworkSingleton.NetworkManager.UserHandler;
             playerNameText.text = userProfile.PlayerName;
             playerAvatarImage.sprite = avatarAssets.GetAvatar(userProfile.Profile.Avatar);
-            userGameHolder.Register(lobbyHandler);
 
             userHandler.ProfileUpdated += OnProfileUpdated;
 

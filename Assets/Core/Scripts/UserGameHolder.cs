@@ -4,22 +4,24 @@ using UnityEngine;
 public class UserGameHolder : ScriptableObject
 {
     IGameHandler _currentGameHandler;
-    ILobbyHandler _lobbyHandler;
 
     public GameData ActiveGame { get; private set; }
 
     public bool IsTutorial { get; private set; }
 
-    public void SetActiveGame(GameData gameData)
+    public void SetActiveGame(GameData gameData, IGameHandler gameHandler)
     {
         EndTutorial();
+        ReleaseHandler();
+
         ActiveGame = gameData;
+        _currentGameHandler = gameHandler;
+        _currentGameHandler.LeftGame += OnLeftGame;
     }
 
     public void StartTutorial(GameData gameData, IGameHandler tutorialHandler)
     {
-        if (_currentGameHandler != null)
-            _currentGameHandler.PlayerLeft -= OnPlayerLeft;
+        ReleaseHandler();
 
         ActiveGame = gameData;
         _currentGameHandler = tutorialHandler;
@@ -36,29 +38,20 @@ public class UserGameHolder : ScriptableObject
         _currentGameHandler = null;
     }
 
-    public void Register(ILobbyHandler lobbyHandler)
+    private void OnLeftGame()
     {
-        if (_lobbyHandler != null)
+        ReleaseHandler();
+        ActiveGame = null;
+    }
+
+    void ReleaseHandler()
+    {
+        if (_currentGameHandler == null)
             return;
 
-        _lobbyHandler = lobbyHandler;
-
-        lobbyHandler.JoinedGame += OnJoinedGame;
-    }
-
-    private void OnJoinedGame(IGameHandler gameHandler, System.Collections.Generic.IEnumerable<IBoardGamePlayer> _)
-    {
-        _currentGameHandler = gameHandler;
-        _currentGameHandler.PlayerLeft += OnPlayerLeft;
-    }
-
-    private void OnPlayerLeft(IBoardGamePlayer player)
-    {
-        if (player.IsMe)
-        {
-            _currentGameHandler.PlayerLeft -= OnPlayerLeft;
-            _currentGameHandler = null;
-        }
+        _currentGameHandler.LeftGame -= OnLeftGame;
+        _currentGameHandler.Dispose();
+        _currentGameHandler = null;
     }
 
     public T GetGameHandler<T>() where T : IGameHandler
@@ -68,10 +61,6 @@ public class UserGameHolder : ScriptableObject
 
     private void OnDisable()
     {
-        if(_lobbyHandler != null)
-            _lobbyHandler.JoinedGame -= OnJoinedGame;
-
-        if (_currentGameHandler != null)
-            _currentGameHandler.Dispose();
+        ReleaseHandler();
     }
 }

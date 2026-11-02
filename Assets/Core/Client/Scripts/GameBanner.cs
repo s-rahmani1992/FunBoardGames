@@ -18,14 +18,12 @@ namespace FunBoardGames.Client
         [SerializeField] UserProfile userProfile;
         [SerializeField] SceneAssetMap sceneMap;
 
-        ILobbyHandler lobbyHandler;
         GameData gameData;
 
         public void Initialize(GameData gameData)
         {
             this.gameData = gameData;
 
-            lobbyHandler = NetworkSingleton.NetworkManager.LobbyHandler;
             titleText.text = string.IsNullOrEmpty(gameData.Name) ? gameData.Type.ToString() : gameData.Name;
             playerCountText.text = $"{gameData.NumberofPlayers} Players";
             joinRandomButton.onClick.AddListener(OnJoinRandomClicked);
@@ -45,7 +43,7 @@ namespace FunBoardGames.Client
         private void OnJoinRandomClicked()
         {
             var joinPanel = Instantiate(joinGamePanel);
-            joinPanel.Initialize(lobbyHandler, gameData);
+            joinPanel.Initialize(gameData);
         }
     } 
 }

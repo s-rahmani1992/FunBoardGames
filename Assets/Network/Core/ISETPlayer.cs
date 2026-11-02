@@ -7,7 +7,5 @@ namespace FunBoardGames.Network
         int CorrectScore { get; }
         bool IsBusted { get; }
         int UsedHintCount { get; }
-        bool HasLeft { get; }
-        bool? Vote { get; }
     }
 }

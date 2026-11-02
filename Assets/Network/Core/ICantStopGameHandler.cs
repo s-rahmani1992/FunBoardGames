@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace FunBoardGames.Network
 {
-    public interface ICantStopGameHandler : IGameHandler
+    public interface ICantStopGameHandler : IGameHandlerT<ICantStopPlayer>
     {
         event Action<ICantStopPlayer> GameDataReceived;
         event Action<int[], bool> DiceRolled;

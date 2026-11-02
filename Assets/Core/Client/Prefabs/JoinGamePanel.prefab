@@ -616,7 +616,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1937016121747090105, guid: 64bd3d47a43ec86429c1c0041d07a461, type: 3}
       propertyPath: m_Name
-      value: UserProfileItem (3)
+      value: UserProfileItem4
       objectReference: {fileID: 0}
     - target: {fileID: 1937016121747090105, guid: 64bd3d47a43ec86429c1c0041d07a461, type: 3}
       propertyPath: m_IsActive
@@ -733,7 +733,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1937016121747090105, guid: 64bd3d47a43ec86429c1c0041d07a461, type: 3}
       propertyPath: m_Name
-      value: UserProfileItem
+      value: UserProfileItem1
       objectReference: {fileID: 0}
     - target: {fileID: 5553472986679363002, guid: 64bd3d47a43ec86429c1c0041d07a461, type: 3}
       propertyPath: m_Pivot.x
@@ -846,7 +846,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1937016121747090105, guid: 64bd3d47a43ec86429c1c0041d07a461, type: 3}
       propertyPath: m_Name
-      value: UserProfileItem (2)
+      value: UserProfileItem3
       objectReference: {fileID: 0}
     - target: {fileID: 1937016121747090105, guid: 64bd3d47a43ec86429c1c0041d07a461, type: 3}
       propertyPath: m_IsActive
@@ -1104,7 +1104,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1937016121747090105, guid: 64bd3d47a43ec86429c1c0041d07a461, type: 3}
       propertyPath: m_Name
-      value: UserProfileItem (1)
+      value: UserProfileItem2
       objectReference: {fileID: 0}
     - target: {fileID: 1937016121747090105, guid: 64bd3d47a43ec86429c1c0041d07a461, type: 3}
       propertyPath: m_IsActive

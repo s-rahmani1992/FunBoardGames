@@ -19,19 +19,31 @@ namespace FunBoardGames.Network.SignalR
         [SerializeField] float serverTimeoutSeconds = 6f;
 
         SignalRAuthHandler _authHandler;
-        SignalRLobbyHandler _lobbyHandler;
         SignalRUserHandler _userHandler;
         HubConnection _connection;
         SynchronizationContext unityContext;
 
         public IAuthHandler AuthHandler => _authHandler;
-        public ILobbyHandler LobbyHandler => _lobbyHandler;
         public IUserHandler UserHandler => _userHandler;
 
         public event Action Connected;
         public event Action Disconnected;
         public event Action<string> ConnectionFailed;
         public event Action<string> UnexpectedError;
+
+        public T CreateGameHandler<T>() where T : IGameHandler
+        {
+            IGameHandler handler;
+
+            if (typeof(T) == typeof(ISETGameHandler))
+                handler = new SignalRSETGameHandler(_connection);
+            else if (typeof(T) == typeof(ICantStopGameHandler))
+                handler = new SignalRCantStopGameHandler(_connection);
+            else
+                throw new NotSupportedException($"No game handler is registered for {typeof(T).Name}.");
+
+            return (T)handler;
+        }
 
         public void Dispose()
         {
@@ -86,7 +98,6 @@ namespace FunBoardGames.Network.SignalR
             });
 
             _authHandler = new SignalRAuthHandler(_connection);
-            _lobbyHandler = new SignalRLobbyHandler(_connection);
             _userHandler = new SignalRUserHandler(_connection);
 
             _connection.StartAsync().ContinueWith(task =>

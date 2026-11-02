@@ -7,7 +7,6 @@ namespace FunBoardGames.SET
     {
         public bool IsMe => true;
         public ProfileData Profile { get; }
-        public bool IsReady => true;
         public int WrongScore { get; internal set; }
         public int CorrectScore { get; internal set; }
         public bool IsBusted => false;
@@ -18,7 +17,6 @@ namespace FunBoardGames.SET
 #pragma warning disable CS0067 // Nothing changes for an offline player, the events only satisfy the interface
         public event Action<int, int> IndexChanged;
         public event Action LeftGame;
-        public event Action<bool> ReadyStatusChanged;
 #pragma warning restore CS0067
 
         public TutorialSETPlayer(ProfileData profile)

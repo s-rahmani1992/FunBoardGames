@@ -43,9 +43,12 @@ namespace FunBoardGames.CantStop
         public event Action BustSaverReceived;
 
 #pragma warning disable CS0067 // There are no other players, no timeouts and no game end in the tutorial, the events only satisfy the interface
-        public event Action<IBoardGamePlayer> PlayerJoined;
-        public event Action<IBoardGamePlayer> PlayerLeft;
-        public event Action AllPlayersReady;
+        public event Action<IEnumerable<ICantStopPlayer>> JoinedGame;
+        public event Action<ICantStopPlayer> PlayerJoined;
+        public event Action<ICantStopPlayer> PlayerLeft;
+        public event Action JoinFailed;
+        public event Action GameBegan;
+        public event Action LeftGame;
         public event Action<IEnumerable<ICantStopPlayer>> GameFinished;
         public event Action<ICantStopPlayer, ICantStopPlayer> TimedOut;
         public event Action<DateTimeOffset, ICantStopPlayer> RoundStarted;
@@ -148,11 +151,11 @@ namespace FunBoardGames.CantStop
             BustSaverReceived?.Invoke();
         }
 
-        public void LeaveGame()
+        public void JoinGame(GameData gameData)
         {
         }
 
-        public void ReadyUp()
+        public void LeaveGame()
         {
         }
 

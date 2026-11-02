@@ -33,9 +33,12 @@ namespace FunBoardGames.SET
         public event Action<CardData> CardHintReceived;
 
 #pragma warning disable CS0067 // There are no other players, no timeouts and no game end in the tutorial, the events only satisfy the interface
-        public event Action<IBoardGamePlayer> PlayerJoined;
-        public event Action<IBoardGamePlayer> PlayerLeft;
-        public event Action AllPlayersReady;
+        public event Action<IEnumerable<ISETPlayer>> JoinedGame;
+        public event Action<ISETPlayer> PlayerJoined;
+        public event Action<ISETPlayer> PlayerLeft;
+        public event Action JoinFailed;
+        public event Action GameBegan;
+        public event Action LeftGame;
         public event Action<ISETPlayer> PlayerGuessTimeout;
         public event Action<ISETPlayer> PlayerBusted;
         public event Action<IEnumerable<ISETPlayer>> GameEnded;
@@ -165,11 +168,11 @@ namespace FunBoardGames.SET
             CardHintReceived?.Invoke(set[0]);
         }
 
-        public void LeaveGame()
+        public void JoinGame(GameData gameData)
         {
         }
 
-        public void ReadyUp()
+        public void LeaveGame()
         {
         }
 

@@ -6,7 +6,6 @@ namespace FunBoardGames.Network
     public interface INetworkManager : IDisposable
     {
         IAuthHandler AuthHandler { get; }
-        ILobbyHandler LobbyHandler { get; }
         IUserHandler UserHandler { get; }
 
         event Action Connected;
@@ -15,6 +14,7 @@ namespace FunBoardGames.Network
         event Action<string> UnexpectedError;
 
         void Initialize(string serverUrl);
+        T CreateGameHandler<T>() where T : IGameHandler;
         void Disconnect();
     }
 }
