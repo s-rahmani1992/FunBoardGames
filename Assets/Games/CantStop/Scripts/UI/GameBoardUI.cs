@@ -19,7 +19,7 @@ namespace FunBoardGames.CantStop
 
         public event Action<IEnumerable<GameBoardColumn>> SelectedChanged;
 
-        public void Initialize(CantStopBoardData board)
+        public void Initialize(CantStopBoardData board, WhiteConePanel conePanel)
         {
             columnList = new();
             dormantList.Clear();
@@ -30,7 +30,7 @@ namespace FunBoardGames.CantStop
             {
                 if(columns.TryGetValue(i, out int count))
                 {
-                    boardColumns[i - 2].Initalize(i, count, toggleGroup);
+                    boardColumns[i - 2].Initalize(i, count, toggleGroup, conePanel);
                     boardColumns[i - 2].SelectChanged += OnSelectChanged;
                     columnList.Add(i, boardColumns[i - 2]);
                 }
@@ -74,11 +74,17 @@ namespace FunBoardGames.CantStop
 
             if (selectMode == MarkMode.Correct)
             {
-                column.PreviewCone(pos);
+                column.HidePreview();
+                column.MoveMarker(pos);
             }
-            else if(selectMode == MarkMode.Select)
+            else
             {
-                column.SetPreviewPosition(pos);
+                column.RevertMarker();
+                column.ResetToggle();
+                selectedColumns.Remove(column);
+
+                if (selectMode == MarkMode.Select)
+                    column.SetPreviewPosition(pos);
             }
         }
 
@@ -88,27 +94,42 @@ namespace FunBoardGames.CantStop
             {
                 column.Mark(MarkMode.Clear);
                 column.ResetToggle();
-                column.PreviewCone(null);
+                column.HidePreview();
             }
             selectedColumns.Clear();
         }
 
-        public void RemoveWhiteCones()
+        public void CancelPreviews(int? keep1 = null, int? keep2 = null)
+        {
+            foreach(var column in columnList.Values.Concat(dormantList.Values))
+            {
+                if (column.Number == keep1 || column.Number == keep2)
+                    continue;
+
+                column.RevertMarker();
+                column.Mark(MarkMode.Clear);
+                column.ResetToggle();
+                column.HidePreview();
+                selectedColumns.Remove(column);
+            }
+        }
+
+        public void CommitPreviews()
         {
             foreach (var column in columnList.Values)
-                column.PlaceCone(PlayerColor.None, null);
+                column.CommitMarker();
+        }
+
+        public void RemoveMarkerCones()
+        {
+            foreach (var column in columnList.Values)
+                column.RemoveMarker();
         }
 
         public void PlaceCone(int column, PlayerColor color, int? cellNumber)
         {
             if (columnList.TryGetValue(column, out var c))
                 c.PlaceCone(color, cellNumber);
-        }
-
-        public void PreviewColumn(int number, int? pos)
-        {
-            if (columnList.TryGetValue(number, out var c))
-                c.PreviewCone(pos);
         }
     }
 }

@@ -33,7 +33,14 @@ namespace FunBoardGames.CantStop
         [SerializeField] Color dormantBadgeColor = new(1f, 1f, 1f, 0.35f);
 
         List<BoardCell> cells;
+        WhiteConePanel panel;
         GhostPulse ghost;
+
+        // The marker is taken from the panel while it is on the board; confirmedPos is where the game says it is, markerPos where it is shown
+        GameObject whiteCone;
+        int? markerPos;
+        int? confirmedPos;
+        int? choicePos;
 
         GhostPulse Ghost => ghost != null ? ghost : (ghost = previewCone.GetComponent<GhostPulse>());
         SortedDictionary<PlayerColor, GameObject> placedCones = new();
@@ -48,15 +55,22 @@ namespace FunBoardGames.CantStop
         {
             toggle.onValueChanged.AddListener((isOn) =>
             {
-                // The ghost marker stays visible while the player must choose; choosing it makes it solid
                 Ghost.SetStyle(isOn ? GhostStyle.Chosen : GhostStyle.Choice);
                 choiceFrame.SetActive(!isOn);
+                previewCone.SetActive(!isOn);
+
+                if (isOn && choicePos != null)
+                    MoveMarker(choicePos.Value);
+                else
+                    RevertMarker();
+
                 SelectChanged?.Invoke(this, isOn);
             });
         }
 
-        public void Initalize(int number, int count, ToggleGroup toggleGroup)
+        public void Initalize(int number, int count, ToggleGroup toggleGroup, WhiteConePanel conePanel)
         {
+            panel = conePanel;
             Mark(MarkMode.Clear);
             toggle.group = toggleGroup;
             toggleGroup.RegisterToggle(toggle);
@@ -73,7 +87,6 @@ namespace FunBoardGames.CantStop
             numberText.text = number.ToString();
         }
 
-        /// <summary>Builds a column that is absent from the game: only its dimmed number is shown.</summary>
         public void InitializeDormant(int number)
         {
             IsDormant = true;
@@ -81,7 +94,6 @@ namespace FunBoardGames.CantStop
             Number = number;
             cells = new();
 
-            // The holder's cells are not used, so the column is just its dimmed number
             square.gameObject.SetActive(false);
             goalSquare.gameObject.SetActive(false);
             finishObject.SetActive(false);
@@ -115,10 +127,25 @@ namespace FunBoardGames.CantStop
 
         public void PlaceCone(PlayerColor playerColor, int? number)
         {
+            if (playerColor == PlayerColor.None)
+            {
+                confirmedPos = number;
+
+                if (number == null)
+                    ReturnMarker();
+                else
+                    MoveMarker(number.Value);
+
+                return;
+            }
+
             if (placedCones.TryGetValue(playerColor, out GameObject cone))
             {
                 if (number == null)
+                {
+                    ConeMover.Of(cone).Release();
                     cone.SetActive(false);
+                }
                 else
                 {
                     cone.SetActive(true);
@@ -130,37 +157,87 @@ namespace FunBoardGames.CantStop
                 if (number == null)
                     return;
 
-                var newCcne = Instantiate(conePrefab, transform);
-                newCcne.GetComponent<Image>().color = assetManager.GetPlayerColor(playerColor);
-                placedCones.Add(playerColor, newCcne.gameObject);
-                cells[number.Value].AddCone(newCcne.gameObject);
+                var newCone = Instantiate(conePrefab, transform);
+                newCone.GetComponent<Image>().color = assetManager.GetPlayerColor(playerColor);
+
+                var rect = (RectTransform)newCone.transform;
+                rect.sizeDelta = panel.ConeSize;
+
+                if (whiteCone != null)
+                {
+                    rect.position = whiteCone.transform.position;
+                    rect.localScale = whiteCone.transform.localScale;
+                }
+
+                placedCones.Add(playerColor, newCone.gameObject);
+                cells[number.Value].AddCone(newCone.gameObject);
             }
 
-            if(playerColor != PlayerColor.None && !finishObject.activeSelf)
+            if(!finishObject.activeSelf)
                 finishObject.SetActive(number == cells.Count - 1);
         }
 
-        public void PreviewCone(int? pos)
+        public void MoveMarker(int pos)
         {
-            Ghost.SetStyle(GhostStyle.Preview);
-
-            // A dormant column has no cells to preview in
             if (cells.Count == 0)
-            {
-                previewCone.SetActive(false);
                 return;
+
+            if (whiteCone == null)
+            {
+                whiteCone = panel.PullMarker();
+
+                if (whiteCone == null)
+                    return;
             }
 
-            previewCone.SetActive(pos != null);
-            previewCone.transform.position = cells[pos.GetValueOrDefault()].transform.position;
+            whiteCone.SetActive(true);
+            markerPos = pos;
+            cells[pos].AddCone(whiteCone);
         }
 
-        /// <summary>Shows the ghost marker in the cell the player can choose; the select toggle sits on that cell, so tapping the ghost chooses the column.</summary>
+        public void RevertMarker()
+        {
+            if (confirmedPos != null)
+                MoveMarker(confirmedPos.Value);
+            else
+                ReturnMarker();
+        }
+
+        public void CommitMarker()
+        {
+            if (markerPos != null)
+                confirmedPos = markerPos;
+        }
+
+        public void RemoveMarker()
+        {
+            confirmedPos = null;
+            ReturnMarker();
+        }
+
+        void ReturnMarker()
+        {
+            if (whiteCone == null)
+                return;
+
+            panel.PushMarker(whiteCone);
+            whiteCone = null;
+            markerPos = null;
+        }
+
+        public void HidePreview()
+        {
+            choicePos = null;
+            Ghost.SetStyle(GhostStyle.Preview);
+            previewCone.SetActive(false);
+        }
+
         public void SetPreviewPosition(int? pos)
         {
             if (cells.Count == 0)
                 return;
 
+            choicePos = pos;
             var cellPosition = cells[pos.GetValueOrDefault()].transform.position;
             previewCone.transform.position = cellPosition;
             selectObject.transform.position = cellPosition;

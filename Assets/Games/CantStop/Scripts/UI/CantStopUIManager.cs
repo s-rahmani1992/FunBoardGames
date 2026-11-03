@@ -64,6 +64,7 @@ namespace FunBoardGames.CantStop
             {
                 if (v1 != null)
                 {
+                    boardController.CancelPreviews(v1.Value, v2.Value);
                     UpdatePossibleMoves(v1.Value, v2.Value);
                     bool allWrong = possibleMoves.All(m => m.Value.Item2 == MarkMode.Wrong);
 
@@ -81,7 +82,7 @@ namespace FunBoardGames.CantStop
                 {
                     playButton.interactable = isbusted;
                     ClearChooseColumnMessage();
-                    boardController.ClearMarks();
+                    boardController.CancelPreviews();
                 }
             };
 
@@ -92,7 +93,8 @@ namespace FunBoardGames.CantStop
         {
             game = userGameHolder.ActiveGame as CantStopGame;
             boardData = game.BoardData;
-            boardController.Initialize(boardData);
+            whiteConePanel.Initialize(game.MarkerConeCount);
+            boardController.Initialize(boardData, whiteConePanel);
             int index = 0;
             int winConeCount = (userGameHolder.ActiveGame as CantStopGame)?.WinConeCount ?? DefaultWinConeCount;
 
@@ -205,6 +207,7 @@ namespace FunBoardGames.CantStop
         {
             var g = diceController.SelectedIndices.ToArray();
 
+            boardController.CommitPreviews();
             playButton.interactable = false;
             playsSavedBust = false;
             playerUiDict[currentPlayer].StopTimer();
@@ -267,8 +270,7 @@ namespace FunBoardGames.CantStop
         {
             playerUiDict[player].UpdateTimeouts();
             statText.text = (player.IsMe ? "You" : player.Profile.PlayerName) + " ran out of time!";
-            whiteConePanel.UpdateUI(game.MarkerConeCount);
-            boardController.RemoveWhiteCones();
+            boardController.RemoveMarkerCones();
             OnTurnStarted(nextPlayer);
             await System.Threading.Tasks.Task.Delay(2000);
             statText.text = "";
@@ -281,9 +283,8 @@ namespace FunBoardGames.CantStop
                 statText.text = (currentPlayer.IsMe ? "You" : currentPlayer.Profile.PlayerName) + " Reset the Round!";
                 diceController.ClearSelection();
                 diceController.Reset();
-                boardController.RemoveWhiteCones();
+                boardController.RemoveMarkerCones();
                 boardController.ClearMarks();
-                whiteConePanel.UpdateUI(game.MarkerConeCount);
             }
             else
                 rollButton.interactable = true;
@@ -300,8 +301,7 @@ namespace FunBoardGames.CantStop
         private async void OnRoundCanceled(ICantStopPlayer player1, ICantStopPlayer nextPlayer)
         {
             statText.text = (player1.IsMe ? "You" : player1.Profile.PlayerName) + " Canceled the Round!";
-            whiteConePanel.UpdateUI(game.MarkerConeCount);
-            boardController.RemoveWhiteCones();
+            boardController.RemoveMarkerCones();
             OnTurnStarted(nextPlayer);
             await System.Threading.Tasks.Task.Delay(2000);
             statText.text = "";
@@ -312,7 +312,6 @@ namespace FunBoardGames.CantStop
             foreach (var p in dictionary)
                 boardController.PlaceCone(p.Key, PlayerColor.None, p.Value);
 
-            whiteConePanel.UpdateUI(game.MarkerConeCount - gameHandler.WhiteConePositions.Count());
 
             if (player != selfPlayer)
             {
@@ -329,8 +328,6 @@ namespace FunBoardGames.CantStop
             foreach (var p in updatedWhitecones)
                 boardController.PlaceCone(p.Key, PlayerColor.None, p.Value);
 
-            whiteConePanel.UpdateUI(game.MarkerConeCount - gameHandler.WhiteConePositions.Count());
-
             if (player != selfPlayer)
             {
                 if (dice1 >= 0 && dice2 >= 0) // no pair was placed when the round is played after a saved bust
@@ -344,7 +341,7 @@ namespace FunBoardGames.CantStop
                     boardController.PlaceCone(p.Key, currentPlayer.ConeColor, p.Value);
                 }
 
-                boardController.RemoveWhiteCones();
+                boardController.RemoveMarkerCones();
             }
             else
             {
@@ -353,7 +350,7 @@ namespace FunBoardGames.CantStop
                 {
                     boardController.PlaceCone(p.Key, currentPlayer.ConeColor, p.Value);
                 }
-                boardController.RemoveWhiteCones();
+                boardController.RemoveMarkerCones();
             }
 
             playerUiDict[player].UpdateScore(player.Score);
@@ -395,9 +392,8 @@ namespace FunBoardGames.CantStop
             playButton.interactable = false;
             resetRoundButton.interactable = false;
             bustSaverButton.interactable = false;
-            whiteConePanel.UpdateUI(game.MarkerConeCount);
             diceController.Reset();
-            boardController.RemoveWhiteCones();
+            boardController.RemoveMarkerCones();
             boardController.ClearMarks();
 
             if (pendingTimer != null && pendingTimer.Value.player == player)
@@ -433,6 +429,7 @@ namespace FunBoardGames.CantStop
             {
                 playButton.interactable = false;
                 ClearChooseColumnMessage();
+                boardController.CommitPreviews();
                 gameHandler.PlaceWhiteCones(diceController.SelectedIndices.ElementAtOrDefault(0), diceController.SelectedIndices.ElementAtOrDefault(1), selectedNumbers.Count() == 0 ? null : selectedNumbers.ElementAt(0));
 
                 diceController.Block(true);
@@ -454,7 +451,7 @@ namespace FunBoardGames.CantStop
             isbusted = false;
             diceController.ClearSelection();
             diceController.Reset();
-            boardController.ClearMarks();
+            boardController.CancelPreviews();
             gameHandler.UseBustSaver();
         }
 
@@ -498,9 +495,8 @@ namespace FunBoardGames.CantStop
             gameHandler.ResetRound();
             diceController.ClearSelection();
             diceController.Reset();
-            boardController.RemoveWhiteCones();
+            boardController.RemoveMarkerCones();
             boardController.ClearMarks();
-            whiteConePanel.UpdateUI(game.MarkerConeCount);
             resetRoundUsed = true;
         }
 
