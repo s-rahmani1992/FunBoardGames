@@ -11,7 +11,7 @@ namespace FunBoardGames.CantStop
 
         readonly Dictionary<GameObject, RectTransform> holders = new();
 
-        public void AddCone(GameObject cone, bool animate = true)
+        public void AddCone(GameObject cone, bool animate = true, DG.Tweening.Ease ease = DG.Tweening.Ease.OutQuad)
         {
             if (holders.ContainsKey(cone))
                 return;
@@ -28,7 +28,7 @@ namespace FunBoardGames.CantStop
             layout.preferredHeight = size.y;
 
             holders[cone] = rect;
-            ConeMover.Of(cone).MoveTo(rect, coneScale, () => ReleaseHolder(cone), animate);
+            ConeMover.Of(cone).MoveTo(rect, coneScale, () => ReleaseHolder(cone), animate, ease);
         }
 
         void ReleaseHolder(GameObject cone)

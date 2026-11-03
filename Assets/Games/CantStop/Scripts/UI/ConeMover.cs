@@ -13,7 +13,7 @@ namespace FunBoardGames.CantStop
 
         public static ConeMover Of(GameObject cone) => cone.TryGetComponent(out ConeMover mover) ? mover : cone.AddComponent<ConeMover>();
 
-        public void MoveTo(Transform target, float scale, Action onDetach = null, bool animate = true)
+        public void MoveTo(Transform target, float scale, Action onDetach = null, bool animate = true, Ease ease = Ease.OutQuad)
         {
             tween?.Kill();
 
@@ -44,7 +44,7 @@ namespace FunBoardGames.CantStop
                 transform.position = Vector3.LerpUnclamped(fromPosition, target.position, t);
                 transform.localScale = Vector3.LerpUnclamped(fromScale, toScale, t);
             })
-            .SetEase(Ease.OutQuad)
+            .SetEase(ease)
             .SetLink(gameObject)
             .OnComplete(() => Arrive(target, scale));
         }

@@ -338,7 +338,7 @@ namespace FunBoardGames.CantStop
 
                 foreach(var p in currentPlayer.ConePositions)
                 {
-                    boardController.PlaceCone(p.Key, currentPlayer.ConeColor, p.Value);
+                    boardController.PlaceCone(p.Key, currentPlayer.ConeColor, p.Value, playerUiDict[currentPlayer].ConeSpawnPosition);
                 }
 
                 boardController.RemoveMarkerCones();
@@ -348,7 +348,7 @@ namespace FunBoardGames.CantStop
                 await System.Threading.Tasks.Task.Delay(2000);
                 foreach (var p in currentPlayer.ConePositions)
                 {
-                    boardController.PlaceCone(p.Key, currentPlayer.ConeColor, p.Value);
+                    boardController.PlaceCone(p.Key, currentPlayer.ConeColor, p.Value, playerUiDict[currentPlayer].ConeSpawnPosition);
                 }
                 boardController.RemoveMarkerCones();
             }

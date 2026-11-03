@@ -31,6 +31,8 @@ namespace FunBoardGames.CantStop
         readonly List<Image> finishCones = new();
         readonly List<Image> timeoutIcons = new();
 
+        public Vector3 ConeSpawnPosition => coneIcon.transform.position;
+
         public void SetPlayer(ICantStopPlayer player, int winConeCount, int timeoutLimit)
         {
             playerColor = assetManager.GetPlayerColor(player.ConeColor);

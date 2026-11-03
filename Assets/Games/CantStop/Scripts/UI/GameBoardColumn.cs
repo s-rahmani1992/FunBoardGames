@@ -32,6 +32,8 @@ namespace FunBoardGames.CantStop
         [SerializeField] Graphic numberBadge;
         [SerializeField] Color dormantBadgeColor = new(1f, 1f, 1f, 0.35f);
 
+        const float NewConeStartScale = 0.4f;
+
         List<BoardCell> cells;
         WhiteConePanel panel;
         GhostPulse ghost;
@@ -125,7 +127,8 @@ namespace FunBoardGames.CantStop
             choiceFrame.SetActive(true);
         }
 
-        public void PlaceCone(PlayerColor playerColor, int? number)
+        /// <summary>A new cone of a player starts at the spawn position, when there is one.</summary>
+        public void PlaceCone(PlayerColor playerColor, int? number, Vector3? spawnPosition = null)
         {
             if (playerColor == PlayerColor.None)
             {
@@ -163,14 +166,15 @@ namespace FunBoardGames.CantStop
                 var rect = (RectTransform)newCone.transform;
                 rect.sizeDelta = panel.ConeSize;
 
-                if (whiteCone != null)
+                if (spawnPosition != null)
                 {
-                    rect.position = whiteCone.transform.position;
-                    rect.localScale = whiteCone.transform.localScale;
+                    rect.position = spawnPosition.Value;
+                    rect.localScale = Vector3.one * NewConeStartScale;
                 }
 
                 placedCones.Add(playerColor, newCone.gameObject);
-                cells[number.Value].AddCone(newCone.gameObject);
+                // A slow start, so the cone is seen leaving the player
+                cells[number.Value].AddCone(newCone.gameObject, true, DG.Tweening.Ease.InOutQuad);
             }
 
             if(!finishObject.activeSelf)

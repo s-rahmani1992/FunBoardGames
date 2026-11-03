@@ -126,10 +126,10 @@ namespace FunBoardGames.CantStop
                 column.RemoveMarker();
         }
 
-        public void PlaceCone(int column, PlayerColor color, int? cellNumber)
+        public void PlaceCone(int column, PlayerColor color, int? cellNumber, Vector3? spawnPosition = null)
         {
             if (columnList.TryGetValue(column, out var c))
-                c.PlaceCone(color, cellNumber);
+                c.PlaceCone(color, cellNumber, spawnPosition);
         }
     }
 }
