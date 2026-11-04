@@ -78,8 +78,8 @@ namespace FunBoardGames.Client
         {
             var data = new MessageData("Error", error, new List<ButtonData>
             {
-                new ButtonData("Retry", OnRetryConnectionClicked),
-                new ButtonData("Quit", OnQuitClicked)
+                new("Retry", OnRetryConnectionClicked),
+                new("Quit", OnQuitClicked, ButtonColor.Red)
             });
             DialogManager.Instance.ShowDialog(messageDialog, DialogShowOptions.OverAll, data);
         }
@@ -121,7 +121,7 @@ namespace FunBoardGames.Client
             MessageData data = new MessageData("Error", errorMessage, new List<ButtonData>
             {
                 new ButtonData("Retry", StartLogin),
-                new ButtonData("Quit", OnQuitClicked)
+                new ButtonData("Quit", OnQuitClicked, ButtonColor.Red)
             });
             DialogManager.Instance.ShowDialog(messageDialog, DialogShowOptions.OverAll, data);
         }

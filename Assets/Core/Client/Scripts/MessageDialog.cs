@@ -10,9 +10,18 @@ namespace FunBoardGames.Client
         [SerializeField] TMP_Text titleText;
         [SerializeField] TMP_Text messageText;
         [SerializeField] RectTransform buttonsPanel;
-        [SerializeField] MessageDialogButton buttonTemplate;
+        [SerializeField] MessageDialogButton blueButtonTemplate;
+        [SerializeField] MessageDialogButton greenButtonTemplate;
+        [SerializeField] MessageDialogButton redButtonTemplate;
 
         MessageData data;
+
+        MessageDialogButton GetTemplate(ButtonColor color) => color switch
+        {
+            ButtonColor.Blue => blueButtonTemplate,
+            ButtonColor.Red => redButtonTemplate,
+            _ => greenButtonTemplate
+        };
 
         public void Initialize(MessageData data)
         {
@@ -31,7 +40,7 @@ namespace FunBoardGames.Client
 
             foreach (var buttonData in data.Buttons)
             {
-                var button = Instantiate(buttonTemplate, buttonsPanel);
+                var button = Instantiate(GetTemplate(buttonData.Color), buttonsPanel);
                 button.gameObject.SetActive(true);
                 button.Setup(buttonData);
                 button.Clicked += Close;

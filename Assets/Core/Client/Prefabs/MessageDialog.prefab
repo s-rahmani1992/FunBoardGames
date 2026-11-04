@@ -98,7 +98,9 @@ MonoBehaviour:
   titleText: {fileID: 3588377377797471861}
   messageText: {fileID: 5184768699294640185}
   buttonsPanel: {fileID: 3448595486538562313}
-  buttonTemplate: {fileID: 5626735954585331652, guid: 685c0f41fada54845b3760bcace8a40a, type: 3}
+  blueButtonTemplate: {fileID: 7427684596633974847, guid: 836b8111c4b0b43438246d40657a0a01, type: 3}
+  greenButtonTemplate: {fileID: 5626735954585331652, guid: 685c0f41fada54845b3760bcace8a40a, type: 3}
+  redButtonTemplate: {fileID: 5176828763432472364, guid: f55cd1282657d184ea1c694ffa36a099, type: 3}
 --- !u!1 &2891478839457433457
 GameObject:
   m_ObjectHideFlags: 0

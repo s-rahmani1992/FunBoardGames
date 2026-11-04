@@ -55,7 +55,7 @@ namespace FunBoardGames.Network
             var data = new MessageData("Disconnected", "The connection to the server was lost.", new List<ButtonData>
             {
                 new ButtonData("Reload", OnReloadClicked),
-                new ButtonData("Quit", OnQuitClicked)
+                new ButtonData("Quit", OnQuitClicked, ButtonColor.Red)
             });
             DialogManager.Instance.ShowDialog(messageDialog, DialogShowOptions.OverAll, data);
         }
@@ -70,7 +70,7 @@ namespace FunBoardGames.Network
             var data = new MessageData("Error", "Unexpected server error occured!", new List<ButtonData>
             {
                 new ButtonData("Reload", OnReloadClicked),
-                new ButtonData("Quit", OnQuitClicked)
+                new ButtonData("Quit", OnQuitClicked, ButtonColor.Red)
             });
             DialogManager.Instance.ShowDialog(messageDialog, DialogShowOptions.OverAll, data);
         }
