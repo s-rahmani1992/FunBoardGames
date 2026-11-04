@@ -12,10 +12,10 @@ namespace FunBoardGames.SET
         public bool IsBusted => false;
         public int UsedHintCount { get; internal set; }
         public bool HasLeft => false;
+        public int Index => 0;
         public bool? Vote => null;
 
 #pragma warning disable CS0067 // Nothing changes for an offline player, the events only satisfy the interface
-        public event Action<int, int> IndexChanged;
         public event Action LeftGame;
 #pragma warning restore CS0067
 

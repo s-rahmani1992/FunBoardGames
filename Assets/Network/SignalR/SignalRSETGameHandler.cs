@@ -23,9 +23,6 @@ namespace FunBoardGames.Network.SignalR
         public event Action<ISETPlayer> PlayerUsedHint;
         public event Action<CardData> CardHintReceived;
 
-        // Players who left are not in the server's final scores, but still appear at the end of the results
-        List<SignalRSETPlayer> leftPlayers = new();
-
         public IEnumerable<ISETPlayer> Players => playerList;
 
         public SignalRSETGameHandler(HubConnection connection) : base(connection)
@@ -45,6 +42,11 @@ namespace FunBoardGames.Network.SignalR
                 unityContext.Post(_ => OnRoundTimeoutReceived(timeoutMsg), null);
             }));
 
+            connectionHooks.Add(connection.On<GameFinishedMessage>(SETGameMessageNames.GameFinished, (finishedMsg) =>
+            {
+                unityContext.Post(_ => OnFinalScoresReceived(finishedMsg.FinalScores), null);
+            }));
+
             connectionHooks.Add(connection.On<CardHintResponse>(SETGameMessageNames.CardHint, (hintMsg) =>
             {
                 unityContext.Post(_ => OnCardHintReceived(hintMsg), null);
@@ -57,8 +59,6 @@ namespace FunBoardGames.Network.SignalR
         }
 
         protected override SignalRSETPlayer CreatePlayer(PlayerInfoDTO playerInfo) => new(connection, playerInfo);
-
-        protected override void OnPlayerRemoved(SignalRSETPlayer player) => leftPlayers.Add(player);
 
         protected override void OnGameBegin(GameBeginMessage gameMsg)
         {
@@ -131,7 +131,6 @@ namespace FunBoardGames.Network.SignalR
 
                 rankedPlayers.Add(p);
             }
-            rankedPlayers.AddRange(leftPlayers);
             GameEnded?.Invoke(rankedPlayers);
             Dispose();
         }

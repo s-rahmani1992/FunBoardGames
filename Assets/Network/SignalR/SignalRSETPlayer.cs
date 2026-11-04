@@ -14,14 +14,8 @@ namespace FunBoardGames.Network.SignalR
         public int UsedHintCount { get; private set; } = 0;
 
         public SignalRSETPlayer(HubConnection connection, PlayerInfoDTO playerInfo)
-            : base(connection)
+            : base(connection, playerInfo)
         {
-            Profile = new ProfileData()
-            {
-                UserId = playerInfo.UserProfile.UserId,
-                PlayerName = playerInfo.UserProfile.PlayerName,
-                Avatar = playerInfo.UserProfile.Avatar,
-            };
         }
 
         internal void SetWrongScore(int score)

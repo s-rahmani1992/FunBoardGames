@@ -9,8 +9,7 @@ namespace FunBoardGames.Network
         bool IsMe { get;}
         ProfileData Profile { get; }
         bool HasLeft { get; }
-
-        event Action<int, int> IndexChanged;
+        int Index { get; }
         event Action LeftGame;
     }
 

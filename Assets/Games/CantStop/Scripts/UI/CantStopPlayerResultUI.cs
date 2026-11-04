@@ -13,7 +13,7 @@ namespace FunBoardGames.CantStop
         public void SETUI(ICantStopPlayer player, int rank)
         {
             rankText.text = rank.ToString();
-            nameText.text = player.Profile.PlayerName;
+            nameText.text = player.HasLeft ? player.Profile.PlayerName + " (Left)" : player.Profile.PlayerName;
             scoreText.text = player.Score.ToString();
         }
     }

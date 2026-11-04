@@ -9,18 +9,27 @@ namespace FunBoardGames.Network.SignalR
 {
     public class SignalRPlayer : IBoardGamePlayer
     {
-        public SignalRPlayer(HubConnection connection)
+        public SignalRPlayer(HubConnection connection, PlayerInfoDTO playerInfo)
         {
             _connection = connection;
             _unityContext = SynchronizationContext.Current;
+            Index = playerInfo.Index;
+            Profile = new ProfileData()
+            {
+                UserId = playerInfo.UserProfile.UserId,
+                PlayerName = playerInfo.UserProfile.PlayerName,
+                Avatar = playerInfo.UserProfile.Avatar,
+            };
         }
 
         public bool IsMe => Profile.UserId == UserProfile.UserId;
         public ProfileData Profile { get; protected set; }
         public int UserId => Profile.UserId;
+        public int Index { get; }
+
+        /// <summary>The player disconnected after the game began.</summary>
         public bool HasLeft{ get; private set; }
 
-        public event Action<int, int> IndexChanged;
         public event Action LeftGame;
 
         protected readonly HubConnection _connection;
@@ -89,7 +98,7 @@ namespace FunBoardGames.Network.SignalR
 
         protected abstract void OnGameBegin(TBegin beginData);
 
-        protected virtual void OnPlayerRemoved(TPlayer player) { }
+        protected bool IsGameBegan { get; private set; }
 
         public void JoinGame(GameData gameData)
         {
@@ -130,6 +139,7 @@ namespace FunBoardGames.Network.SignalR
 
             TPlayer player = CreatePlayer(playerInfo);
             playerList.Add(player);
+            playerList.Sort((a, b) => a.Index.CompareTo(b.Index));
             return player;
         }
 
@@ -138,6 +148,7 @@ namespace FunBoardGames.Network.SignalR
             if (beginData == null)
                 return;
 
+            IsGameBegan = true;
             OnGameBegin(beginData);
             GameBegan?.Invoke();
         }
@@ -151,8 +162,12 @@ namespace FunBoardGames.Network.SignalR
 
             player.InvokeLeave();
             PlayerLeft?.Invoke(player);
+
+            // The player disconnected from a running game, so the player stays in the game and the results
+            if (IsGameBegan)
+                return;
+
             playerList.Remove(player);
-            OnPlayerRemoved(player);
             player.Dispose();
 
             if (player.IsMe)

@@ -154,12 +154,8 @@ namespace FunBoardGames.Network.SignalR
 
         protected override void OnGameBegin(GameDataMessage gameDataMsg)
         {
-            int index = 0;
             foreach(var player in playerList)
-            {
-                player.SetPlayerColor(playerColors[index]);
-                index++;
-            }
+                player.SetPlayerColor(playerColors[player.Index]);
 
             var startPlayer = playerList.FirstOrDefault(player => player.UserId == gameDataMsg.StartPlayerUserId);
             GameDataReceived?.Invoke(startPlayer);

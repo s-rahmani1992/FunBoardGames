@@ -9,15 +9,15 @@ namespace FunBoardGames.CantStop
         readonly SortedDictionary<int, int> conePositions = new();
 
         public bool IsMe => true;
+        public bool HasLeft => false;
+        public int Index => 0;
         public ProfileData Profile { get; }
         public PlayerColor ConeColor => PlayerColor.Red;
         public IDictionary<int, int> ConePositions => conePositions;
         public int Score { get; internal set; }
         public int TimeoutCount => 0;
-        public bool HasLeft => false;
 
 #pragma warning disable CS0067 // Nothing changes for an offline player, the events only satisfy the interface
-        public event Action<int, int> IndexChanged;
         public event Action LeftGame;
 #pragma warning restore CS0067
 

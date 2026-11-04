@@ -19,14 +19,8 @@ namespace FunBoardGames.Network.SignalR
         SortedDictionary<int, int> conePositions = new();
 
         public SignalRCantStopPlayer(HubConnection connection, PlayerInfoDTO playerInfo)
-            :base(connection)
+            : base(connection, playerInfo)
         {
-            Profile = new ProfileData()
-            {
-                UserId = playerInfo.UserProfile.UserId,
-                PlayerName = playerInfo.UserProfile.PlayerName,
-                Avatar = playerInfo.UserProfile.Avatar,
-            };
         }
 
         public void SetPlayerColor(PlayerColor color)
