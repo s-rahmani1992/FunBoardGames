@@ -1,12 +1,11 @@
 using DG.Tweening;
+using FunBoardGames.Network;
+using FunBoardGames.Network.SignalR.Shared;
 using System.Collections.Generic;
 using TMPro;
-
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-
-using FunBoardGames.Network;
 
 namespace FunBoardGames.Client
 {
@@ -15,7 +14,7 @@ namespace FunBoardGames.Client
         [SerializeField] UserProfile userProfile;
         [SerializeField] SignUpDialog signUpDialog;
         [SerializeField] MessageDialog messageDialog;
-        [SerializeField] Image progressFillImage;
+        [SerializeField] RectMask2D progressMask;
         [SerializeField] TMP_Text progressText;
         [SerializeField] TournamentGameHolder tournamentGameHolder;
         [SerializeField] string serverUrl = "http://localhost:5020/game";
@@ -97,7 +96,12 @@ namespace FunBoardGames.Client
 
         private void SetProgress(float fillAmount, string text)
         {
-            progressFillImage.fillAmount = fillAmount;
+            // Progress is shown by shrinking the RectMask2D's right padding: the tiled fill
+            // inside it stays put and is revealed from the left as the padding decreases.
+            float width = progressMask.rectTransform.rect.width;
+            var padding = progressMask.padding;
+            padding.z = width * (1f - Mathf.Clamp01(fillAmount));
+            progressMask.padding = padding;
             progressText.text = text;
         }
 
@@ -116,14 +120,30 @@ namespace FunBoardGames.Client
             DOVirtual.DelayedCall(0.5f, () => SceneManager.LoadScene("Menu"));
         }
 
-        private void OnLoginFailed(string errorMessage)
+        private void OnLoginFailed(AuthenticationError status)
         {
-            MessageData data = new MessageData("Error", errorMessage, new List<ButtonData>
+            if (status == AuthenticationError.InvalidCredentials)
             {
-                new ButtonData("Retry", StartLogin),
-                new ButtonData("Quit", OnQuitClicked, ButtonColor.Red)
-            });
-            DialogManager.Instance.ShowDialog(messageDialog, DialogShowOptions.OverAll, data);
+                MessageData data = new("Error", "Invalid or corrupted user credentials detected. Do you want to create new account?", new List<ButtonData>
+                {
+                    new("Yes", () =>
+                    {
+                        var dialog = DialogManager.Instance.ShowDialog(signUpDialog, DialogShowOptions.Replace);
+                        dialog.OnClosedEvent += () => SignUp(dialog.ChosenUsername);
+                    }, ButtonColor.Green),
+                    new("Quit", OnQuitClicked, ButtonColor.Red)
+                });
+                DialogManager.Instance.ShowDialog(messageDialog, DialogShowOptions.OverAll, data);
+            }
+            else
+            {
+                MessageData data = new("Error", "Unknown error while logging in. Please try again.", new List<ButtonData>
+                {
+                    new("Retry", StartLogin),
+                    new("Quit", OnQuitClicked, ButtonColor.Red)
+                });
+                DialogManager.Instance.ShowDialog(messageDialog, DialogShowOptions.OverAll, data);
+            }
         }
 
         private void StartLogin()

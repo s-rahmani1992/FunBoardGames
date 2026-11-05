@@ -34,8 +34,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 6}
-  m_SizeDelta: {x: -45.2858, y: -23.8369}
+  m_AnchoredPosition: {x: 0, y: -0.00002670288}
+  m_SizeDelta: {x: -62.6515, y: -26.7313}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8585440802984525760
 CanvasRenderer:
@@ -67,15 +67,15 @@ MonoBehaviour:
       m_Calls: []
   m_text: Welcome
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: ae8e96a325c267f47bb0c353c48c7ba1, type: 2}
-  m_sharedMaterial: {fileID: -1719405759251356643, guid: ae8e96a325c267f47bb0c353c48c7ba1, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: b6b4201fa226d3b43a70e140e94b8225, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: 5209b9e772c591049921d8cbb3d20cdf, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278391360
-  m_fontColor: {r: 0.2528302, g: 0.070957854, b: 0.012880009, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -92,7 +92,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 63.15
+  m_fontSize: 68.8
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -224,6 +224,7 @@ GameObject:
   - component: {fileID: 4914538396962790312}
   - component: {fileID: 4911014626124206386}
   - component: {fileID: 6422092965181477498}
+  - component: {fileID: 8399471955796709393}
   m_Layer: 5
   m_Name: SignUpDialog
   m_TagString: Untagged
@@ -264,8 +265,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 575f5a2add0016e4481f6ada34ac59d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FunBoardGames.Client.SignUpDialog
-  showTime: 0.2
-  closeTime: 0.2
+  showTime: 0.1
+  closeTime: 0.1
   usernameInputField: {fileID: 4956364862821927217}
   chooseButton: {fileID: 1524078158931093838}
 --- !u!223 &4911014626124206386
@@ -308,6 +309,28 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!95 &8399471955796709393
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3864946292633021210}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 07e82992011a67547989b3a2c1b17296, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &4611451356051847178
 GameObject:
   m_ObjectHideFlags: 0
@@ -342,8 +365,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -8.4746, y: -155}
-  m_SizeDelta: {x: -93.2256, y: 190.91}
+  m_AnchoredPosition: {x: -3.879486, y: -164.8468}
+  m_SizeDelta: {x: -84.0353, y: 171.2164}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5568316791197660628
 CanvasRenderer:
@@ -375,8 +398,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Welcome to the Game. Choose a name for yourself
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: ae8e96a325c267f47bb0c353c48c7ba1, type: 2}
-  m_sharedMaterial: {fileID: -1719405759251356643, guid: ae8e96a325c267f47bb0c353c48c7ba1, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: b6b4201fa226d3b43a70e140e94b8225, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: 519734356cf9d6b4f85deab2d6c72c5d, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -400,7 +423,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 50.7
+  m_fontSize: 50.75
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -456,6 +479,7 @@ GameObject:
   - component: {fileID: 4807044460705490810}
   - component: {fileID: 8352532928509854686}
   - component: {fileID: 1205336659133408724}
+  - component: {fileID: 1884363426966691074}
   m_Layer: 5
   m_Name: holder
   m_TagString: Untagged
@@ -525,6 +549,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 0.53
+--- !u!225 &1884363426966691074
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5101974172883506121}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &6598410240830227613
 GameObject:
   m_ObjectHideFlags: 0
@@ -611,7 +647,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1393531652056081227, guid: cc7447935e848dd4d938c3b6dbefa33e, type: 3}
       propertyPath: m_fontSize
-      value: 57.4
+      value: 64.75
       objectReference: {fileID: 0}
     - target: {fileID: 1393531652056081227, guid: cc7447935e848dd4d938c3b6dbefa33e, type: 3}
       propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
@@ -735,7 +771,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1393531653188220768, guid: cc7447935e848dd4d938c3b6dbefa33e, type: 3}
       propertyPath: m_fontSize
-      value: 57.4
+      value: 64.75
       objectReference: {fileID: 0}
     - target: {fileID: 1393531653188220768, guid: cc7447935e848dd4d938c3b6dbefa33e, type: 3}
       propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
@@ -872,7 +908,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3896115147996918958, guid: 06bfe97b31c7fe042b9f9d48531cfb87, type: 3}
       propertyPath: m_fontSize
-      value: 54.55
+      value: 60.2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -998,15 +1034,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8808527151959482554, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: m_fontSize
-      value: 54.55
+      value: 60.2
       objectReference: {fileID: 0}
     - target: {fileID: 8808527151959482554, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
       value: 1801810542
-      objectReference: {fileID: 0}
-    - target: {fileID: 8808527151959482555, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 3.3962097
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

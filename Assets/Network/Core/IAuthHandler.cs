@@ -14,6 +14,13 @@ namespace FunBoardGames.Network
         public string DeviceId { get; set; }
     }
 
+    public enum AuthenticationError
+    {
+        Unknown,
+        InvalidCredentials,
+        TooManyAccounts,
+    }
+
     public class SignInResponse
     {
         public ProfileData Profile { get; set; }
@@ -23,7 +30,7 @@ namespace FunBoardGames.Network
     public interface IAuthHandler
     {
         event System.Action<SignInResponse> LoginSuccess;
-        event System.Action<string> LoginFailed;
+        event System.Action<AuthenticationError> LoginFailed;
 
         void SignUp(SignUpData signUpData);
         void SignIn(SignInData signInData);

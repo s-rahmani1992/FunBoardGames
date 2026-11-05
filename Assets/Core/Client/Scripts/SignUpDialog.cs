@@ -30,8 +30,7 @@ namespace FunBoardGames.Client
         public override void Show()
         {
             base.Show();
-            usernameInputField.text = "";
-            chooseButton.interactable = false;
+            usernameInputField.text = "player_" + Random.Range(100, 10000);
         }
     }
 }

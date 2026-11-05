@@ -8,7 +8,7 @@ namespace FunBoardGames.Network.SignalR
     public class SignalRAuthHandler : IAuthHandler
     {
         public event Action<SignInResponse> LoginSuccess;
-        public event Action<string> LoginFailed;
+        public event Action<AuthenticationError> LoginFailed;
 
         HubConnection _connection; 
         SynchronizationContext unityContext;
@@ -40,7 +40,14 @@ namespace FunBoardGames.Network.SignalR
             }
             else 
             {
-                LoginFailed?.Invoke("Error");
+                AuthenticationError status = msg.ErrorCode switch
+                {
+                    AuthenticationErrorCode.InvalidCredentials => AuthenticationError.InvalidCredentials,
+                    AuthenticationErrorCode.UserNotFound => AuthenticationError.InvalidCredentials,
+                    AuthenticationErrorCode.UserAlreadyExists => AuthenticationError.TooManyAccounts,
+                    _ => AuthenticationError.Unknown,
+                };
+                LoginFailed?.Invoke(status);
             }
         }
 
