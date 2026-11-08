@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3e376223a2f9004290840c27265cf5a, type: 3}
+  m_Name: UserResourceManager
+  m_EditorClassIdentifier: Assembly-CSharp::UserResourceManager
+  _balanceResourceHolders:
+  - {fileID: 11400000, guid: 56b0fcd3171b3921fb00f362a2a33e1a, type: 2}
+  - {fileID: 11400000, guid: f3169efb2dcae553ecab90251e5d94fb, type: 2}
+  - {fileID: 11400000, guid: f9d45848f0eb9b311762a26797ef13dc, type: 2}
+  - {fileID: 11400000, guid: 879fc54728a27eeed1e1205d8861f515, type: 2}
+  - {fileID: 11400000, guid: 99cda896cc71448acd9ebca8db3c7f53, type: 2}

@@ -25,6 +25,7 @@ namespace FunBoardGames.Network.SignalR
 
         public IAuthHandler AuthHandler => _authHandler;
         public IUserHandler UserHandler => _userHandler;
+        public IResourceHandler ResourceHandler => _userHandler;
 
         public event Action Connected;
         public event Action Disconnected;

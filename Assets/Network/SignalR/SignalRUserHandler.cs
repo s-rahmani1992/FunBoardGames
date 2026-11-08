@@ -2,15 +2,34 @@ using FunBoardGames.Network.SignalR.Shared;
 using FunBoardGames.SignalR.Shared;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using SharedResource = FunBoardGames.Network.SignalR.Shared.Resource;
+using SharedResourceType = FunBoardGames.Network.SignalR.Shared.ResourceType;
 
 namespace FunBoardGames.Network.SignalR
 {
-    public class SignalRUserHandler : IUserHandler
+    public class SignalRUserHandler : IUserHandler, IResourceHandler
     {
         HubConnection _connection;
         SynchronizationContext unityContext;
+
+        // The server identifies a resource by its permanent key, the client by this enum
+        static readonly Dictionary<string, ResourceName> ResourceNamesByKey = new()
+        {
+            ["xp"] = ResourceName.xp,
+            ["gem"] = ResourceName.gem,
+            ["set_hint_card"] = ResourceName.setCardHint,
+            ["cantstop_reset_round"] = ResourceName.cantStopResetRound,
+            ["cantstop_bust_saver"] = ResourceName.cantStopBustSaver,
+        };
+
+        readonly Dictionary<int, ResourceData> _resourcesById = new();
+
+        public IEnumerable<ResourceData> Resources => _resourcesById.Values;
+        public event Action<IEnumerable<UserResourceData>> UserResourceReceived;
+        public event Action<UserResourceData> ResourceUpdated;
 
         public SignalRUserHandler(HubConnection connection)
         {
@@ -20,6 +39,11 @@ namespace FunBoardGames.Network.SignalR
             _connection.On<GetUserDataResponseMessage>(UserMessageNames.GetUserData, (response) =>
             {
                 unityContext.Post(_ => OnUserDataReceived(response), null);
+            });
+
+            _connection.On<UserResourcesUpdateMessage>(UserMessageNames.UserResourcesUpdate, (message) =>
+            {
+                unityContext.Post(_ => OnUserResourcesUpdated(message), null);
             });
 
             _connection.On<Profile>(UserMessageNames.ProfileUpdate, (profile) =>
@@ -33,8 +57,61 @@ namespace FunBoardGames.Network.SignalR
             });
         }
 
+        private ResourceData ConvertResource(SharedResource resource)
+        {
+            if (_resourcesById.TryGetValue(resource.Id, out var known))
+                return known;
+
+            // A resource added on the server that this client version does not know is ignored
+            if (ResourceNamesByKey.TryGetValue(resource.Key, out var name) == false)
+            {
+                UnityEngine.Debug.LogWarning($"Unknown resource key '{resource.Key}' was ignored.");
+                return null;
+            }
+
+            var data = new ResourceData
+            {
+                Id = resource.Id,
+                Type = resource.Type == SharedResourceType.Subscription ? ResourceType.Subscription : ResourceType.Amount,
+                Name = name,
+            };
+            _resourcesById[resource.Id] = data;
+            return data;
+        }
+
+        private List<UserResourceData> ConvertUserResources(IEnumerable<UserResource> userResources)
+        {
+            var converted = new List<UserResourceData>();
+            foreach (var userResource in userResources)
+            {
+                var resource = ConvertResource(userResource.Resource);
+                if (resource == null)
+                    continue;
+
+                converted.Add(new UserResourceData
+                {
+                    Resource = resource,
+                    Balance = userResource.Balance,
+                    ExpireDate = userResource.ExpireDate,
+                });
+            }
+            return converted;
+        }
+
+        private void OnUserResourcesUpdated(UserResourcesUpdateMessage message)
+        {
+            foreach (var userResource in ConvertUserResources(message.UserResources))
+                ResourceUpdated?.Invoke(userResource);
+        }
+
         private void OnUserDataReceived(GetUserDataResponseMessage response)
         {
+            foreach (var resource in response.Resources)
+                ConvertResource(resource);
+
+            // Resources go out first, so the balances are ready by the time the menu loads
+            UserResourceReceived?.Invoke(ConvertUserResources(response.UserResources));
+
             var games = response.Games
                 .Select(ConvertGameDto)
                 .ToList();

@@ -1147,6 +1147,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   userProfile: {fileID: 11400000, guid: 64194ba9ba2799b4dafa3757146ee5e2, type: 2}
+  userResourceManager: {fileID: 11400000, guid: 5e19f274400a9bdd972e19d879756794, type: 2}
   signUpDialog: {fileID: 4914538396962790312, guid: 0ae3a6a3a0bd9b24dbdb74c900299b5c, type: 3}
   messageDialog: {fileID: 147469796528152084, guid: cd7be6b9ff60bec45aedb9b9fd335aac, type: 3}
   progressMask: {fileID: 10371059}

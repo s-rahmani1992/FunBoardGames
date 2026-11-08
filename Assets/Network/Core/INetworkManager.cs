@@ -7,6 +7,7 @@ namespace FunBoardGames.Network
     {
         IAuthHandler AuthHandler { get; }
         IUserHandler UserHandler { get; }
+        IResourceHandler ResourceHandler { get; }
 
         event Action Connected;
         event Action Disconnected;

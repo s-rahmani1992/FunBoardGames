@@ -12,6 +12,7 @@ namespace FunBoardGames.Client
     public class LoginUIManager : MonoBehaviour
     {
         [SerializeField] UserProfile userProfile;
+        [SerializeField] UserResourceManager userResourceManager;
         [SerializeField] SignUpDialog signUpDialog;
         [SerializeField] MessageDialog messageDialog;
         [SerializeField] RectMask2D progressMask;
@@ -56,6 +57,7 @@ namespace FunBoardGames.Client
 
             authHandler = networkManager.AuthHandler;
             userProfile.Register(authHandler, networkManager.UserHandler);
+            userResourceManager.Register(networkManager.ResourceHandler);
             authHandler.LoginSuccess += OnLoginSuccess;
             authHandler.LoginFailed += OnLoginFailed;
 
