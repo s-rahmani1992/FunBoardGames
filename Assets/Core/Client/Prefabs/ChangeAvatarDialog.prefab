@@ -92,7 +92,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 51.85
+  m_fontSize: 45.95
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -331,6 +331,7 @@ GameObject:
   - component: {fileID: 4911014626124206386}
   - component: {fileID: 6422092965181477498}
   - component: {fileID: 2016380798621240882}
+  - component: {fileID: 1067219120830292969}
   m_Layer: 5
   m_Name: ChangeAvatarDialog
   m_TagString: Untagged
@@ -419,6 +420,28 @@ MonoBehaviour:
   content: {fileID: 5551929459349562266}
   toggleGroup: {fileID: 3691496782667795778}
   changeButton: {fileID: 1524078158931093838}
+--- !u!95 &1067219120830292969
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3864946292633021210}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 07e82992011a67547989b3a2c1b17296, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &4547124594271477596
 GameObject:
   m_ObjectHideFlags: 0
@@ -761,10 +784,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4807044460705490810}
     m_Modifications:
-    - target: {fileID: 8808527151278746681, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
-      propertyPath: m_PixelsPerUnitMultiplier
-      value: 1.66
-      objectReference: {fileID: 0}
     - target: {fileID: 8808527151278746660, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: m_Name
       value: cancelButton
@@ -881,13 +900,17 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: d81f60c2c2b3f174521daa6a3d7be199, type: 3}
+    - target: {fileID: 8808527151278746681, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
+      propertyPath: m_PixelsPerUnitMultiplier
+      value: 1.66
+      objectReference: {fileID: 0}
     - target: {fileID: 8808527151959482554, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: m_text
       value: Cancel
       objectReference: {fileID: 0}
     - target: {fileID: 8808527151959482554, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: m_fontSize
-      value: 40.2
+      value: 44
       objectReference: {fileID: 0}
     - target: {fileID: 8808527151959482554, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
@@ -915,10 +938,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4807044460705490810}
     m_Modifications:
-    - target: {fileID: 8808527151278746681, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
-      propertyPath: m_PixelsPerUnitMultiplier
-      value: 1.38
-      objectReference: {fileID: 0}
     - target: {fileID: 8808527151278746660, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: m_Name
       value: changeButton
@@ -1027,13 +1046,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8808527151278746681, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
+      propertyPath: m_PixelsPerUnitMultiplier
+      value: 1.38
+      objectReference: {fileID: 0}
     - target: {fileID: 8808527151959482554, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: m_text
       value: Change
       objectReference: {fileID: 0}
     - target: {fileID: 8808527151959482554, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: m_fontSize
-      value: 40.2
+      value: 44
       objectReference: {fileID: 0}
     - target: {fileID: 8808527151959482554, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: 'm_ActiveFontFeatures.Array.data[0]'

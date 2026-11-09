@@ -224,6 +224,7 @@ GameObject:
   - component: {fileID: 4911014626124206386}
   - component: {fileID: 6422092965181477498}
   - component: {fileID: 5493964428273389519}
+  - component: {fileID: 919996907366024622}
   m_Layer: 5
   m_Name: ChangeNameDialog
   m_TagString: Untagged
@@ -309,6 +310,28 @@ MonoBehaviour:
   nameInputField: {fileID: 4956364862821927217}
   changeButton: {fileID: 1524078158931093838}
   userProfile: {fileID: 11400000, guid: 64194ba9ba2799b4dafa3757146ee5e2, type: 2}
+--- !u!95 &919996907366024622
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3864946292633021210}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 07e82992011a67547989b3a2c1b17296, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &4611451356051847178
 GameObject:
   m_ObjectHideFlags: 0
@@ -736,7 +759,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8808527151959482554, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: m_fontSize
-      value: 40.2
+      value: 44
       objectReference: {fileID: 0}
     - target: {fileID: 8808527151959482555, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -762,7 +785,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1393531652056081227, guid: cc7447935e848dd4d938c3b6dbefa33e, type: 3}
       propertyPath: m_fontSize
-      value: 57.4
+      value: 64.75
       objectReference: {fileID: 0}
     - target: {fileID: 1393531652056081227, guid: cc7447935e848dd4d938c3b6dbefa33e, type: 3}
       propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
@@ -898,7 +921,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1393531653188220768, guid: cc7447935e848dd4d938c3b6dbefa33e, type: 3}
       propertyPath: m_fontSize
-      value: 57.4
+      value: 64.75
       objectReference: {fileID: 0}
     - target: {fileID: 1393531653188220768, guid: cc7447935e848dd4d938c3b6dbefa33e, type: 3}
       propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
@@ -1055,7 +1078,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8808527151959482554, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: m_fontSize
-      value: 40.2
+      value: 44
       objectReference: {fileID: 0}
     - target: {fileID: 8808527151959482554, guid: c57b4b14ae327704db9036cee0342aca, type: 3}
       propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
