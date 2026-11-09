@@ -1,49 +1,42 @@
-using FunBoardGames.CantStop;
 using FunBoardGames.Network;
-using FunBoardGames.SET;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace FunBoardGames.Client 
+namespace FunBoardGames.Client
 {
-    public class GameBanner : MonoBehaviour
+    public abstract class GameBanner<T> : MonoBehaviour where T : GameData
     {
+        [Header("Common UI Elements")]
         [SerializeField] TMP_Text titleText;
         [SerializeField] TMP_Text playerCountText;
         [SerializeField] Button joinRandomButton;
         [SerializeField] JoinGamePanel joinGamePanel;
         [SerializeField] Button howToPlayButton;
-        [SerializeField] UserGameHolder userGameHolder;
-        [SerializeField] UserProfile userProfile;
-        [SerializeField] SceneAssetMap sceneMap;
+        [SerializeField] protected UserGameHolder userGameHolder;
+        [SerializeField] protected UserProfile userProfile;
+        [SerializeField] protected SceneAssetMap sceneMap;
 
-        GameData gameData;
+        protected T GameData { get; private set; }
 
-        public void Initialize(GameData gameData)
+        protected void InitializeBase(T gameData)
         {
-            this.gameData = gameData;
+            GameData = gameData;
 
             titleText.text = string.IsNullOrEmpty(gameData.Name) ? gameData.Type.ToString() : gameData.Name;
-            playerCountText.text = $"{gameData.NumberofPlayers} Players";
+            playerCountText.text = gameData.NumberofPlayers.ToString();
             joinRandomButton.onClick.AddListener(OnJoinRandomClicked);
-
-            howToPlayButton.gameObject.SetActive(gameData.Type == BoardGame.SET || gameData.Type == BoardGame.CantStop);
             howToPlayButton.onClick.AddListener(OnHowToPlayClicked);
         }
 
-        private void OnHowToPlayClicked()
-        {
-            if (gameData.Type == BoardGame.CantStop)
-                CantStopTutorialFlow.Launch(userGameHolder, userProfile.Profile, sceneMap.GetScene(BoardGame.CantStop));
-            else
-                SETTutorialFlow.Launch(userGameHolder, userProfile.Profile, sceneMap.GetScene(BoardGame.SET));
-        }
+        public abstract void Initialize(T gameData);
 
-        private void OnJoinRandomClicked()
+        protected abstract void OnHowToPlayClicked();
+
+        void OnJoinRandomClicked()
         {
             var joinPanel = Instantiate(joinGamePanel);
-            joinPanel.Initialize(gameData);
+            joinPanel.Initialize(GameData);
         }
-    } 
+    }
 }

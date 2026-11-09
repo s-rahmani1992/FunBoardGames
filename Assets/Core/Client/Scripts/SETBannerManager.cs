@@ -1,7 +1,22 @@
+using System.Linq;
+using FunBoardGames.Network;
+using UnityEngine;
+
 namespace FunBoardGames.Client
 {
-    public class SETBannerManager : GameBannerManagerBase
+    /// <summary>
+    /// Spawns a <see cref="SETGameBanner"/> for every tournament SET game.
+    /// </summary>
+    public class SETBannerManager : MonoBehaviour
     {
-        protected override BoardGame GameType => BoardGame.SET;
+        [SerializeField] SETGameBanner gameBannerPrefab;
+        [SerializeField] TournamentGameHolder tournamentGameHolder;
+        [SerializeField] RectTransform bannerHolder;
+
+        void Start()
+        {
+            foreach (var game in tournamentGameHolder.Games.OfType<SETGame>())
+                Instantiate(gameBannerPrefab, bannerHolder).Initialize(game);
+        }
     }
 }
