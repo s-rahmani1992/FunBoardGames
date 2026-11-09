@@ -12,10 +12,6 @@ namespace FunBoardGames.Client
         [SerializeField] AvatarAssetManager avatarAssets;
         [SerializeField] Image playerAvatarImage;
         [SerializeField] TMP_Text playerNameText;
-        [SerializeField] UserGameHolder userGameHolder;
-        [SerializeField] TournamentGameHolder tournamentGameHolder;
-        [SerializeField] GameBanner gameBannerPrefab;
-        [SerializeField] RectTransform gameBannerHolder;
         [SerializeField] ChangeNameDialog changeNameDialog;
         [SerializeField] ChangeAvatarDialog changeAvatarDialog;
 
@@ -29,12 +25,6 @@ namespace FunBoardGames.Client
             playerAvatarImage.sprite = avatarAssets.GetAvatar(userProfile.Profile.Avatar);
 
             userHandler.ProfileUpdated += OnProfileUpdated;
-
-            foreach (var gameData in tournamentGameHolder.Games)
-            {
-                var banner = Instantiate(gameBannerPrefab, gameBannerHolder);
-                banner.Initialize(gameData);
-            }
         }
 
         private void OnDestroy()
