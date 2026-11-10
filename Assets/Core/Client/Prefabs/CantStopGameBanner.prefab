@@ -1079,7 +1079,6 @@ MonoBehaviour:
   titleText: {fileID: 7291878055247206940}
   playerCountText: {fileID: 2060800562946432675}
   joinRandomButton: {fileID: 1552818140761689782}
-  joinGamePanel: {fileID: 6363429112168754158, guid: f594ce7e11395be4ebb4617b5bcb3d1d, type: 3}
   howToPlayButton: {fileID: 2869312286657007896}
   userGameHolder: {fileID: 11400000, guid: 024728347846f934e9cf6f23e7599d80, type: 2}
   userProfile: {fileID: 11400000, guid: 64194ba9ba2799b4dafa3757146ee5e2, type: 2}
@@ -1088,6 +1087,7 @@ MonoBehaviour:
   winConeCountText: {fileID: 2968879924031753344}
   timeoutLimitText: {fileID: 5405640304832861239}
   roundTimeText: {fileID: 555279383016628949}
+  joinGamePanelPrefab: {fileID: 8519739449818186512, guid: f2a8cd1843db1f84e9dfb2151eb1b121, type: 3}
 --- !u!1 &3786500813832247885
 GameObject:
   m_ObjectHideFlags: 0

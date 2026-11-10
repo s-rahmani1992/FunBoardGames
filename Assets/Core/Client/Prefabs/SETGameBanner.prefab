@@ -790,7 +790,6 @@ MonoBehaviour:
   titleText: {fileID: 7291878055247206940}
   playerCountText: {fileID: 9209515599035021606}
   joinRandomButton: {fileID: 4206447687568711795}
-  joinGamePanel: {fileID: 6363429112168754158, guid: f594ce7e11395be4ebb4617b5bcb3d1d, type: 3}
   howToPlayButton: {fileID: 3392268379846034424}
   userGameHolder: {fileID: 11400000, guid: 024728347846f934e9cf6f23e7599d80, type: 2}
   userProfile: {fileID: 11400000, guid: 64194ba9ba2799b4dafa3757146ee5e2, type: 2}
@@ -798,6 +797,7 @@ MonoBehaviour:
   cardCountText: {fileID: 3245676046089898531}
   wrongLimitText: {fileID: 7416062625349666507}
   roundTimeText: {fileID: 4256491424712373185}
+  joinGamePanelPrefab: {fileID: 808542076980679579, guid: 4b2a5529bdd8dd3418e2406551041c51, type: 3}
 --- !u!1 &3786500813832247885
 GameObject:
   m_ObjectHideFlags: 0

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SceneAssetMap
   m_EditorClassIdentifier: Assembly-CSharp::FunBoardGames.SceneAssetMap
   scenes:
-  - <Scene>k__BackingField: Assets/Games/SET/Scenes/Game.unity
+  - <Scene>k__BackingField: Assets/Games/SET/Scenes/Game_SET.unity
     <gameType>k__BackingField: 0
-  - <Scene>k__BackingField: Assets/Games/CantStop/Game.unity
+  - <Scene>k__BackingField: Assets/Games/CantStop/Game_CantStop.unity
     <gameType>k__BackingField: 1

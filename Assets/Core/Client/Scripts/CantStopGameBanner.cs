@@ -12,6 +12,7 @@ namespace FunBoardGames.Client
         [SerializeField] TMP_Text winConeCountText;
         [SerializeField] TMP_Text timeoutLimitText;
         [SerializeField] TMP_Text roundTimeText;
+        [SerializeField] CantStopJoinGamePanel joinGamePanelPrefab;
 
         public override void Initialize(CantStopGame game)
         {
@@ -26,6 +27,11 @@ namespace FunBoardGames.Client
         protected override void OnHowToPlayClicked()
         {
             CantStopTutorialFlow.Launch(userGameHolder, userProfile.Profile, sceneMap.GetScene(BoardGame.CantStop));
+        }
+
+        protected override void OnJoinRandomClicked()
+        {
+            Instantiate(joinGamePanelPrefab).Initialize(GameData);
         }
     }
 }

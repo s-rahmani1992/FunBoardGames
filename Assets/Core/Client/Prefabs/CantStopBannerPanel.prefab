@@ -92,9 +92,17 @@ PrefabInstance:
       propertyPath: m_text
       value: Ridge Rush Games
       objectReference: {fileID: 0}
+    - target: {fileID: 3858907992247670077, guid: a381542fd5e793e46b675631bb7b1874, type: 3}
+      propertyPath: m_fontSize
+      value: 56.2
+      objectReference: {fileID: 0}
     - target: {fileID: 6650412203435155108, guid: a381542fd5e793e46b675631bb7b1874, type: 3}
       propertyPath: m_Name
       value: CantStopBannerPanel
+      objectReference: {fileID: 0}
+    - target: {fileID: 8992816101743524262, guid: a381542fd5e793e46b675631bb7b1874, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -214,7 +222,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6096697732582773833, guid: 45264db21d5817b49b72d44165045fb0, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -190
+      value: -228
       objectReference: {fileID: 0}
     - target: {fileID: 6096697732582773833, guid: 45264db21d5817b49b72d44165045fb0, type: 3}
       propertyPath: m_AnchoredPosition.y

@@ -11,7 +11,6 @@ namespace FunBoardGames.Client
         [SerializeField] TMP_Text titleText;
         [SerializeField] TMP_Text playerCountText;
         [SerializeField] Button joinRandomButton;
-        [SerializeField] JoinGamePanel joinGamePanel;
         [SerializeField] Button howToPlayButton;
         [SerializeField] protected UserGameHolder userGameHolder;
         [SerializeField] protected UserProfile userProfile;
@@ -33,10 +32,6 @@ namespace FunBoardGames.Client
 
         protected abstract void OnHowToPlayClicked();
 
-        void OnJoinRandomClicked()
-        {
-            var joinPanel = Instantiate(joinGamePanel);
-            joinPanel.Initialize(GameData);
-        }
+        protected abstract void OnJoinRandomClicked();
     }
 }

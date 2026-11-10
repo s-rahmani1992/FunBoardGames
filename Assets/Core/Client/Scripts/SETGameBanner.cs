@@ -11,6 +11,7 @@ namespace FunBoardGames.Client
         [SerializeField] TMP_Text cardCountText;
         [SerializeField] TMP_Text wrongLimitText;
         [SerializeField] TMP_Text roundTimeText;
+        [SerializeField] SETJoinGamePanel joinGamePanelPrefab;
 
         public override void Initialize(SETGame game)
         {
@@ -27,6 +28,11 @@ namespace FunBoardGames.Client
         protected override void OnHowToPlayClicked()
         {
             SETTutorialFlow.Launch(userGameHolder, userProfile.Profile, sceneMap.GetScene(BoardGame.SET));
+        }
+
+        protected override void OnJoinRandomClicked()
+        {
+            Instantiate(joinGamePanelPrefab).Initialize(GameData);
         }
     }
 }
